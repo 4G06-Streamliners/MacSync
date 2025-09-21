@@ -84,11 +84,55 @@ likely change throughout the year.}
 
 \section{Workflow Plan}
 
+\subsection{Git Usage}
 \begin{itemize}
-	\item How will you be using git, including branches, pull request, etc.?
-	\item How will you be managing issues, including template issues, issue
-	classification, etc.?
-  \item Use of CI/CD
+	\item Github will be used as the primary version control system (VCS).
+    \item All commits must be made to a non-master branch and submitted via a pull request before they can be merged.
+    \item Branching Strategy: \begin{itemize}
+    \item Main branch: Stable production-ready code waiting for a release.
+    \item Documentation branches: Used to maintain and update project documentation and requirements.
+        \begin{itemize}
+            \item Notation: \texttt{docs/SL-<Issue\#>}
+        \end{itemize}
+
+    \item Development branch: Integration branch where all new features and bug fixes are merged. This branch will contain the latest features with the most up-to-date code. 
+        \begin{itemize}
+            \item Notation: \texttt{dev}
+        \end{itemize}
+
+    \item Feature branches: Used to develop and test new features before merging into the development branch. 
+        \begin{itemize}
+            \item Notation: \texttt{feature/SL-<Issue\#>}
+        \end{itemize}
+
+    \item Bugfix branches: Used to fix defects.
+        \begin{itemize}
+            \item Notation: \texttt{bugfix/SL-<Issue\#>}
+        \end{itemize}
+\end{itemize}
+\end{itemize}
+
+\subsection{Issues and Project Management}
+\begin{itemize}
+    \item Github issues will serve as the primary issue/ticket system
+    \item All subsections of each document/report will have its own issue
+    \item All new tasks and/or features will have its own issue
+    \item Issues will be classified to using labels (e.g., \texttt{documentation}, \texttt{feature}, \texttt{bug}).
+    \item Github's Kanban board will be used to monitor progress
+\end{itemize}
+
+\subsection{CI/CD Usage}
+\begin{itemize}
+    \item A CI/CD pipeline will be implemented using Github Actions.
+    \item Continuous Integration \textbf{(CI)}:
+    \begin{itemize}
+        \item Automatically build the project and run tests on every pull request.
+    \end{itemize}
+    \item Continuous Deployment \textbf{(CD)}:
+    \begin{itemize}
+        \item Deploy staging builds after merging to development branch.
+        \item Deploy production builds after merging to main branch.
+    \end{itemize}
 \end{itemize}
 
 \section{Project Decomposition and Scheduling}
