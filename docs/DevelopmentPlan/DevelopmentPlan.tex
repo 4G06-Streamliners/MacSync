@@ -153,7 +153,18 @@ Topics to discuss include the following:
 
 \section{Coding Standard}
 
-\wss{What coding standard will you adopt?}
+The team will adopt consistent coding standards to ensure readability, maintainability, and effective collaboration. For JavaScript code, the team will follow the \href{https://github.com/airbnb/javascript}{Airbnb JavaScript Style Guide}, which provides well-established conventions for formatting and best practices. Code formatting will be automated with \textbf{Prettier}, and linting will be enforced with \textbf{ESLint} to reduce inconsistencies across contributions.
+
+Naming conventions will remain uniform across the stack:
+\begin{itemize}
+  \item \texttt{camelCase} for variables and functions
+  \item \texttt{PascalCase} for React components and NestJS classes
+  \item \texttt{snake\_case} for PostgreSQL tables and column names
+\end{itemize}
+
+Beyond style rules, the team will apply \textbf{Clean Code principles} to keep the codebase simple and easy to understand. This means writing small and focused functions, choosing descriptive names, avoiding duplication, and keeping modules cohesive. Comments will be added only where necessary to clarify complex logic, with the preference being self-explanatory code.
+
+For version control, all work will be done in feature branches, with pull requests reviewed before merging into \texttt{staging} or \texttt{main}. Commit messages will follow the imperative style (for example, “Add payment processing logic”) to maintain a clear project history.
 
 \newpage{}
 
