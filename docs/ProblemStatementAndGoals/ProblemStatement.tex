@@ -2,6 +2,7 @@
 
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{array}
 
 \title{Problem Statement and Goals\\\progname}
 
@@ -61,6 +62,30 @@ Use abstraction so that you can avoid details.}
     \item Deliver a smooth, mobile-first attendee experience with push notifications and reminders.
     \item Reduce administrative burden for volunteers by consolidating tools into a single system.
 \end{itemize}
+
+\begin{table}[h!]
+\small
+\begin{tabular}{|p{3cm}|p{5cm}|p{5.5cm}|}
+\hline
+\textbf{Goal} & \textbf{Description} & \textbf{Justification} \\
+\hline
+Centralized Registration \& Ticketing & The platform must consolidate ticket purchasing, registration, and RSVPs into one place. & This eliminates confusion caused by scattered tools and ensures students always have access to the latest event information. \\
+\hline
+Payment Integration & Provide secure and flexible payment options (Stripe, Square, PayPal). & Enables students to pay quickly with widely used systems while reducing cash-handling risks for organizers. \\
+\hline
+Role-Based Access Control (RBAC/FBAC) & Implement granular permissions so organizers only see/manage the tools relevant to their role. & Reduces errors, ensures security, and improves efficiency in large event teams. \\
+\hline
+Bus \& Table Sign-ups & Allow attendees to reserve buses and tables with automatic capacity tracking. & Simplifies logistics and avoids overbooking, replacing spreadsheets and manual coordination. \\
+\hline
+Notifications \& Reminders & Send push notifications and reminders for registrations, updates, and cancellations. & Improves event memorability, prevents missed opportunities, and reduces no-shows. \\
+\hline
+Analytics \& Reporting & Provide organizers with real-time dashboards on sales, demographics, and waitlists. & Supports decision-making, improves resource allocation, and helps executives evaluate event success. \\
+\hline
+Attendee Experience & Ensure the platform is mobile-first, intuitive, and accessible. & Reduces barriers to use, supports inclusivity, and maximizes student engagement. \\
+\hline
+\end{tabular}
+\label{tab:requirements}
+\end{table}
 
 \section{Stretch Goals}
 
