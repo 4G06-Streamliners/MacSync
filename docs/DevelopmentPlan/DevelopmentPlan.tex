@@ -61,7 +61,7 @@ student developers.
 All software developed by the student team is protected under copyright law. 
 To clarify permitted use, the team has adopted the MIT License, which is included 
 in the project repository
-\href{https://github.com/4G06-team12-MacSync/demo-repository/blob/main/LICENSE}{here}. 
+\href{https://github.com/4G06-Streamliners/demo-repository/blob/main/LICENSE}{here}. 
 This license allows reuse and modification of the code, provided that the 
 original copyright notice and license terms are preserved. This ensures proper 
 attribution to the development team.
@@ -190,37 +190,46 @@ you will be able to overcome this risk?
 
 \section{Expected Technology}
 
-\wss{What programming language or languages do you expect to use?  What external
-libraries?  What frameworks?  What technologies.  Are there major components of
-the implementation that you expect you will implement, despite the existence of
-libraries that provide the required functionality.  For projects with machine
-learning, will you use pre-trained models, or be training your own model?  }
+\subsubsection*{Languages \& Frameworks} 
+The team will use \textbf{JavaScript} as the primary language across the stack. 
+The web application will be built with \textbf{Next.js (React)}, the mobile application with \textbf{React Native}, 
+and the backend will be developed using \textbf{NestJS} (chosen for its opinionated structure atop Express).
 
-\wss{The implementation decisions can, and likely will, change over the course
-of the project.  The initial documentation should be written in an abstract way;
-it should be agnostic of the implementation choices, unless the implementation
-choices are project constraints.  However, recording our initial thoughts on
-implementation helps understand the challenge level and feasibility of a
-project.  It may also help with early identification of areas where project
-members will need to augment their training.}
+\subsubsection*{Database \& ORM} 
+The database will be \textbf{PostgreSQL}, self-managed via a Docker container. 
+For database access, the team is considering \textbf{Drizzle ORM} as the shared standard across groups.
 
-Topics to discuss include the following:
+\subsubsection*{Payments} 
+Payments will be handled through \textbf{Stripe}, integrated using official SDKs. 
+Processor-specific logic will be isolated within the backend service.
 
+\subsubsection*{Selected Libraries (initial)}
 \begin{itemize}
-\item Specific programming language
-\item Specific libraries
-\item Pre-trained models
-\item Specific linter tool (if appropriate)
-\item Specific unit testing framework
-\item Investigation of code coverage measuring tools
-\item Specific plans for Continuous Integration (CI), or an explanation that CI
-  is not being done
-\item Specific performance measuring tools (like Valgrind), if
-  appropriate
-\item Tools you will likely be using?
+  \item \textbf{Frontend:} a React component library (e.g., Tailwind or Material UI) to accelerate UI development.
+  \item \textbf{Backend:} NestJS modules for routing/validation; Stripe SDK for payments; Drizzle ORM for database access.
 \end{itemize}
 
-\wss{git, GitHub and GitHub projects should be part of your technology.}
+\subsubsection*{Custom Components Expected to Be Implemented} 
+Despite the existence of some libraries, the team anticipates implementing core logic to align with project requirements:
+\begin{itemize}
+  \item \textbf{Feature-Based Access Control (FBAC)} with role templates and per-user overrides.
+  \item \textbf{Sign-up capacity/hold logic} (e.g., bus/table/RSVP) to safely manage contention and inventory.
+\end{itemize}
+
+\subsubsection*{Dev Workflow \& Tooling}
+\begin{itemize}
+  \item \textbf{Git} for version control; \textbf{GitHub} for repository management; \textbf{GitHub Projects} for task tracking.
+  \item Production hosting will be on \textbf{DigitalOcean} (school-hosted), with Postgres running in Docker.
+\end{itemize}
+
+\subsubsection*{Testing, CI/CD, and Performance} 
+The team intends to adopt a layered testing strategy:
+\begin{itemize}
+  \item \textbf{Unit tests} for backend modules (NestJS services/controllers) and React components.
+  \item \textbf{Integration tests} to validate backend endpoints against a local Postgres instance.
+  \item \textbf{End-to-end (E2E) tests} for critical flows such as checkout, sign-ups, and access control.
+\end{itemize}
+Continuous Integration will be run through \textbf{GitHub Actions}, with pipelines for linting, type-checking, running automated tests, and validating database migrations.
 
 \section{Coding Standard}
 
