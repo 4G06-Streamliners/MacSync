@@ -2,6 +2,7 @@
 
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{array}
 
 \title{Problem Statement and Goals\\\progname}
 
@@ -13,6 +14,7 @@
 \input{../Common}
 
 \begin{document}
+\sloppy
 
 \maketitle
 
@@ -31,29 +33,140 @@ Date2 & Name(s) & Description of changes\\
 
 \section{Problem Statement}
 
-\wss{You should check your problem statement with the
-\href{https://github.com/smiths/capTemplate/blob/main/docs/Checklists/ProbState-Checklist.pdf}
-{problem statement checklist}.} 
-
-\wss{You can change the section headings, as long as you include the required
-information.}
-
 \subsection{Problem}
+The McMaster Engineering Society (MES) organizes large-scale events such as Fireball Formal, Graduation Formal,
+ and Pub Nights, often drawing several hundred attendees. Currently, registration, ticketing, waiver collection,
+ and check-in processes are fragmented across multiple platforms (Google Forms, spreadsheets, Discord, Instagram,
+ etc.). This lack of centralization increases the administrative burden on student organizers and creates a
+ confusing, inconsistent experience for attendees.
+\\
+\\Students struggle to:
+\begin{itemize}
+    \item Access clear, consolidated event information.
+    \item Register efficiently for events and related logistics (tables, buses).
+    \item Receive timely updates or reminders.
+\end{itemize}
+Organizers struggle to:
+\begin{itemize}
+    \item Manage ticket sales, waitlists, and attendee data in one place.
+    \item Track accessibility/dietary requirements effectively.
+    \item Minimize repetitive manual effort across multiple tools.
+\end{itemize}
+The absence of a centralized system reduces event memorability, increases missed opportunities, and 
+wastes volunteer time that could be spent on event quality rather than administration.
 
 \subsection{Inputs and Outputs}
 
-\wss{Characterize the problem in terms of ``high level'' inputs and outputs.  
-Use abstraction so that you can avoid details.}
+\paragraph{Inputs:}
+\begin{itemize}
+    \item Student event registrations (tickets, RSVPs, bus signups, table preferences).
+    \item Waiver acknowledgements and personal details (e.g., dietary and accessibility requirements).
+    \item Payment details for ticket purchases.
+    \item Admin inputs for event setup (ticket types, capacities, schedules, notifications).
+\end{itemize}
+
+
+\paragraph{Outputs:}
+\begin{itemize}
+    \item Confirmation of event registration and digital tickets/QR codes.
+    \item Notifications and reminders about events.
+    \item Waitlist updates and allocations.
+    \item Admin dashboards showing ticket sales, attendee demographics, accessibility/dietary data, and financial tracking.
+    \item Check-in validation at event entry points.
+\end{itemize}
+
 
 \subsection{Stakeholders}
+\paragraph{Primary Stakeholders:}
+\begin{itemize}
+    \item MES Event Attendees (students): Use the platform to register, purchase tickets, receive updates,
+        and check in.
+    \item MES Event Organizers/Volunteers: Use the platform to manage events, track registrations, ticket
+     sales and payments, waivers, handle check-ins, and communicate with attendees.
+\end{itemize}
+
+\paragraph{Secondary Stakeholders:}
+\begin{itemize}
+    \item MES Executives: Oversee finances, risk management, and reporting.
+\end{itemize}
+
+\paragraph{Tertiary Stakeholders:}
+\begin{itemize}
+    \item Sponsors and partners: Interested in gaining visibility, engagement, and smooth execution.
+    \item McMaster University Administration: Indirectly involved for compliance, liability via waivers,
+     and student satisfaction.
+\end{itemize}
 
 \subsection{Environment}
+\paragraph{Hardware Environment:}
+\begin{itemize}
+    \item Attendees: Smartphones (iOS/Android) and laptops for registration, notifications, and check-in.
+    \item Organizers: Laptops/desktops for backend dashboards, mobile devices for on-site management and QR code scanning.
+\end{itemize}
 
-\wss{Hardware and Software Environment}
+\paragraph{Software Environment:}
+\begin{itemize}
+    \item Web-based admin dashboard for event creation and analytics.
+    \item Cross-platform mobile app for students (primary focus) with fallback web access.
+    \item Payment integration (e.g., Stripe, Square, Paypal).
+    \item Backend database to store user, event, and financial data.
+\end{itemize}
+
 
 \section{Goals}
 
+
+\paragraph{Centralized Registration \& Ticketing}
+\begin{itemize}
+    \item \textbf{Description:} The platform must consolidate ticket purchasing, registration, and RSVPs into one place.
+    \item \textbf{Justification:} This eliminates confusion caused by scattered tools and ensures students always have access to the latest event information.
+\end{itemize}
+
+\paragraph{Payment Integration}
+\begin{itemize}
+    \item \textbf{Description:} Provide secure and flexible payment options (Stripe, Square, PayPal).
+    \item \textbf{Justification:} Enables students to pay quickly with widely used systems while reducing cash-handling risks for organizers.
+\end{itemize}
+
+\paragraph{Role-Based Access Control (RBAC/FBAC)}
+\begin{itemize}
+    \item \textbf{Description:} Implement granular permissions so organizers only see/manage the tools relevant to their role.
+    \item \textbf{Justification:} Reduces errors, ensures security, and improves efficiency in large event teams.
+\end{itemize}
+
+\paragraph{Bus \& Table Sign-ups}
+\begin{itemize}
+    \item \textbf{Description:} Allow attendees to reserve buses and tables with automatic capacity tracking.
+    \item \textbf{Justification:} Simplifies logistics and avoids overbooking, replacing spreadsheets and manual coordination.
+\end{itemize}
+
+\paragraph{Notifications \& Reminders}
+\begin{itemize}
+    \item \textbf{Description:} Send push notifications and reminders for registrations, updates, and cancellations.
+    \item \textbf{Justification:} Improves event memorability, prevents missed opportunities, and reduces no-shows.
+\end{itemize}
+
+\paragraph{Analytics \& Reporting}
+\begin{itemize}
+    \item \textbf{Description:} Provide organizers with real-time dashboards on sales, demographics, and waitlists.
+    \item \textbf{Justification:} Supports decision-making, improves resource allocation, and helps executives evaluate event success.
+\end{itemize}
+
+\paragraph{Attendee Experience}
+\begin{itemize}
+    \item \textbf{Description:} Ensure the platform is mobile-first, intuitive, and accessible.
+    \item \textbf{Justification:} Reduces barriers to use, supports inclusivity, and maximizes student engagement.
+\end{itemize}
+
 \section{Stretch Goals}
+
+\begin{itemize}
+    \item Personalized event recommendations based on student interests.
+    \item Calendar integration (Google/Outlook/Apple).
+    \item Post-event engagement features (photo gallery, feedback surveys, lost \& found updates).
+    \item Sponsor visibility tools (logos, surveys, branded features).
+    \item Dietary/accessibility matching algorithms for meal and seating planning.
+\end{itemize}
 
 \section{Extras}
 
@@ -62,7 +175,7 @@ Use abstraction so that you can avoid details.}
     \item User documentation for both attendees and admin organizers.
 \end{itemize}
 
-\newpage{}
+\newpage
 
 \section*{Appendix --- Reflection}
 
