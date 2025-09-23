@@ -40,55 +40,135 @@ what is contained in the report.}
 
 \section{Confidential Information?}
 
-\wss{State whether your project has confidential information from industry, or
-not.  If there is confidential information, point to the agreement you have in
-place.}
+This project does not involve the use or disclosure of confidential information 
+from any industry partner. All requirements, specifications, and implementation 
+details have been developed by the student team. As there is no industry-provided proprietary data 
+or trade secrets involved, no Non-Disclosure Agreement (NDA) is required. 
 
-\wss{For most teams this section will just state that there is no confidential
-information to protect.}
 \section{IP to Protect}
 
-\wss{State whether there is IP to protect.  If there is, point to the agreement.
-All students who are working on a project that requires an IP agreement are also
-required to sign the ``Intellectual Property Guide Acknowledgement.''}
+All intellectual property (IP) generated as part of this project is owned by the 
+student team, in accordance with McMaster University’s policies on ownership of 
+student work. Since the project is not sponsored by an external industry partner, 
+no Intellectual Property Guide Acknowledgement form is required. To enable the 
+intended use of the system, the student team will grant the McMaster Engineering 
+Society a non-exclusive license to operate and maintain the software for its 
+events and activities. Ownership of the underlying source code remains with the 
+student developers. 
 
 \section{Copyright License}
 
-\wss{What copyright license is your team adopting.  Point to the license in your
-repo.}
+All software developed by the student team is protected under copyright law. 
+To clarify permitted use, the team has adopted the MIT License, which is included 
+in the project repository
+\href{https://github.com/4G06-Streamliners/demo-repository/blob/main/LICENSE}{here}. 
+This license allows reuse and modification of the code, provided that the 
+original copyright notice and license terms are preserved. This ensures proper 
+attribution to the development team.
 
 \section{Team Meeting Plan}
+The team will meet twice a week. Once online on Monday, from 9:30pm to 10:30pm, to discuss details on work to complete during the week. The second time will be from 5:00pm to 6:30pm to discuss progress, roadblocks, or any issues where assistance is required. This meeting will be online on the weeks there are no in-person progress check-ins and in-person otherwise. \vspace{1em}
 
-\wss{How often will you meet? where?}
+The team will meet with the industry advisor online every week on Wednesday during the 4G06 tutorial time from 4:30pm to 5:00pm. This meeting will be to discuss project updates, clear up confusion, and ask for help if needed. \vspace{1em}
 
-\wss{If the meeting is a physical location (not virtual), out of an abundance of
-caution for safety reasons you shouldn't put the location online}
+Before all meetings, an agenda will be provided. The agenda will cover the main discussion points to guide the conversation in meetings. All meetings will be structured with project updates provided by all team members first, then an update on any roadblocks or issues that need to be dealt with. The end of the meeting will focus on developing a plan for next steps, assigning tasks to each member, and defining an agenda for the next meeting. At the end of the meeting, a record of the meeting minutes will be provided by the chair of the meeting to keep the team accountable for their tasks.
 
-\wss{How often will you meet with your industry advisor?  when?  where?}
 
-\wss{Will meetings be virtual?  At least some meetings should likely be
-in-person.}
 
-\wss{How will the meetings be structured?  There should be a chair for all meetings.  There should be an agenda for all meetings.}
+
 
 \section{Team Communication Plan}
 
-\wss{Issues on GitHub should be part of your communication plan.}
+\begin{flushleft}
+\textbf{Main Objectives:} The main objective of the team communication plan is to ensure the team is updated on the tasks they have to complete, the current project progress and the deadlines for completing their tasks. This is to ensure all members are accountable for the progress of the project.\vspace{1em}
+
+\textbf{Communication Platform:} The team's main form of communication will be through Discord for quick updates, project reminders, discussions on division of labour for milestones and getting help for issues faced.\vspace{1em}
+
+\textbf{Response Times:} Maximum 12 hours response time for any form of communication from accepting github issue assignments to message responses on Discord.\vspace{1em}
+
+\textbf{GitHub Issue Tracking:}
+\begin{itemize}
+    \item Creation of Issues: Issues will be created for every project task, defect or feature and will be linked to the Kanban board.
+    \item Issue Assignment: Issues will be assigned to team members based on interest and group consensus. 
+    \item Issue Updates: Issue progress will need to be updated in the Kanban board by dragging into “In Progress” state or “Review” state.
+    \item Issue Reviews and Closure: Issues will be reviewed by the team to ensure quality standards are met and will then be merged and closed after consensus is reached.
+\end{itemize}
+
+\textbf{Conflict Resolution:} Disagreements on responsibilities, division of tasks or ideas escalated to the entirety of the team for a vote to decide on next steps. Final escalation to project supervisor if no consensus reached.
+
+\end{flushleft}
+
 
 \section{Team Member Roles}
 
-\wss{You should identify the types of roles you anticipate, like notetaker,
-leader, meeting chair, reviewer.  Assigning specific people to those roles is
-not necessary at this stage.  In a student team the role of the individuals will
-likely change throughout the year.}
+\begin{enumerate}
+    \item \textbf{Leader: Farhan} \\
+    Responsibilities: Leading team discussions with open-ended questions and guiding team direction to achieve goals.
+    \item \textbf{Organizer/Reviewer: Ali} \\
+    Responsibilities: Keeping the team on track for project milestones and deadlines and making sure the quality of work meets team standards. \\
+    \item \textbf{Editor: Abyan}
+    Responsibilities: Preparing final versions of deliverables and proofreading documents to ensure consistency and accuracy. \\
+    \item \textbf{Notetaker/Meeting chair: Prerna} 
+    Responsibilities: Gathering important information from lectures and tutorials and recording meeting notes to record and summarize project progress. \\
+    \item \textbf{Trouble-shooter: Mahad}
+    Responsibilities: Help resolve issues and challenges faced by the team and analyze problems and criteria to figure out solutions.
+\end{enumerate}
+
+
+
+
 
 \section{Workflow Plan}
 
+\subsection{Git Usage}
 \begin{itemize}
-	\item How will you be using git, including branches, pull request, etc.?
-	\item How will you be managing issues, including template issues, issue
-	classification, etc.?
-  \item Use of CI/CD
+	\item Github will be used as the primary version control system (VCS).
+    \item All commits must be made to a non-master branch and submitted via a pull request before they can be merged.
+    \item Branching Strategy: \begin{itemize}
+    \item Main branch: Stable production-ready code waiting for a release.
+    \item Documentation branches: Used to maintain and update project documentation and requirements.
+        \begin{itemize}
+            \item Notation: \texttt{docs/SL-<Issue\#>}
+        \end{itemize}
+
+    \item Development branch: Integration branch where all new features and bug fixes are merged. This branch will contain the latest features with the most up-to-date code. 
+        \begin{itemize}
+            \item Notation: \texttt{dev}
+        \end{itemize}
+
+    \item Feature branches: Used to develop and test new features before merging into the development branch. 
+        \begin{itemize}
+            \item Notation: \texttt{feature/SL-<Issue\#>}
+        \end{itemize}
+
+    \item Bugfix branches: Used to fix defects.
+        \begin{itemize}
+            \item Notation: \texttt{bugfix/SL-<Issue\#>}
+        \end{itemize}
+\end{itemize}
+\end{itemize}
+
+\subsection{Issues and Project Management}
+\begin{itemize}
+    \item Github issues will serve as the primary issue/ticket system
+    \item All subsections of each document/report will have its own issue
+    \item All new tasks and/or features will have its own issue
+    \item Issues will be classified to using labels (e.g., \texttt{documentation}, \texttt{feature}, \texttt{bug}).
+    \item Github's Kanban board will be used to monitor progress
+\end{itemize}
+
+\subsection{CI/CD Usage}
+\begin{itemize}
+    \item A CI/CD pipeline will be implemented using Github Actions.
+    \item Continuous Integration \textbf{(CI)}:
+    \begin{itemize}
+        \item Automatically build the project and run tests on every pull request.
+    \end{itemize}
+    \item Continuous Deployment \textbf{(CD)}:
+    \begin{itemize}
+        \item Deploy staging builds after merging to development branch.
+        \item Deploy production builds after merging to main branch.
+    \end{itemize}
 \end{itemize}
 
 \section{Project Decomposition and Scheduling}
@@ -110,131 +190,176 @@ you will be able to overcome this risk?
 
 \section{Expected Technology}
 
-\wss{What programming language or languages do you expect to use?  What external
-libraries?  What frameworks?  What technologies.  Are there major components of
-the implementation that you expect you will implement, despite the existence of
-libraries that provide the required functionality.  For projects with machine
-learning, will you use pre-trained models, or be training your own model?  }
+\subsubsection*{Languages \& Frameworks} 
+The team will use \textbf{JavaScript} as the primary language across the stack. 
+The web application will be built with \textbf{Next.js (React)}, the mobile application with \textbf{React Native}, 
+and the backend will be developed using \textbf{NestJS} (chosen for its opinionated structure atop Express).
 
-\wss{The implementation decisions can, and likely will, change over the course
-of the project.  The initial documentation should be written in an abstract way;
-it should be agnostic of the implementation choices, unless the implementation
-choices are project constraints.  However, recording our initial thoughts on
-implementation helps understand the challenge level and feasibility of a
-project.  It may also help with early identification of areas where project
-members will need to augment their training.}
+\subsubsection*{Database \& ORM} 
+The database will be \textbf{PostgreSQL}, self-managed via a Docker container. 
+For database access, the team is considering \textbf{Drizzle ORM} as the shared standard across groups.
 
-Topics to discuss include the following:
+\subsubsection*{Payments} 
+Payments will be handled through \textbf{Stripe}, integrated using official SDKs. 
+Processor-specific logic will be isolated within the backend service.
 
+\subsubsection*{Selected Libraries (initial)}
 \begin{itemize}
-\item Specific programming language
-\item Specific libraries
-\item Pre-trained models
-\item Specific linter tool (if appropriate)
-\item Specific unit testing framework
-\item Investigation of code coverage measuring tools
-\item Specific plans for Continuous Integration (CI), or an explanation that CI
-  is not being done
-\item Specific performance measuring tools (like Valgrind), if
-  appropriate
-\item Tools you will likely be using?
+  \item \textbf{Frontend:} a React component library (e.g., Tailwind or Material UI) to accelerate UI development.
+  \item \textbf{Backend:} NestJS modules for routing/validation; Stripe SDK for payments; Drizzle ORM for database access.
 \end{itemize}
 
-\wss{git, GitHub and GitHub projects should be part of your technology.}
+\subsubsection*{Custom Components Expected to Be Implemented} 
+Despite the existence of some libraries, the team anticipates implementing core logic to align with project requirements:
+\begin{itemize}
+  \item \textbf{Feature-Based Access Control (FBAC)} with role templates and per-user overrides.
+  \item \textbf{Sign-up capacity/hold logic} (e.g., bus/table/RSVP) to safely manage contention and inventory.
+\end{itemize}
+
+\subsubsection*{Dev Workflow \& Tooling}
+\begin{itemize}
+  \item \textbf{Git} for version control; \textbf{GitHub} for repository management; \textbf{GitHub Projects} for task tracking.
+  \item Production hosting will be on \textbf{DigitalOcean} (school-hosted), with Postgres running in Docker.
+\end{itemize}
+
+\subsubsection*{Testing, CI/CD, and Performance} 
+The team intends to adopt a layered testing strategy:
+\begin{itemize}
+  \item \textbf{Unit tests} for backend modules (NestJS services/controllers) and React components.
+  \item \textbf{Integration tests} to validate backend endpoints against a local Postgres instance.
+  \item \textbf{End-to-end (E2E) tests} for critical flows such as checkout, sign-ups, and access control.
+\end{itemize}
+Continuous Integration will be run through \textbf{GitHub Actions}, with pipelines for linting, type-checking, running automated tests, and validating database migrations.
 
 \section{Coding Standard}
 
-\wss{What coding standard will you adopt?}
+The team will adopt consistent coding standards to ensure readability, maintainability, and effective collaboration. For JavaScript code, the team will follow the \href{https://github.com/airbnb/javascript}{Airbnb JavaScript Style Guide}, which provides well-established conventions for formatting and best practices. Code formatting will be automated with \textbf{Prettier}, and linting will be enforced with \textbf{ESLint} to reduce inconsistencies across contributions.
+
+Naming conventions will remain uniform across the stack:
+\begin{itemize}
+  \item \texttt{camelCase} for variables and functions
+  \item \texttt{PascalCase} for React components and NestJS classes
+  \item \texttt{snake\_case} for PostgreSQL tables and column names
+\end{itemize}
+
+Beyond style rules, the team will apply \textbf{Clean Code principles} to keep the codebase simple and easy to understand. This means writing small and focused functions, choosing descriptive names, avoiding duplication, and keeping modules cohesive. Comments will be added only where necessary to clarify complex logic, with the preference being self-explanatory code.
+
+For version control, all work will be done in feature branches, with pull requests reviewed before merging into \texttt{staging} or \texttt{main}. Commit messages will follow the imperative style (for example, “Add payment processing logic”) to maintain a clear project history.
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
 
-\wss{Not required for CAS 741}
-
-\input{../Reflection.tex}
-
 \begin{enumerate}
     \item Why is it important to create a development plan prior to starting the
     project?
+
+    Creating a development plan helped the team align on goals, expectations, and responsibilities before beginning development. Because this project spans multiple groups, documenting decisions early established a common foundation and reduced the risk of misunderstandings later. It also encouraged us to think ahead about technologies, workflows, and risks, which gave the team more confidence moving into implementation.
+    
     \item In your opinion, what are the advantages and disadvantages of using
     CI/CD?
+
+    The advantages of CI/CD include automated testing, faster feedback, and reduced integration issues. It helps ensure that code changes are validated continuously, which improves reliability and makes collaboration smoother. On the other hand, the disadvantages are the upfront setup effort and the need for ongoing maintenance of pipelines. For a student project with limited time, the main challenge is balancing the investment in CI/CD with the need to deliver features quickly.
+    
     \item What disagreements did your group have in this deliverable, if any,
     and how did you resolve them?
+   
+    The team did not have any major disagreements, but there were discussions around which ORM should be used. Some members had experience with Prisma, while others were interested in Drizzle for its modern features and close mapping to SQL. After reviewing the trade-offs together and following up with the mentors for additional guidance, the team decided to move forward with Drizzle as the preferred option. This process allowed the team to weigh different perspectives while still keeping flexibility in case future integration across groups requires adjustments.
 \end{enumerate}
+
+\noindent
+\textbf{Overall, this deliverable reinforced the importance of careful planning, open communication, and collaborative decision-making.} By documenting our expectations early, reflecting on the role of CI/CD, and carefully weighing options for the technology stack, the team not only produced a development plan but also practiced the skills needed to sustain long-term teamwork. These lessons will continue to shape how we approach challenges in the later stages of the project.
 
 \newpage{}
 
 \section*{Appendix --- Team Charter}
 
-\wss{borrows from
-\href{https://engineering.up.edu/industry_partnerships/files/team-charter.pdf}
-{University of Portland Team Charter}}
-
 \subsection*{External Goals}
+\begin{itemize}
+    \item Secure a grade of A+ in 4G06.
+    \item Gain real-world experience in areas of project management, teamwork and shipping projects.
+    \item Create a strong portfolio project that has a large user base and can be discussed in interviews.  
+\end{itemize}
 
-\wss{What are your team's external goals for this project? These are not the
-goals related to the functionality or quality fo the project.  These are the
-goals on what the team wishes to achieve with the project.  Potential goals are
-to win a prize at the Capstone EXPO, or to have something to talk about in
-interviews, or to get an A+, etc.}
 
 \subsection*{Attendance}
 
 \subsubsection*{Expectations}
-
-\wss{What are your team's expectations regarding meeting attendance (being on
-time, leaving early, missing meetings, etc.)?}
+\begin{itemize}
+    \item All members are expected to attend all scheduled meetings either in-person or online.
+    \item All members are expected to be on time for meetings and remain present for the duration of the meeting.
+    \item All members are expected to notify the team 24 hours beforehand if they are unable to attend meetings.
+\end{itemize}
 
 \subsubsection*{Acceptable Excuse}
-
-\wss{What constitutes an acceptable excuse for missing a meeting or a deadline?
-What types of excuses will not be considered acceptable?}
+Acceptable excuses for missing meetings or deadlines include the following:
+\begin{itemize}
+    \item Family emergency
+    \item Health issues
+    \item Medical appointments
+\end{itemize}
+Unacceptable excuses for missing meetings or deadlines include the following:
+\begin{itemize}
+    \item Forgetting about meetings
+    \item Oversleeping
+\end{itemize}
 
 \subsubsection*{In Case of Emergency}
+\begin{itemize}
+    \item If the emergency affects the members ability to attend a meeting, they must notify the group immediately or as soon as possible after the emergency.
+    \item If the emergency affects completion of work, the member must communicate explicitly what work is done and what remains so the team can decide on the division of labour or a plan to catch-up.
+\end{itemize}
 
-\wss{What process will team members follow if they have an emergency and cannot
-attend a team meeting or complete their individual work promised for a team
-deliverable?}
 
 \subsection*{Accountability and Teamwork}
 
 \subsubsection*{Quality} 
-
-\wss{What are your team's expectations regarding the quality
-of team members' preparation for team meetings and the quality of the
-deliverables that members bring to the team?}
+\begin{itemize}
+    \item All members must come to meetings prepared with progress updates on their tasks.
+    \item Deliverables should be well-organized and reviewed before they are shared with the team.
+    \item Contributions in the code repository must follow team standards for readability and documentation.
+\end{itemize}
 
 \subsubsection*{Attitude}
-
-\wss{What are your team's expectations regarding team members' ideas,
-interactions with the team, cooperation, attitudes, and anything else regarding
-team member contributions?  Do you want to introduce a code of conduct?  Do you
-want a conflict resolution plan?  Can adopt existing codes of conduct.}
+\begin{itemize}
+    \item All members must listen actively to all other members and avoid passive or dismissive behavior.
+    \item All members should respect all ideas and viewpoints without judgment.
+    \item All members are encouraged to share their ideas openly.
+    \item All members must adopt a simple code of conduct revolving on principles of respect, communication and collaboration.
+    \item Conflicts must be resolved respectfully and if unresolved will be escalated to the TA.
+\end{itemize}
 
 \subsubsection*{Stay on Track}
-
-\wss{What methods will be used to keep the team on track? How will your team
-ensure that members contribute as expected to the team and that the team
-performs as expected? How will your team reward members who do well and manage
-members whose performance is below expectations?  What are the consequences for
-someone not contributing their fair share?}
-
-\wss{You may wish to use the project management metrics collected for the TA and
-instructor for this.}
-
-\wss{You can set target metrics for attendance, commits, etc.  What are the
-consequences if someone doesn't hit their targets?  Do they need to bring the
-coffee to the next team meeting?  Does the team need to make an appointment with
-their TA, or the instructor?  Are there incentives for reaching targets early?}
+\begin{itemize}
+    \item Weekly progress check-ins where members discuss what they completed and next steps will be used to keep the team on track. 
+    \item GitHub Issues and commits will be used to ensure members contribute as expected.
+    
+    \item Metrics: \begin{itemize}
+        \item An attendance rate of 100\% is expected from all members unless an excuse is deemed valid and acceptable by the team.
+        \item Consistent GitHub activity is expected per week with issues in progress or items being committed for review.
+        \item On-time delivery of tasks on assigned deadlines.
+    \end{itemize}
+    \item Rewards: \begin{itemize}
+        \item Members who reach targets early or who do well overall will be rewarded with acknowledgments of being strong contributors. \end{itemize}
+    \item Consequences: \begin{itemize}
+        \item First time incident will be a verbal reminder.
+        \item Second time will result in a discussion with the TA.
+        \item Third time and more will result in escalation to the course instructor.
+    \end{itemize}
+\end{itemize}
 
 \subsubsection*{Team Building}
-
-\wss{How will you build team cohesion (fun time, group rituals, etc.)? }
+\begin{itemize}
+    \item Start meetings with small talk and conversations to get to know each other and maintain team connection.
+    \item Doing a group ritual of small activities like board games or lunch to celebrate milestone deliveries.
+\end{itemize}
 
 \subsubsection*{Decision Making} 
+\begin{itemize}
+    \item Initial plan will be to reach consensus when possible.
+    \item If consensus cannot be reached, opt for a majority vote.
+    \item If disagreements still exist within the team if consensus and majority vote leaves members unsatisfied, involve the TA for handling disagreements.
+\end{itemize}
 
-\wss{How will you make decisions in your group? Consensus?  Vote? How will you
-handle disagreements? }
 
 \end{document}
