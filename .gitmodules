@@ -1,0 +1,3 @@
+[submodule "docs/SRS"]
+	path = docs/SRS
+	url = https://github.com/4G06-Streamliners/MacSync-SRS
