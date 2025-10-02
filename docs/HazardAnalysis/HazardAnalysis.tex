@@ -36,7 +36,8 @@
 \toprule
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
-Date1 & Name(s) & Description of changes\\
+2025-10-02 & Abyan & Scope and Purpose\\
+2025-10-02 & Farhan & Critical assumptions made for the project\\
 2025-10-01 & Prerna & Initial draft of safety and security requirements\\
 ... & ... & ...\\
 \bottomrule
@@ -59,8 +60,40 @@ Date1 & Name(s) & Description of changes\\
 
 \section{Scope and Purpose of Hazard Analysis}
 
-\wss{You should say what \textbf{loss} could be incurred because of the
-hazards.}
+
+The purpose of this hazard analysis is to identify and evaluate potential hazards that could arise during 
+the development and operation of the Large Event Management System (LEMS). Since LEMS is a 
+software-based platform that supports event registration, ticketing, payments, and participant 
+management, hazards are primarily related to data integrity, system availability, security, and user 
+interactions. By analyzing these risks early, the project team can define mitigation strategies, 
+incorporate safety and security requirements into the design, and reduce the likelihood of 
+organizational or reputational harm.
+
+\par
+\vspace{1em}
+
+The scope of this analysis covers all major components of LEMS, including the backend services, 
+web and mobile applications, and the database. It considers hazards introduced by user error, software 
+defects, integration failures across modules, and security vulnerabilities. Hazards that fall outside the 
+team’s control, such as third-party cloud hosting failures or issues with external payment providers 
+(e.g., Stripe), are acknowledged but not analyzed in detail.
+
+\par
+\vspace{1em}
+
+The goals of this hazard analysis are:
+\begin{itemize}
+  \item To proactively identify risks related to security, data integrity, privacy, and availability in LEMS.
+  \item To evaluate the potential consequences of failures, such as data loss, financial errors, or 
+        unauthorized access to sensitive information.
+  \item To define mitigations or controls that reduce these risks to acceptable levels.
+  \item To guide architectural and design decisions and support the definition of non-functional 
+        requirements such as reliability, security, and maintainability.
+\end{itemize}
+
+This hazard analysis will be refined as the project design evolves, ensuring that new risks are 
+addressed as they emerge. It is part of the broader quality assurance process and ensures that LEMS 
+meets the standards of safety, security, and reliability expected by the McMaster Engineering Society.
 
 \section{System Boundaries and Components}
 
@@ -72,10 +105,22 @@ important library, these are also potential components.}
 
 \section{Critical Assumptions}
 
-\wss{These assumptions that are made about the software or system.  You should
-minimize the number of assumptions that remove potential hazards.  For instance,
-you could assume a part will never fail, but it is generally better to include
-this potential failure mode.}
+The following assumptions have been identified as critical to the safe and reliable operation of the MacSync platform.
+
+\begin{itemize}
+    \item \textbf{Reliable Internet Access:} It is assumed that both attendees and organizers will have access to stable internet connections during registration, payment, and check-in. While temporary connectivity loss may occur, the system must handle these cases gracefully.
+    
+    \item \textbf{Third-Party Service Availability:} The platform depends on external services such as payment processors (e.g., Stripe, PayPal) and hosting infrastructure. It is assumed these services provide high availability, but the system will still account for outages or delays to prevent complete operational failure.
+    
+    \item \textbf{Device Compatibility:} It is assumed that attendees will primarily use modern smartphones and organizers will have access to laptops or mobile devices capable of running the dashboard. Reliance on outdated devices or unsupported browsers must be minimized through compatibility testing.
+    
+    \item \textbf{User Data Accuracy:} The system assumes that users provide correct information (e.g., dietary restrictions, accessibility needs, payment details). However, hazards tied to incorrect or incomplete inputs will be addressed by validation checks.
+    
+    \item \textbf{Organizational Oversight:} It is assumed that event organizers will actively monitor the system for anomalies (e.g., payment disputes, capacity errors, failed notifications). This system will assist and automate many of the tasks and centralize information, but human oversight is still necessary to manage unexpected situations.
+    
+    \item \textbf{Security Measures:} It is assumed that standard security practices (encrypted storage, secure authentication, and role-based access control) will be implemented and maintained. Failure to enforce these could expose sensitive student data or enable fraudulent event access.
+\end{itemize}
+
 
 \section{Failure Mode and Effect Analysis}
 
