@@ -59,8 +59,40 @@ Date2 & Name(s) & Description of changes\\
 
 \section{Scope and Purpose of Hazard Analysis}
 
-\wss{You should say what \textbf{loss} could be incurred because of the
-hazards.}
+
+The purpose of this hazard analysis is to identify and evaluate potential hazards that could arise during 
+the development and operation of the Large Event Management System (LEMS). Since LEMS is a 
+software-based platform that supports event registration, ticketing, payments, and participant 
+management, hazards are primarily related to data integrity, system availability, security, and user 
+interactions. By analyzing these risks early, the project team can define mitigation strategies, 
+incorporate safety and security requirements into the design, and reduce the likelihood of 
+organizational or reputational harm.
+
+\par
+\vspace{1em}
+
+The scope of this analysis covers all major components of LEMS, including the backend services, 
+web and mobile applications, and the database. It considers hazards introduced by user error, software 
+defects, integration failures across modules, and security vulnerabilities. Hazards that fall outside the 
+team’s control, such as third-party cloud hosting failures or issues with external payment providers 
+(e.g., Stripe), are acknowledged but not analyzed in detail.
+
+\par
+\vspace{1em}
+
+The goals of this hazard analysis are:
+\begin{itemize}
+  \item To proactively identify risks related to security, data integrity, privacy, and availability in LEMS.
+  \item To evaluate the potential consequences of failures, such as data loss, financial errors, or 
+        unauthorized access to sensitive information.
+  \item To define mitigations or controls that reduce these risks to acceptable levels.
+  \item To guide architectural and design decisions and support the definition of non-functional 
+        requirements such as reliability, security, and maintainability.
+\end{itemize}
+
+This hazard analysis will be refined as the project design evolves, ensuring that new risks are 
+addressed as they emerge. It is part of the broader quality assurance process and ensures that LEMS 
+meets the standards of safety, security, and reliability expected by the McMaster Engineering Society.
 
 \section{System Boundaries and Components}
 
