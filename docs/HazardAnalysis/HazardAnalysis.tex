@@ -38,6 +38,7 @@
 \midrule
 2025-10-02 & Abyan & Scope and Purpose\\
 2025-10-02 & Farhan & Critical assumptions made for the project\\
+2025-10-01 & Prerna & Add initial version of introduction\\
 Date2 & Name(s) & Description of changes\\
 ... & ... & ...\\
 \bottomrule
@@ -52,11 +53,44 @@ Date2 & Name(s) & Description of changes\\
 
 \pagenumbering{arabic}
 
-\wss{You are free to modify this template.}
 
 \section{Introduction}
 
-\wss{You can include your definition of what a hazard is here.}
+This document outlines the hazard analysis of the \textbf{Large Event Management System (LEMS)} for the McMaster
+Engineering Society (MES). The LEMS is a centralized platform designed to streamline event workflows such as
+ \textbf{ticket sales, registrations, waivers, payments, bus/table sign-ups, notifications, and event check-ins}.'
+\newline
+
+\noindent
+For this deliverable, the analysis will specifically focus on the features within the scope of \textbf{Project B} which include:
+
+\begin{itemize}
+    \item Payment System
+    \item Role-Centric/Feature-Based Access Control (RBAC/FBAC)
+    \item Bus Sign-Ups
+    \item RSVP Sign-Ups
+    \item Table Sign-Ups
+\end{itemize}
+
+\noindent
+Hazards in this system refer to conditions or failures that may lead to financial loss, security/privacy breaches,
+accessibility failures, or reputational damage for MES and McMaster University. While the system does not directly
+involve hardware or pose risks of physical harm, software risks are significant. These include data loss, payment
+errors, registration corruption, check-in failures, and unauthorized access to sensitive information.
+\newline
+
+\noindent
+The purpose of this hazard analysis is to:
+
+\begin{itemize}
+    \item Identify risks associated with the Payment, Access Control, and Signup modules.
+    \item Define their potential impacts on users, organizers, and the MES organization.
+    \item Introduce mitigation strategies by specifying safety and security requirements that
+     will guide system design and implementation.
+\end{itemize}
+
+\noindent
+By proactively addressing these hazards, this analysis ensures the system will be reliable, secure, accessible, and trustworthy for both organizers and attendees.
 
 \section{Scope and Purpose of Hazard Analysis}
 
