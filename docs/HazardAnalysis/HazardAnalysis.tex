@@ -131,11 +131,23 @@ meets the standards of safety, security, and reliability expected by the McMaste
 
 \section{System Boundaries and Components}
 
-\wss{Dividing the system into components will help you brainstorm the hazards.
-You shouldn't do a full design of the components, just get a feel for the major
-ones.  For projects that involve hardware, the components will typically include
-each individual piece of hardware.  If your software will have a database, or an
-important library, these are also potential components.}
+The MacSync platform system that the hazard analysis will be conducted on consists of:
+\begin{enumerate}
+    \item The application that is both web and mobile based, which includes the front-end and back-end made up of the following major components:
+    \begin{itemize}
+        \item Dashboards (User and Admin)
+        \item Payment System
+        \item Authentication (Role/Feature Based Access Control)
+        \item RSVP Sign-Ups
+        \item Bus Sign-Ups
+        \item Table Sign-Ups
+    \end{itemize}
+    \item The PostgreSQL database where all user, admin, event and transaction data will be stored.
+    \item The payment module that interfaces with external payment gateways to process ticket payments and refunds.
+    \item The notification service that sends automated emails and notifications to users for event details and payment receipts.
+\end{enumerate}
+
+The system boundary in the case of the MacSync platform includes components necessary to support event operations for the MES, which includes the entire application, both web and mobile based, along with their subcomponents, the database, payment gateway and notification service. The payment and notification services are controlled by external providers. The payment is controlled by Stripe and the notification service is controlled by Microsoft. However, they remain critical to the function of the system and the overall operation of the platform and thus fall within the system boundary.
 
 \section{Critical Assumptions}
 
