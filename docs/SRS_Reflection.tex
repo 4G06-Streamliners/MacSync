@@ -1,20 +1,75 @@
 \begin{enumerate}
-  \item What went well while writing this deliverable? 
-  \item What pain points did you experience during this deliverable, and how did
-  you resolve them?
-  \item How many of your requirements were inspired by speaking to your
-  client(s) or their proxies (e.g. your peers, stakeholders, potential users)?
-  \item Which of the courses you have taken, or are currently taking, will help
-  your team to be successful with your capstone project.
-  \item What knowledge and skills will the team collectively need to acquire to
-  successfully complete this capstone project?  Examples of possible knowledge
-  to acquire include domain specific knowledge from the domain of your
-  application, or software engineering knowledge, mechatronics knowledge or
-  computer science knowledge.  Skills may be related to technology, or writing,
-  or presentation, or team management, etc.  You should look to identify at
-  least one item for each team member.
-  \item For each of the knowledge areas and skills identified in the previous
-  question, what are at least two approaches to acquiring the knowledge or
-  mastering the skill?  Of the identified approaches, which will each team
-  member pursue, and why did they make this choice?
+  \item \textbf{What went well while writing this deliverable?} \\ 
+  During this deliverable, we organized a meeting to talk to the rest of the team prior to starting the deliverable and divided the work evenly between us. This worked really well, and we made sure we each had parts in the Hazard Analysis and the SRS document so that we all had a good understanding of both documents. We could ask each other for more information or help on any of the parts that we were working on. We were all in the loop and it wasn’t like only one person was working on the whole document while the others didn’t look at it at all. This worked better than the first deliverable. We also had the ability to discuss the strengths or weaknesses we may have had when writing a similar deliverable in our previous 3RA3 class and what each of us may have more understanding or knowledge on to focus on certain parts of the deliverable.
+
+  \item \textbf{What pain points did you experience during this deliverable, and how did you resolve them?} \\ 
+  One of the initial pain points we experienced was dividing the work evenly since it was difficult to gauge the amount of work each task in the deliverable would be and dividing it evenly amongst the team members. From previous experiences with SRS documentation deliverables in 3RA3, we knew some of them were more work or more difficult than others. So initially, we needed to spend a little bit more time looking into each of the tasks to divide them evenly.\\
+  Additionally, when we originally worked on this template and deliverable in our previous requirements course, we worked on this document throughout the duration of the course (approximately a bit more than 3 months). Whereas for this deliverable, we had 2 weeks to work on it alongside other coursework, midterms, and another document that was part of the deliverable, making it a time crunch and requiring us to organize our time effectively.\\
+  Another pain point was that some of our work relied on another team member’s assigned tasks, so even if we had organized time to work on it, if another team member had not completed their assigned tasks, it would be difficult to work on the task we were assigned, leaving gaps or waiting until they completed their parts.
+
+  \item \textbf{How many of your requirements were inspired by speaking to your client(s) or their proxies (e.g. your peers, stakeholders, potential users)?} \\ 
+  A large portion of our requirements came directly from our own experiences and from talking to peers who attend or organize MES events. Since some of us have already been to MES events or similar events with other clubs, we already understood the main frustrations with registration, payments, and communication. We also talked to current MES members and past event volunteers to confirm what the biggest administrative challenges were. These conversations helped shape many of our requirements in addition to the information we had already been given for the main features we would be focusing on for our subproject.\\
+  For example, they mentioned the need for a centralized registration system, push notifications, and automated waiver tracking. So while we didn’t have a single external client, most of our requirements were influenced by real stakeholder feedback and our shared experience as both attendees and organizers. Additionally, while working on a similar project for our Human Centered Interface Design course, we had the ability to talk to other students and gauge their feedback and struggles that they faced, as well as any additional requirements or features they thought would be important.
+
+  \item \textbf{Which of the courses you have taken, or are currently taking, will help your team to be successful with your capstone project?} \\ 
+  All of us have taken the requirements course: 3RA3, which has helped us significantly with the SRS documentation for this deliverable as it taught us how to structure requirements, define stakeholders, and briefly covered hazard and verification plans. It made the SRS deliverable something we were more familiar with compared to some of the other deliverables that were new.\\
+  We have also all taken 3A04, the software design course, which will help us structure and develop the actual application for our part of the project and help us work with other teams and merge the parts together. It helped us understand modular architecture and how to plan system components and interfaces, which is key for building our event management platform.\\
+  Additionally, all of us have taken 2AA4, which was an introduction to software development. This will allow us to work better as a team and work on features simultaneously in an iterative and incremental approach, being able to separate features and create a minimum viable product for the project. It was the first major course where we developed a large project in groups, dividing features, and building each milestone on top of the previous one.\\
+  The software testing course we took, 3S03, will also help us with the testing approaches we can use for our project.\\
+  We are also all currently taking 4HC3, the human centered design course, where we are in the same team and working on a similar project. It is teaching us about putting user needs first and is helping us learn more about our stakeholders and how they will utilize and interact with the product and the pain points they have. It also helps us receive additional feedback from TAs and other students to improve our deliverables and the application we are working on.
+
+  \item \textbf{What knowledge and skills will the team collectively need to acquire to successfully complete this capstone project?} \\ 
+  \begin{itemize}
+    \item \textbf{GitHub and Version Control (Collaboration – all team members):} Improve branch management, issue tracking, and merge request handling to avoid code conflicts and maintain an organized workflow.
+    \item \textbf{Testing and Debugging Skills:} Proficiency in building unit tests, integration and usability testing, and debugging code and system workflows.
+    \item \textbf{Project Management and Documentation:} At least one team member needs to lead the project as a liaison, manage workflow, team collaboration, workload division, and communication.
+    \item \textbf{Payment Gateway Integration:} At least one team member needs to learn how to securely integrate Stripe, Square, or PayPal APIs for handling transactions.
+    \item \textbf{Databases and Security:} At least one team member needs strong skills in database management (SQL/NoSQL), secure deployment, and data encryption.
+    \item \textbf{Software Architecture and Design:} At least one team member needs strong skills in software architecture and system design, with others maintaining a solid understanding.
+  \end{itemize}
+
+  \item \textbf{For each of the knowledge areas and skills identified in the previous question, what are at least two approaches to acquiring the knowledge or mastering the skill? Of the identified approaches, which will each team member pursue, and why did they make this choice?} \\ 
+  \begin{itemize}
+    \item \textbf{Payment Gateway Integration:}
+      \begin{enumerate}
+        \item Complete official Stripe/Square/PayPal developer tutorials.
+        \item Review open-source repositories with working payment modules.
+      \end{enumerate}
+      The team will also build a small test integration using sandbox credentials to fully understand how it works and its security mechanisms.
+
+    \item \textbf{Database and Security:}
+      \begin{enumerate}
+        \item Deploy small test environments on AWS, Firebase, or SQL systems.
+        \item Take short online courses on secure data management and review course material from 3DB3.
+      \end{enumerate}
+
+    \item \textbf{Project Management and Documentation:}
+      \begin{enumerate}
+        \item Use GitHub Projects, issues, and milestone tracking.
+        \item Study and adapt Agile and Scrum techniques for small teams.
+      \end{enumerate}
+      This will be done by continuously managing the GitHub repo, coordinating internal deadlines, and ensuring all documents are consistently formatted and versioned.
+
+    \item \textbf{Testing and Debugging Skills:}
+      \begin{enumerate}
+        \item Practice test-driven development (TDD) using Jest or PyTest.
+        \item Review previous 3S03 course materials on debugging strategies.
+      \end{enumerate}
+      All members will participate in testing sessions and collaboratively review failed cases to improve debugging efficiency.
+
+    \item \textbf{GitHub and Version Control:}
+      \begin{enumerate}
+        \item Follow Git branching models (feature branch, main branch, PR reviews).
+        \item Review GitHub CLI and advanced automation features.
+      \end{enumerate}
+      All members will follow a structured branching workflow and use pull request reviews to maintain code quality.
+
+    \item \textbf{Software Architecture and Design:}
+      \begin{enumerate}
+        \item Review course material from 2AA4, 3RA3, and 3A04, and use UML diagrams to model the system structure.
+        \item Review examples of scalable event or booking platforms to understand component separation.
+      \end{enumerate}
+      The team will collectively design architecture that separates various layers, following the supervisor’s specified design. Architecture diagrams will be peer-reviewed to ensure maintainability and extensibility before implementation begins.
+  \end{itemize}
+
 \end{enumerate}
