@@ -3,6 +3,10 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage[a4paper, margin=0.75in]{geometry}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{float}
 
 \hypersetup{
     colorlinks=true,       % false: boxed links; true: colored links
@@ -166,14 +170,32 @@ The following assumptions have been identified as critical to the safe and relia
 
 \section{Failure Mode and Effect Analysis}
 
-\wss{Include your FMEA table here. This is the most important part of this document.}
-\wss{The safety requirements in the table do not have to have the prefix SR.
-The most important thing is to show traceability to your SRS. You might trace to
-requirements you have already written, or you might need to add new
-requirements.}
-\wss{If no safety requirement can be devised, other mitigation strategies can be
-entered in the table, including strategies involving providing additional
-documentation, and/or test cases.}
+The Failure Mode \& Effect Analysis (FMEA) is the tool chosen to identify possible hazards within the system. Identifying these hazards will allow the creation of strategies to mitigate them.
+
+\subsection{Hazards Out of Scope}
+The following hazards fall outside the control of the dev team however, still have a critical impact on system operations:
+\begin{enumerate}
+    \item The users mobile device
+    \item Hosting provider availability
+    \item External payment gateway provider availability
+    \item Any External API's hosted by third-party providers (ie. Calendars, Database, OAuth)
+\end{enumerate}
+These dependecies are all hosted by third party services and therefore the development team cannot control the downtime or availability of them. However, an attempt will be made to mitigate these hazards as much as possible in the case they occur.
+
+\subsection{Failure Modes \& Effects Analysis Table}
+
+\begin{figure}[H]
+\begin{subfigure}{\textwidth}
+    \centering\includegraphics[width=\textwidth]{part1-register_payment.jpg} 
+    \caption{FMEA Table Part 1}
+\end{subfigure}
+
+\begin{subfigure}{\textwidth}
+    \centering\includegraphics[width=\textwidth]{part2-rbac_db.jpg} 
+    \caption{FMEA Table Part 1}
+\end{subfigure}
+
+\end{figure}
 
 \section{Safety and Security Requirements}
 
