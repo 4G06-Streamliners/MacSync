@@ -262,15 +262,51 @@ These requirements, while essential for long-term system robustness and maintain
 
 \begin{enumerate}
     \item What went well while writing this deliverable? 
+    *Ali:* What went really well was the work distribution. We had really even division of labour and it being done on a rotating method where each person gets one section was really helpful in giving members a good idea of what every section was about.
+
+    *Abyan:* From an analytical standpoint, the team approached the Hazard Analysis with a strong balance of technical accuracy and practical reasoning. Each hazard was considered in the real context of the architecture, not just as an abstract risk. This allowed the team to identify safety concerns that were both realistic and relevant such as payment failures and data handling vulnerabilities. The document evolved through meaningful collaboration, with members bringing insights from different subsystems to ensure no component was overlooked. What went particularly well was the team’s ability to move beyond compliance-based thinking toward a proactive safety mindset.
+
+    *Farhan:* Writing the Hazard Analysis went smoothly once the team established a clear understanding of the system’s structure and potential failure points. Our prior work on defining the system scope, roles, and data flow made it easier to identify where risks could emerge, specifically around payments, user data, and cross module data handling. The process encouraged the team to think more critically about system safety and resilience rather than just functionality.
+
+    *Prerna:* Before beginning the deliverable we all organized a meeting to look over the required parts and what they might look like and we were able to divide them evenly among ourselves. Using the github issues and being able to assign each issue to each group member made it easy to see which ones we were all working on, completed, and reviewed, and also made aided in keeping us organized and on track. Since we divided it in a way where we would all each be working on every document each group member was always in the loop about what was happening in each document.
+
+    *Mahad:* Working on the deliverable as a whole went really well especially with the streamlined workflow we had covering the division of work to the reviews. What also went well was the meeting organization and being able to stay on track for working on each task and having the opportunity to ask questions when needed.
+
+
     \item What pain points did you experience during this deliverable, and how
     did you resolve them?
+    *Ali:* A pain point faced was trying to align the team on deadline dates especially with hectic schedules due to assignments and midterms being due around the deadline for this project. We resolved this issue by focusing our efforts in getting as much work done as possible and discussing issues during times we were guaranteed to be together and have free time such as during the lecture times and tutorial time.
+
+    *Abyan:* One consistent challenge was distinguishing between true system hazards and general project risks. Early drafts blur the line between technical failures and broader management concerns such as scheduling or workload. This required several iterations to refine. Another pain point was ensuring that every identified hazard could be meaningfully connected to a mitigation or safety requirement avoiding speculative risks that could not be addressed within scope. The team resolved this by mapping each hazard directly to the system’s functional and safety requirements, which clarified responsibility and feasibility.
+
+    *Farhan:* Collaborating across groups also helped surface hazards that individual members might not have initially considered, such as data integrity risks due to concurrent database writes or communication breakdowns between the mobile app and backend APIs. Overall, the deliverable strengthened our shared understanding of system dependencies and clarified design priorities for reliability and user trust.
+
+    *Prerna:* Some pain points we experienced were that some parts we were working on relied heavily on another group members assigned parts, making it difficult to work on some of the parts until another group member was finished with them. Also if any edits needed to be made to a certain part, then the corresponding part which relied on it would also have to be changed. Trying to balance these deliverables with other course work was also difficult as some members had more coursework than others, adding some unforseen delays.
+
+    *Mahad:* Some pain points we initially experienced was having to sometimes rely on other people's components to get work done which made it difficult to sometimes stay on top of work. However, we were easily able to resolve this through our meetings where we discussed priorities for each member and focused on getting the dependent work done first so team members were not roadblocked.
+
+
     \item Which of your listed risks had your team thought of before this
     deliverable, and which did you think of while doing this deliverable? For
     the latter ones (ones you thought of while doing the Hazard Analysis), how
     did they come about?
+    Prior to doing the deliverable we had a strong idea on the technical risks related to the system. Specifically, we identified payment integration failures due to external API issues to be a big one very quickly because it is directly tied to a core functionality of the platform and one of the main components the team will be focused on developing. During the hazard analysis, we identified an additional risk which we did not fully consider before, which is associated with data security access within the role and feature based access control. This new risk we identified came about through breaking down the system into its main components and mapping system boundaries, wherein we realized how any failures or inaccuracies in this component could affect the overall reliability of the system as a whole.
+
+
     \item Other than the risk of physical harm (some projects may not have any
     appreciable risks of this form), list at least 2 other types of risk in
     software products. Why are they important to consider?
+    Other than the risk of physical harm, two other major types of risks in software products include:
+    \begin{enumerate}
+        \item Data Privacy
+        \begin{itemize}
+            \item These risks mainly revolve around unauthorized access, data breaches and mishandling of sensitive users information. These risks are important to consider because of the severe consequences associated with them. For instance, mishandling of sensitive user information can lead to financial impact where there can be fines placed for not complying to regulations and there can be operational disruptions as well as reputational damage due to data breaches, which can lead to loss of customer trust and halt business operations.
+        \end{itemize}
+        \item Operational Reliability Risks
+        \begin{itemize}
+            \item These risks mainly revolve around the reliability of the system and its availability for users, specifically system failures, performance degradation and downtimes. These risks are important to consider because they can lead to customer usage disruptions and frustration. The result can be a loss in confidence in the dependability of the system as well as a loss of interest in the system, which can cause financial loss.
+        \end{itemize}
+    \end{enumerate}
+    
 \end{enumerate}
-
 \end{document}
