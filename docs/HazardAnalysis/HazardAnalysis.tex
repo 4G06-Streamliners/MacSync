@@ -38,6 +38,7 @@
 \midrule
 2025-10-02 & Abyan & Scope and Purpose\\
 2025-10-02 & Farhan & Critical assumptions made for the project\\
+2025-10-01 & Prerna & Initial draft of safety and security requirements\\
 2025-10-01 & Prerna & Add initial version of introduction\\
 Date2 & Name(s) & Description of changes\\
 ... & ... & ...\\
@@ -181,8 +182,46 @@ documentation, and/or test cases.}
 
 \section{Safety and Security Requirements}
 
-\wss{Newly discovered requirements.  These should also be added to the SRS.  (A
-rationale design process how and why to fake it.)}
+\subsection{Data Security Requirements}
+\begin{itemize}
+    \item \textbf{SSR-DS1 (Encryption in Transit):} The system shall use TLS 1.2 or higher to encrypt all network communications between client applications, servers, and third-party APIs.
+    \item \textbf{SSR-DS2 (Encryption at Rest):} The system shall encrypt sensitive stored data (user profiles, accessibility needs, dietary restrictions, waiver records) using AES-256.
+    \item \textbf{SSR-DS3 (Privacy Compliance):} The system shall comply with PIPEDA and relevant McMaster University policies regarding data collection, storage, and retention.
+    \item \textbf{SSR-DS4 (Data Minimization):} The system shall only store the minimum personal data necessary for event operations (e.g., no raw payment card details).
+\end{itemize}
+
+\subsection{Payment Security Requirements}
+\begin{itemize}
+    \item \textbf{SSR-PS1 (Third-Party Gateways):} All financial transactions shall be processed exclusively through secure payment providers (Stripe, Square, or PayPal). The system shall not store or transmit raw credit card details.
+    \item \textbf{SSR-PS2 (Transaction Confirmation):} The system shall generate a unique transaction confirmation code for every payment, retrievable by both the attendee and the organizer.
+    \item \textbf{SSR-PS3 (Audit Logging):} All financial operations (payments, refunds, chargebacks) shall be logged in an immutable audit trail accessible only to authorized financial officers.
+    \item \textbf{SSR-PS4 (Duplicate Protection):} The system shall prevent duplicate payments by checking for transaction IDs before ticket issuance.
+\end{itemize}
+
+\subsection{Access Control Requirements}
+\begin{itemize}
+    \item \textbf{SSR-AC1 (Role-Based Access Control):} The system shall enforce RBAC/FBAC to ensure that each organizer only has access to the features necessary for their role.
+    \item \textbf{SSR-AC2 (Authentication):} The system shall integrate with McMaster University's Single Sign-On (SSO) to authenticate student attendees and organizers.
+    \item \textbf{SSR-AC3 (Session Management):} The system shall automatically expire inactive sessions after 15 minutes of inactivity for admin accounts and 60 minutes for attendee accounts.
+    \item \textbf{SSR-AC4 (Privilege Escalation Protection):} The system shall log and alert MES executives of any attempts at unauthorized access or privilege escalation.
+\end{itemize}
+
+\subsection{System Reliability \& Availability Requirements}
+\begin{itemize}
+    \item \textbf{SSR-SR1 (Uptime):} The system shall maintain at least 98\% uptime during active registration and event check-in periods.
+    \item \textbf{SSR-SR2 (Offline Check-in):} The system shall support offline QR code validation to allow event entry if internet connectivity is unavailable.
+    \item \textbf{SSR-SR3 (Notification Redundancy):} All time-sensitive notifications (registration confirmations, event reminders) shall include retry mechanisms to ensure delivery.
+    \item \textbf{SSR-SR4 (Backup \& Recovery):} The system shall automatically back up all event and registration data daily and enable recovery within 24 hours of data loss.
+\end{itemize}
+
+\subsection{Operational Safety Requirements}
+\begin{itemize}
+    \item \textbf{SSR-OS1 (Waiver Enforcement):} The system shall not allow final ticket confirmation until the attendee has digitally signed the required waiver.
+    \item \textbf{SSR-OS2 (Capacity Validation):} The system shall enforce real-time capacity limits for bus sign-ups, table sign-ups, and RSVP sign-ups to prevent overbooking.
+    \item \textbf{SSR-OS3 (Organizer Accountability):} All organizer actions (e.g., modifying capacities, issuing refunds, editing registrations) shall be logged with a timestamp and user identifier.
+    \item \textbf{SSR-OS4 (Fail-Safe Defaults):} In the event of a system error, the system shall default to denying access to sensitive data until the error is resolved.
+\end{itemize}
+
 
 \section{Roadmap}
 
