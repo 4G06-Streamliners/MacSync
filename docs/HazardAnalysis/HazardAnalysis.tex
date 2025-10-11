@@ -225,8 +225,32 @@ documentation, and/or test cases.}
 
 \section{Roadmap}
 
-\wss{Which safety requirements will be implemented as part of the capstone timeline?
-Which requirements will be implemented in the future?}
+The implementation of safety and security requirements for the Large Event Management System will occur in stages aligned with the capstone development timeline. Due to the limited duration of the project, the focus will be on ensuring that all critical safety mechanisms which are directly affecting system reliability, security, and data integrity are implemented and validated within the current term. Remaining requirements will be planned for integration by the McMaster Engineering Society (MES) technical team during future development cycles.
+
+\subsection*{Implemented During Capstone Timeline}
+The following requirements will be implemented during the capstone term as part of the system’s core functionality:
+\begin{itemize}
+    \item \textbf{Data Security:} TLS encryption for data in transit (SSR-DS1) and AES encryption for sensitive data at rest (SSR-DS2).
+    \item \textbf{Payment Security:} Secure integration with a third-party payment gateway (SSR-PS1), unique transaction confirmation codes (SSR-PS2), and duplicate transaction protection (SSR-PS4).
+    \item \textbf{Access Control:} Role-Based Access Control (RBAC/FBAC) (SSR-AC1) and session management enforcement (SSR-AC3) for both web and mobile platforms.
+    \item \textbf{System Reliability:} Real-time capacity validation for sign-ups (SSR-OS2), daily automated database backups (SSR-SR4), and fail-safe defaults on system errors (SSR-OS4).
+    \item \textbf{Operational Safety:} Enforcement of waiver signing before ticket confirmation (SSR-OS1) and logging of organizer actions for traceability (SSR-OS3).
+\end{itemize}
+
+These requirements directly address the most immediate and impactful hazards identified in the analysis, particularly those related to data privacy, payment integrity, and access control. Their implementation within the capstone ensures a secure and stable baseline for core system operations.
+
+\subsection*{Planned for Future Implementation}
+The following requirements are identified as long-term improvements that extend beyond the capstone’s implementation schedule:
+\begin{itemize}
+    \item \textbf{Advanced Audit Logging:} Immutable financial and administrative audit trails for regulatory compliance (SSR-PS3, SSR-AC4).
+    \item \textbf{High-Availability Features:} Automated failover, performance monitoring, and uptime guarantees beyond 98\% (SSR-SR1).
+    \item \textbf{Offline Mode Enhancements:} Expanded offline functionality for attendee check-in and ticket validation (SSR-SR2).
+    \item \textbf{Notification Redundancy:} Implementation of retry and multi-channel fallback mechanisms for time-sensitive notifications (SSR-SR3).
+    \item \textbf{Single Sign-On (SSO) Integration:} Full integration with McMaster University’s SSO platform for authentication (SSR-AC2).
+\end{itemize}
+
+These requirements, while essential for long-term system robustness and maintainability, rely on extended infrastructure and resources provided by MES after the capstone handover. Their implementation will build on the security and reliability foundation established by the current development team.
+
 
 \newpage{}
 
