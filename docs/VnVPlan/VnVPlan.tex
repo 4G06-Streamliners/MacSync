@@ -239,59 +239,165 @@ the contents of the subsections.}
 
 \subsection{Tests for Functional Requirements}
 
-\wss{Subsets of the tests may be in related, so this section is divided into
-  different areas.  If there are no identifiable subsets for the tests, this
-  level of document structure can be removed.}
+This section defines and organizes the functional system tests that ensure the Large Event Management System (LEMS) meets the behavioral requirements described in the SRS document. The test cases directly verify the main functional components identified in SRS Section S.4 and the high-level usage scenarios in Section G.5.  
+Each test is uniquely identified, includes expected inputs and outputs, and is traceable to the corresponding SRS functional requirement and hazard mitigation goal.
 
-\wss{Include a blurb here to explain why the subsections below
-  cover the requirements.  References to the SRS would be good here.}
+The functional tests are divided into the following main areas:
+\begin{itemize}
+    \item \textbf{Ticket Purchase and Payment System}
+    \item \textbf{Bus and Table Registration}
+    \item \textbf{Waivers and Preference Submission}
+    \item \textbf{Role-Based Access Control (RBAC)}
+    \item \textbf{Event Creation and Management}
+\end{itemize}
 
-\subsubsection{Area of Testing1}
+\subsubsection{Ticket Purchase and Payment System (FR1)}
 
-\wss{It would be nice to have a blurb here to explain why the subsections below
-  cover the requirements.  References to the SRS would be good here.  If a section
-  covers tests for input constraints, you should reference the data constraints
-  table in the SRS.}
-		
-\paragraph{Title for Test}
+This area ensures users can securely purchase event tickets and that payments are processed correctly. It addresses requirements related to FR1 in the SRS and hazard H.2.1 (payment failure and financial data breach).
+
+\paragraph{Test Case FR1-T01: Successful Ticket Purchase}
 
 \begin{enumerate}
-
-\item{test-id1\\}
-
-Control: Manual versus Automatic
-					
-Initial State: 
-					
-Input: 
-					
-Output: \wss{The expected result for the given inputs.  Output is not how you
-are going to return the results of the test.  The output is the expected
-result.}
-
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-					
-How test will be performed: 
-					
-\item{test-id2\\}
-
-Control: Manual versus Automatic
-					
-Initial State: 
-					
-Input: 
-					
-Output: \wss{The expected result for the given inputs}
-
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-
-How test will be performed: 
-
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} User logged in; event active with available tickets.\\
+    \textbf{Input:} User selects an event, chooses ticket type, and submits valid payment information.\\
+    \textbf{Expected Output:} Payment succeeds; confirmation email and QR ticket generated; ticket linked to user profile.\\
+    \textbf{Test Case Derivation:} Validates system payment workflow from SRS FR1.1 and FR1.2. Ensures secure integration with Stripe/Square APIs.\\
+    \textbf{How Test Will Be Performed:} Executed via Jest and Cypress integration tests using sandbox payment credentials.
 \end{enumerate}
 
-\subsubsection{Area of Testing2}
+\paragraph{Test Case FR1-T02: Unavailable Tickets}
 
-...
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} Event at full capacity.\\
+    \textbf{Input:} User attempts to purchase an additional ticket.\\
+    \textbf{Expected Output:} Transaction blocked; “Event Full” message displayed; payment not processed.\\
+    \textbf{Test Case Derivation:} Confirms enforcement of ticket limit (SRS FR1.3).\\
+    \textbf{How Test Will Be Performed:} Automated end-to-end test using mock database event with zero remaining tickets.
+\end{enumerate}
+
+---
+
+\subsubsection{Bus and Table Registration (FR2)}
+
+These tests validate proper seat and transportation assignment during event registration. They directly support SRS requirements FR2.1–FR2.3 and hazard mitigation for H.3.2 (overbooking errors).
+
+\paragraph{Test Case FR2-T01: Successful Registration for Bus/Table}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} User has a valid ticket; bus/table availability > 0.\\
+    \textbf{Input:} User selects a preferred bus route and table number.\\
+    \textbf{Expected Output:} Seat assignment confirmed; confirmation message and email generated; availability updated in system.\\
+    \textbf{Test Case Derivation:} Confirms user-side registration updates database correctly.\\
+    \textbf{How Test Will Be Performed:} Automated API test verifying correct database updates and response handling.
+\end{enumerate}
+
+\paragraph{Test Case FR2-T02: Registration Failure (Full Table)}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} Table capacity reached.\\
+    \textbf{Input:} User attempts to select an already full table.\\
+    \textbf{Expected Output:} “Table Full” error message displayed; no new entry in registration log.\\
+    \textbf{Test Case Derivation:} Validates exception handling and prevents over-registration (FR2.3).\\
+    \textbf{How Test Will Be Performed:} Run through Jest test using mock dataset with table capacity at max.
+\end{enumerate}
+
+---
+
+\subsubsection{Waiver and Preference Submission (FR3)}
+
+This testing area validates the form submission process for waivers, dietary needs, and accessibility preferences. These tests address FR3.1 and hazard H.4.2 (data loss or unsubmitted forms).
+
+\paragraph{Test Case FR3-T01: Successful Waiver Submission}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} Registered user with confirmed ticket.\\
+    \textbf{Input:} User uploads signed waiver and completes dietary and accessibility form.\\
+    \textbf{Expected Output:} Confirmation page displayed; data saved to user record; verification email sent.\\
+    \textbf{Test Case Derivation:} Ensures data integrity and compliance with accessibility guidelines.\\
+    \textbf{How Test Will Be Performed:} Automated end-to-end test via Cypress; database entries verified post-submission.
+\end{enumerate}
+
+\paragraph{Test Case FR3-T02: Invalid File Upload}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} Registered user attempting submission.\\
+    \textbf{Input:} Uploads unsupported file format (.exe).\\
+    \textbf{Expected Output:} Error message prompting for valid format (.pdf, .png).\\
+    \textbf{Test Case Derivation:} Confirms input validation from SRS FR3.2.\\
+    \textbf{How Test Will Be Performed:} Automated validation test in form submission workflow.
+\end{enumerate}
+
+---
+
+\subsubsection{Role-Based Access Control (RBAC) (FR4)}
+
+These tests confirm that access restrictions function as defined in SRS FR4.1–FR4.3 and that security boundaries prevent unauthorized access, aligning with hazards H.1.1 and H.1.3.
+
+\paragraph{Test Case FR4-T01: Unauthorized Admin Access Attempt}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} User role set to “Student.”\\
+    \textbf{Input:} User attempts to access the admin dashboard URL.\\
+    \textbf{Expected Output:} “Access Denied” displayed; no sensitive data exposed.\\
+    \textbf{Test Case Derivation:} Confirms access restriction enforcement per SRS FR4.1.\\
+    \textbf{How Test Will Be Performed:} Automated UI and endpoint access tests through Cypress.
+\end{enumerate}
+
+\paragraph{Test Case FR4-T02: Organizer Access to Management Tools}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} User logged in as “Organizer.”\\
+    \textbf{Input:} Accesses “Event Management Dashboard.”\\
+    \textbf{Expected Output:} Dashboard accessible with full event modification options.\\
+    \textbf{Test Case Derivation:} Validates organizer permissions from SRS FR4.2.\\
+    \textbf{How Test Will Be Performed:} Automated role simulation and privilege testing.
+\end{enumerate}
+
+---
+
+\subsubsection{Event Creation and Management (FR5)}
+
+These tests validate administrative and organizer capabilities to create and manage event listings,
+per SRS FR5.1–FR5.3 and hazards H.5.1 (incorrect listings) and H.5.3 (data synchronization errors).
+
+\paragraph{Test Case FR5-T01: Create New Event}
+
+\begin{enumerate}
+    \item \textbf{Control:} Manual\\
+    \textbf{Initial State:} Admin logged in with correct permissions.\\
+    \textbf{Input:} Admin submits event form with valid name, date, venue, and capacity.\\
+    \textbf{Expected Output:} Event successfully added and visible to users in the event list.\\
+    \textbf{Test Case Derivation:} Verifies event creation feature per SRS FR5.1.\\
+    \textbf{How Test Will Be Performed:} Manual UI test within staging environment.
+\end{enumerate}
+
+\paragraph{Test Case FR5-T02: Event Data Update and Sync}
+
+\begin{enumerate}
+    \item \textbf{Control:} Automatic\\
+    \textbf{Initial State:} Existing event created.\\
+    \textbf{Input:} Organizer modifies event date or capacity.\\
+    \textbf{Expected Output:} Changes reflected instantly for users; calendar sync updated.\\
+    \textbf{Test Case Derivation:} Validates data synchronization and user notification flow.\\
+    \textbf{How Test Will Be Performed:} Automated API integration test confirming real-time updates.
+\end{enumerate}
+
+---
+
+\textbf{Summary:}  
+The above test cases comprehensively validate all primary functional requirements outlined in the SRS and 
+address key hazards identified in the Hazard Analysis document. Each test ensures correct behavior of the
+system under both normal and boundary conditions, supporting verification of system correctness, reliability,
+and user safety.
+
 
 \subsection{Tests for Nonfunctional Requirements}
 
