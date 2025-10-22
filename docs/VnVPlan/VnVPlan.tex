@@ -352,27 +352,90 @@ This area ensures users can securely purchase event tickets and that payments ar
 
 These tests validate proper seat and transportation assignment during event registration. They directly support SRS requirements FR2.1–FR2.3 and hazard mitigation for H.3.2 (overbooking errors).
 
-\paragraph{Test Case FR2-T01: Successful Registration for Bus/Table}
+\paragraph{Test Case FR2-T01: Successful Bus/Table Registration and Confirmation}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} User has a valid ticket; bus/table availability > 0.\\
-    \textbf{Input:} User selects a preferred bus route and table number.\\
-    \textbf{Expected Output:} Seat assignment confirmed; confirmation message and email generated; availability updated in system.\\
-    \textbf{Test Case Derivation:} Confirms user-side registration updates database correctly.\\
-    \textbf{How Test Will Be Performed:} Automated API test verifying correct database updates and response handling.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR2-T01-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in with valid event ticket. Bus and table options available.\\[0.3em]
+    \textit{Input:} User selects an available bus route and table number.\\[0.3em]
+    \textit{Expected Output:} System assigns user to chosen bus/table; confirmation message displayed; database updates seat count.\\[0.3em]
+    \textit{Test Case Derivation:} Validates standard seat assignment workflow from SRS FR2.1.\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated UI and backend test through Cypress to confirm database entry and confirmation message.
+
+    \item \textbf{Test ID:} FR2-T01-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in with multiple available buses.\\[0.3em]
+    \textit{Input:} User selects bus A; system concurrently processes two users choosing same seat.\\[0.3em]
+    \textit{Expected Output:} One transaction succeeds; second user receives “Seat Taken” error; database integrity maintained.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms concurrency management and atomic seat updates (SRS FR2.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated concurrency test simulating two simultaneous seat reservations.
+
+    \item \textbf{Test ID:} FR2-T01-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event database populated with several buses and tables.\\[0.3em]
+    \textit{Input:} User changes seat selection before final confirmation.\\[0.3em]
+    \textit{Expected Output:} Original seat released; new selection confirmed; no duplicates remain.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures seat reallocation logic works as intended (SRS FR2.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated API-level testing verifying previous record removal and reassignment.
 \end{enumerate}
 
-\paragraph{Test Case FR2-T02: Registration Failure (Full Table)}
+\paragraph{Test Case FR2-T02: Overbooking and Capacity Enforcement}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} Table capacity reached.\\
-    \textbf{Input:} User attempts to select an already full table.\\
-    \textbf{Expected Output:} “Table Full” error message displayed; no new entry in registration log.\\
-    \textbf{Test Case Derivation:} Validates exception handling and prevents over-registration (FR2.3).\\
-    \textbf{How Test Will Be Performed:} Run through Jest test using mock dataset with table capacity at max.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR2-T02-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Table at full capacity.\\[0.3em]
+    \textit{Input:} User attempts to select the same table.\\[0.3em]
+    \textit{Expected Output:} Error message displayed (“Table Full”); user prompted to choose another table.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures accurate enforcement of capacity constraints (SRS FR2.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated UI and backend test simulating multiple full-table assignments.
+
+    \item \textbf{Test ID:} FR2-T02-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Table nearly full (1 seat remaining).\\[0.3em]
+    \textit{Input:} Two users select final seat simultaneously.\\[0.3em]
+    \textit{Expected Output:} First request succeeds; second receives capacity error message; database count remains consistent.\\[0.3em]
+    \textit{Test Case Derivation:} Verifies concurrency and data integrity during high-load operations.\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated stress test simulating simultaneous HTTP requests through Jest mock server.
+
+    \item \textbf{Test ID:} FR2-T02-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Bus route capacity reached.\\[0.3em]
+    \textit{Input:} Organizer views bus assignments in Admin Dashboard.\\[0.3em]
+    \textit{Expected Output:} Capacity indicator highlighted in red; “Bus Full” status displayed; no further reservations allowed.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms that UI state accurately reflects database limits (FR2.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated end-to-end test confirming synchronization between backend state and frontend visuals.
 \end{enumerate}
+
+\paragraph{Test Case FR2-T03: Cancellations, Waitlists, and Updates}
+
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR2-T03-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User registered with confirmed table and bus.\\[0.3em]
+    \textit{Input:} User cancels registration.\\[0.3em]
+    \textit{Expected Output:} Seat released; table and bus availability incremented by one; confirmation displayed.\\[0.3em]
+    \textit{Test Case Derivation:} Validates cancellation and reallocation logic per SRS FR2.3.\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated API test verifying correct record deletion and database updates.
+
+    \item \textbf{Test ID:} FR2-T03-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Table and bus fully booked; waitlist enabled.\\[0.3em]
+    \textit{Input:} User requests to join waitlist.\\[0.3em]
+    \textit{Expected Output:} User added to waitlist queue; notification displayed confirming enrollment.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures waitlist creation and management (FR2.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Backend simulation using mock users to confirm proper queue ordering.
+
+    \item \textbf{Test ID:} FR2-T03-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Seat becomes available due to cancellation.\\[0.3em]
+    \textit{Input:} Waitlisted user automatically promoted.\\[0.3em]
+    \textit{Expected Output:} User receives notification and confirmation email; seat reassigned successfully.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms automated reassignment and notification mechanism (FR2.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend event simulation and notification delivery validation.
+\end{enumerate}
+
 
 ---
 
@@ -382,53 +445,156 @@ This testing area validates the form submission process for waivers, dietary nee
 
 \paragraph{Test Case FR3-T01: Successful Waiver Submission}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} Registered user with confirmed ticket.\\
-    \textbf{Input:} User uploads signed waiver and completes dietary and accessibility form.\\
-    \textbf{Expected Output:} Confirmation page displayed; data saved to user record; verification email sent.\\
-    \textbf{Test Case Derivation:} Ensures data integrity and compliance with accessibility guidelines.\\
-    \textbf{How Test Will Be Performed:} Automated end-to-end test via Cypress; database entries verified post-submission.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR3-T01-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in with confirmed event ticket.\\[0.3em]
+    \textit{Input:} User uploads a valid waiver file in PDF format and selects dietary and accessibility preferences.\\[0.3em]
+    \textit{Expected Output:} System stores waiver file and preference data in user record; confirmation message displayed; email receipt sent.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms successful upload, form validation, and database persistence (SRS FR3.1).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated end-to-end test using Cypress; verification through backend data query.
+
+    \item \textbf{Test ID:} FR3-T01-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; waiver already uploaded.\\[0.3em]
+    \textit{Input:} User attempts to upload an updated waiver document.\\[0.3em]
+    \textit{Expected Output:} Old document replaced with new file; system logs replacement timestamp; confirmation displayed.\\[0.3em]
+    \textit{Test Case Derivation:} Validates update and overwrite functionality (FR3.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend test confirming version history and successful replacement.
 \end{enumerate}
 
-\paragraph{Test Case FR3-T02: Invalid File Upload}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} Registered user attempting submission.\\
-    \textbf{Input:} Uploads unsupported file format (.exe).\\
-    \textbf{Expected Output:} Error message prompting for valid format (.pdf, .png).\\
-    \textbf{Test Case Derivation:} Confirms input validation from SRS FR3.2.\\
-    \textbf{How Test Will Be Performed:} Automated validation test in form submission workflow.
+\paragraph{Test Case FR3-T02: Input Validation and Error Handling}
+
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR3-T02-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; waiver submission page open.\\[0.3em]
+    \textit{Input:} User attempts to upload an invalid file format (e.g., .exe).\\[0.3em]
+    \textit{Expected Output:} Upload rejected; “Invalid File Type” error displayed; submission disabled until valid file provided.\\[0.3em]
+    \textit{Test Case Derivation:} Validates input format verification and file-type restrictions (SRS FR3.1).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated validation test verifying client-side and server-side restrictions.
+
+    \item \textbf{Test ID:} FR3-T02-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in with waiver form active.\\[0.3em]
+    \textit{Input:} User leaves mandatory fields (dietary preference) blank.\\[0.3em]
+    \textit{Expected Output:} System displays inline validation message; prevents submission.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures proper enforcement of required fields (SRS FR3.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Front-end validation test using Cypress automated form interaction.
+\end{enumerate}
+
+
+\paragraph{Test Case FR3-T03: Organizer Access and Data Integrity}
+
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR3-T03-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Organizer logged in; event participant data loaded.\\[0.3em]
+    \textit{Input:} Organizer views waiver submissions.\\[0.3em]
+    \textit{Expected Output:} Organizer sees submission statuses (“Submitted,” “Pending,” “Missing”); sensitive data hidden.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms proper permission-based visibility and anonymization (SRS FR3.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Backend API test verifying restricted data queries and UI display.
+
+    \item \textbf{Test ID:} FR3-T03-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Organizer dashboard active; participant waivers available.\\[0.3em]
+    \textit{Input:} Organizer downloads event-wide waiver report.\\[0.3em]
+    \textit{Expected Output:} CSV generated containing participant names, waiver status, and dietary/accessibility selections.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures export functionality aligns with data protection and reporting (FR3.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated API test confirming file generation and proper field inclusion.
 \end{enumerate}
 
 ---
 
 \subsubsection{Role-Based Access Control (RBAC) (FR4)}
 
-These tests confirm that access restrictions function as defined in SRS FR4.1–FR4.3 and that security boundaries prevent unauthorized access, aligning with hazards H.1.1 and H.1.3.
+This test area verifies that the system correctly enforces user roles and associated permissions for students, administrators, and event organizers. It ensures that access rights, authentication, and authorization are implemented consistently to maintain data security and privacy. These tests align with SRS requirements FR4.1–FR4.3 and mitigate hazards H.5.1 (unauthorized access), H.5.2 (privilege escalation), and H.5.3 (data visibility breach).
 
-\paragraph{Test Case FR4-T01: Unauthorized Admin Access Attempt}
+\paragraph{Test Case FR4-T01: User Authentication and Login Permissions}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} User role set to “Student.”\\
-    \textbf{Input:} User attempts to access the admin dashboard URL.\\
-    \textbf{Expected Output:} “Access Denied” displayed; no sensitive data exposed.\\
-    \textbf{Test Case Derivation:} Confirms access restriction enforcement per SRS FR4.1.\\
-    \textbf{How Test Will Be Performed:} Automated UI and endpoint access tests through Cypress.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR4-T01-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User not logged in; login page displayed.\\[0.3em]
+    \textit{Input:} User enters valid credentials (email and password).\\[0.3em]
+    \textit{Expected Output:} System authenticates credentials, redirects user to dashboard corresponding to their assigned role.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms login workflow and authentication success (SRS FR4.1).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated test using Cypress and mock authentication API responses.
+
+    \item \textbf{Test ID:} FR4-T01-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Login page active.\\[0.3em]
+    \textit{Input:} User enters incorrect password.\\[0.3em]
+    \textit{Expected Output:} Error message “Invalid Credentials” displayed; login attempt logged; user remains on login page.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures error handling and prevention of unauthorized access (FR4.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated authentication test using invalid credential sets.
+
+    \item \textbf{Test ID:} FR4-T01-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User attempts to bypass login page via URL manipulation.\\[0.3em]
+    \textit{Input:} User directly accesses an admin endpoint (e.g., /admin/dashboard).\\[0.3em]
+    \textit{Expected Output:} Access denied; redirected to login page.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms route protection and proper authentication middleware setup.\\[0.3em]
+    \textit{How Test Will Be Performed:} Security test via Postman and Cypress route validation.
 \end{enumerate}
 
-\paragraph{Test Case FR4-T02: Organizer Access to Management Tools}
+\paragraph{Test Case FR4-T02: Role Enforcement and Privilege Management}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} User logged in as “Organizer.”\\
-    \textbf{Input:} Accesses “Event Management Dashboard.”\\
-    \textbf{Expected Output:} Dashboard accessible with full event modification options.\\
-    \textbf{Test Case Derivation:} Validates organizer permissions from SRS FR4.2.\\
-    \textbf{How Test Will Be Performed:} Automated role simulation and privilege testing.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR4-T02-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Student logged in with base privileges.\\[0.3em]
+    \textit{Input:} Student attempts to access “Manage Events” admin page.\\[0.3em]
+    \textit{Expected Output:} Access denied; “Insufficient Permissions” message displayed.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms enforcement of role restrictions per SRS FR4.2.\\[0.3em]
+    \textit{How Test Will Be Performed:} Role-based permission validation using mock user tokens and Cypress tests.
+
+    \item \textbf{Test ID:} FR4-T02-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event organizer logged in.\\[0.3em]
+    \textit{Input:} Organizer attempts to approve or deny waiver submissions.\\[0.3em]
+    \textit{Expected Output:} Action allowed and recorded in audit log; system confirms update.\\[0.3em]
+    \textit{Test Case Derivation:} Validates correct privilege execution for organizers (FR4.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Backend API test verifying authorization scopes.
+
+    \item \textbf{Test ID:} FR4-T02-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Admin logged in; role management page open.\\[0.3em]
+    \textit{Input:} Admin attempts to modify another user’s role (e.g., student → organizer).\\[0.3em]
+    \textit{Expected Output:} Role updated successfully; audit log entry created.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures privilege escalation occurs only for authorized admin accounts (FR4.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend test verifying restricted database write access.
 \end{enumerate}
+
+\paragraph{Test Case FR4-T03: Session Security and Access Persistence}
+
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR4-T03-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; session token active.\\[0.3em]
+    \textit{Input:} User remains idle for 20 minutes.\\[0.3em]
+    \textit{Expected Output:} Session expires automatically; user redirected to login page.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms timeout mechanism and token expiry (FR4.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated timeout simulation test using JWT expiration.
+
+    \item \textbf{Test ID:} FR4-T03-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in across multiple devices.\\[0.3em]
+    \textit{Input:} Admin invalidates all sessions for that user.\\[0.3em]
+    \textit{Expected Output:} All active sessions terminated; user forced to re-login.\\[0.3em]
+    \textit{Test Case Derivation:} Validates centralized session revocation and global logout (FR4.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Backend simulation using token invalidation endpoint and multi-device login testing.
+
+    \item \textbf{Test ID:} FR4-T03-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User with expired token tries accessing protected route.\\[0.3em]
+    \textit{Input:} HTTP request sent with invalid or expired JWT token.\\[0.3em]
+    \textit{Expected Output:} “Unauthorized” response; no data returned.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms backend authentication middleware correctly rejects invalid tokens.\\[0.3em]
+    \textit{How Test Will Be Performed:} Postman API test simulating expired token authentication.
+\end{enumerate}
+
 
 ---
 
@@ -437,31 +603,93 @@ These tests confirm that access restrictions function as defined in SRS FR4.1–
 These tests validate administrative and organizer capabilities to create and manage event listings,
 per SRS FR5.1–FR5.3 and hazards H.5.1 (incorrect listings) and H.5.3 (data synchronization errors).
 
-\paragraph{Test Case FR5-T01: Create New Event}
+\paragraph{Test Case FR5-T01: Event Creation and Publishing}
 
-\begin{enumerate}
-    \item Control: Manual\\
-    Initial State: Admin logged in with correct permissions.\\
-    \textbf{Input:} Admin submits event form with valid name, date, venue, and capacity.\\
-    \textbf{Expected Output:} Event successfully added and visible to users in the event list.\\
-    \textbf{Test Case Derivation:} Verifies event creation feature per SRS FR5.1.\\
-    \textbf{How Test Will Be Performed:} Manual UI test within staging environment.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR5-T01-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Organizer logged in with event creation privileges.\\[0.3em]
+    \textit{Input:} Organizer selects “Create Event” and enters valid event data (title, date, location, ticket limit).\\[0.3em]
+    \textit{Expected Output:} New event record created in the database; confirmation displayed; event visible to attendees.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms primary event creation flow (SRS FR5.1).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated UI and backend test verifying record creation, field population, and confirmation message.
+
+    \item \textbf{Test ID:} FR5-T01-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Organizer dashboard active.\\[0.3em]
+    \textit{Input:} Organizer enters incomplete form (missing required field such as date).\\[0.3em]
+    \textit{Expected Output:} System prevents submission; displays “Field Required” message; no event created.\\[0.3em]
+    \textit{Test Case Derivation:} Validates input validation and form integrity (FR5.1).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated front-end validation test using Cypress form interaction.
+
+    \item \textbf{Test ID:} FR5-T01-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Organizer creating multiple events.\\[0.3em]
+    \textit{Input:} Organizer attempts to create event with identical name and date.\\[0.3em]
+    \textit{Expected Output:} System displays “Duplicate Event” warning; prevents creation.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures event uniqueness constraint enforced in database (FR5.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend test verifying duplicate-check middleware response.
 \end{enumerate}
 
-\paragraph{Test Case FR5-T02: Event Data Update and Sync}
+\paragraph{Test Case FR5-T02: Event Editing and Updates}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} Existing event created.\\
-    \textbf{Input:} Organizer modifies event date or capacity.\\
-    \textbf{Expected Output:} Changes reflected instantly for users; calendar sync updated.\\
-    \textbf{Test Case Derivation:} Validates data synchronization and user notification flow.\\
-    \textbf{How Test Will Be Performed:} Automated API integration test confirming real-time updates.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR5-T02-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Existing event in database.\\[0.3em]
+    \textit{Input:} Organizer modifies event date and capacity.\\[0.3em]
+    \textit{Expected Output:} Changes saved successfully; all linked registrations and tickets updated automatically.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms cascading updates across dependent systems (FR5.2).\\[0.3em]
+    \textit{How Test Will Be Performed:} Backend integration test validating field updates and data consistency.
+
+    \item \textbf{Test ID:} FR5-T02-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event published and visible to attendees.\\[0.3em]
+    \textit{Input:} Organizer updates event description or venue.\\[0.3em]
+    \textit{Expected Output:} System updates event info in attendee view; notification sent to registered users.\\[0.3em]
+    \textit{Test Case Derivation:} Verifies synchronization between admin dashboard and attendee UI (FR5.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated end-to-end test confirming data propagation and push notification delivery.
+
+    \item \textbf{Test ID:} FR5-T02-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Organizer editing event under heavy traffic load.\\[0.3em]
+    \textit{Input:} Multiple simultaneous update requests.\\[0.3em]
+    \textit{Expected Output:} Only latest confirmed update persisted; older requests rejected; no data corruption.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures concurrency handling in event modification (FR5.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated concurrency simulation test using API request flooding in Jest.
+\end{enumerate}
+
+\paragraph{Test Case FR5-T03: Event Deletion and Archiving}
+
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR5-T03-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event published with active registrations.\\[0.3em]
+    \textit{Input:} Organizer attempts to delete event.\\[0.3em]
+    \textit{Expected Output:} System prevents deletion; prompts organizer to archive instead.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms data retention policy and prevention of accidental data loss (FR5.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend test verifying deletion restrictions and user prompts.
+
+    \item \textbf{Test ID:} FR5-T03-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event archived successfully.\\[0.3em]
+    \textit{Input:} Organizer reopens archived event.\\[0.3em]
+    \textit{Expected Output:} System restores event status to active; attendee visibility re-enabled.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures proper archive and restore operations (FR5.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend database state validation test.
+
+    \item \textbf{Test ID:} FR5-T03-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Archived event record exists.\\[0.3em]
+    \textit{Input:} Admin exports archived event data.\\[0.3em]
+    \textit{Expected Output:} CSV or PDF export generated successfully with complete event metadata.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms data export feature functions correctly for historical events (FR5.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend export test verifying file creation and data completeness.
 \end{enumerate}
 
 ---
 
-\textbf{Summary:}  
+\noindent\textbf{Summary:}  
 The above test cases comprehensively validate all primary functional requirements outlined in the SRS and 
 address key hazards identified in the Hazard Analysis document. Each test ensures correct behavior of the
 system under both normal and boundary conditions, supporting verification of system correctness, reliability,
