@@ -240,15 +240,14 @@ the contents of the subsections.}
 \subsection{Tests for Functional Requirements}
 
 This section defines and organizes the functional system tests that ensure the Large Event Management System (LEMS) meets the behavioral requirements described in the SRS document. The test cases directly verify the main functional components identified in SRS Section S.4 and the high-level usage scenarios in Section G.5.  
-Each test is uniquely identified, includes expected inputs and outputs, and is traceable to the corresponding SRS functional requirement and hazard mitigation goal.
-
+Each test is uniquely identified, includes expected inputs and outputs, and is traceable to the corresponding SRS functional requirement and hazard mitigation goal.\newline \newline
 The functional tests are divided into the following main areas:
 \begin{itemize}
-    \item \textbf{Ticket Purchase and Payment System}
-    \item \textbf{Bus and Table Registration}
-    \item \textbf{Waivers and Preference Submission}
-    \item \textbf{Role-Based Access Control (RBAC)}
-    \item \textbf{Event Creation and Management}
+    \item Ticket Purchase and Payment System
+    \item Bus and Table Registration
+    \item Waivers and Preference Submission
+    \item Role-Based Access Control (RBAC)
+    \item Event Creation and Management
 \end{itemize}
 
 \subsubsection{Ticket Purchase and Payment System (FR1)}
@@ -257,24 +256,94 @@ This area ensures users can securely purchase event tickets and that payments ar
 
 \paragraph{Test Case FR1-T01: Successful Ticket Purchase}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} User logged in; event active with available tickets.\\
-    \textbf{Input:} User selects an event, chooses ticket type, and submits valid payment information.\\
-    \textbf{Expected Output:} Payment succeeds; confirmation email and QR ticket generated; ticket linked to user profile.\\
-    \textbf{Test Case Derivation:} Validates system payment workflow from SRS FR1.1 and FR1.2. Ensures secure integration with Stripe/Square APIs.\\
-    \textbf{How Test Will Be Performed:} Executed via Jest and Cypress integration tests using sandbox payment credentials.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR1-T01-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; event active with available tickets.\\[0.3em]
+    \textit{Input:} User selects an event, chooses one ticket, and enters valid payment details (Stripe sandbox credentials).\\[0.3em]
+    \textit{Expected Output:} Payment processed successfully; confirmation email and QR ticket generated and stored in the user profile.\\[0.3em]
+    \textit{Test Case Derivation:} Validates end-to-end workflow from SRS FR1.1 and FR1.2. Ensures secure API integration and correct ticket issuance.\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated end-to-end test using Jest and Cypress with mock data.
+
+    \item \textbf{Test ID:} FR1-T01-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; same event selected.\\[0.3em]
+    \textit{Input:} User enters invalid credit card number.\\[0.3em]
+    \textit{Expected Output:} Error message displayed (“Payment could not be processed”); transaction aborted; no ticket issued.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms handling of invalid input data and payment validation logic (SRS FR1.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Mock API test with invalid credentials in Stripe sandbox environment.
+
+    \item \textbf{Test ID:} FR1-T01-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event active with limited ticket quantity.\\[0.3em]
+    \textit{Input:} Two users attempt to buy the last ticket concurrently.\\[0.3em]
+    \textit{Expected Output:} One transaction succeeds; second receives “Event Full” message; database capacity correctly enforced.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures concurrency handling and race condition protection in ticket allocation.\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated concurrency test simulating two parallel transactions.
+
+    \item \textbf{Test ID:} FR1-T01-4\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User purchased ticket; event data stored.\\[0.3em]
+    \textit{Input:} User refreshes page or revisits ticket page.\\[0.3em]
+    \textit{Expected Output:} Ticket information displayed correctly; no duplicate ticket generated.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms persistence and data retrieval logic for purchased tickets (FR1.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated front-end validation using Cypress component tests.
 \end{enumerate}
 
-\paragraph{Test Case FR1-T02: Unavailable Tickets}
+\paragraph{Test Case FR1-T02: Ticket Unavailability and Refund Scenarios}
 
-\begin{enumerate}
-    \item \textbf{Control:} Automatic\\
-    \textbf{Initial State:} Event at full capacity.\\
-    \textbf{Input:} User attempts to purchase an additional ticket.\\
-    \textbf{Expected Output:} Transaction blocked; “Event Full” message displayed; payment not processed.\\
-    \textbf{Test Case Derivation:} Confirms enforcement of ticket limit (SRS FR1.3).\\
-    \textbf{How Test Will Be Performed:} Automated end-to-end test using mock database event with zero remaining tickets.
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR1-T02-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} Event has reached full capacity.\\[0.3em]
+    \textit{Input:} User attempts to purchase ticket.\\[0.3em]
+    \textit{Expected Output:} “Event Full” message displayed; transaction blocked; no payment processed.\\[0.3em]
+    \textit{Test Case Derivation:} Validates enforcement of event capacity limits and user feedback (SRS FR1.3).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated test with mock event database entries.
+
+    \item \textbf{Test ID:} FR1-T02-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User successfully purchased ticket.\\[0.3em]
+    \textit{Input:} Organizer cancels event.\\[0.3em]
+    \textit{Expected Output:} Refund transaction triggered; user receives refund notification email.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms proper refund workflow and integration with payment API (SRS FR1.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Automated backend test using Stripe test API for refund simulation.
+
+    \item \textbf{Test ID:} FR1-T02-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User attempts to repurchase refunded ticket.\\[0.3em]
+    \textit{Input:} User retries transaction after refund.\\[0.3em]
+    \textit{Expected Output:} Transaction processed normally if capacity reopens.\\[0.3em]
+    \textit{Test Case Derivation:} Ensures reusability and recovery after refund workflow.\\[0.3em]
+    \textit{How Test Will Be Performed:} Backend integration test validating ticket status updates.
+\end{enumerate}
+
+\paragraph{Test Case FR1-T03: Payment Security and Error Handling}
+
+\begin{enumerate}\setlength{\itemsep}{1em}
+    \item \textbf{Test ID:} FR1-T03-1\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; valid event and payment options available.\\[0.3em]
+    \textit{Input:} User attempts purchase while network connection drops mid-transaction.\\[0.3em]
+    \textit{Expected Output:} System rolls back incomplete transaction; no double charge occurs.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms transactional atomicity (FR1.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Network interruption simulated during payment call.
+
+    \item \textbf{Test ID:} FR1-T03-2\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; payment processing API temporarily offline.\\[0.3em]
+    \textit{Input:} User submits payment request.\\[0.3em]
+    \textit{Expected Output:} System returns “Payment service unavailable” error; retry option presented.\\[0.3em]
+    \textit{Test Case Derivation:} Validates graceful error handling and user communication (FR1.4).\\[0.3em]
+    \textit{How Test Will Be Performed:} Simulated API downtime using mock server responses.
+
+    \item \textbf{Test ID:} FR1-T03-3\\[0.5em]
+    \textit{Control:} Automatic\\[0.3em]
+    \textit{Initial State:} User logged in; payment API active.\\[0.3em]
+    \textit{Input:} User attempts to alter payment request via browser console.\\[0.3em]
+    \textit{Expected Output:} Request rejected; unauthorized data tampering prevented.\\[0.3em]
+    \textit{Test Case Derivation:} Confirms security mechanisms (input validation, token verification) from Hazard H.2.3 mitigation.\\[0.3em]
+    \textit{How Test Will Be Performed:} API security test through Postman and OWASP ZAP scanning.
 \end{enumerate}
 
 ---
@@ -371,8 +440,8 @@ per SRS FR5.1–FR5.3 and hazards H.5.1 (incorrect listings) and H.5.3 (data syn
 \paragraph{Test Case FR5-T01: Create New Event}
 
 \begin{enumerate}
-    \item \textbf{Control:} Manual\\
-    \textbf{Initial State:} Admin logged in with correct permissions.\\
+    \item Control: Manual\\
+    Initial State: Admin logged in with correct permissions.\\
     \textbf{Input:} Admin submits event form with valid name, date, venue, and capacity.\\
     \textbf{Expected Output:} Event successfully added and visible to users in the event list.\\
     \textbf{Test Case Derivation:} Verifies event creation feature per SRS FR5.1.\\
