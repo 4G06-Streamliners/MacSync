@@ -147,9 +147,21 @@ how they relate to your VnV efforts.}
 
 \subsection{Verification and Validation Team}
 
-\wss{Your teammates.  Maybe your supervisor.
-  You should do more than list names.  You should say what each person's role is
-  for the project's verification.  A table is a good way to summarize this information.}
+The Verification and Validation (V\&V) process for the \textbf{Large Event Management Platform} will be jointly executed by all members of the \textbf{Large Event 3 (Streamliners)} development team. Team members are paired across key verification areas to ensure overlap between functional, integration, and validation responsibilities. This approach promotes redundancy in testing coverage, continuous feedback across modules, and consistent quality assurance throughout development.
+
+\begin{center}
+\begin{tabular}{|p{4cm}|p{4cm}|p{7cm}|}
+\hline
+\textbf{Members} & \textbf{V\&V Focus Area} & \textbf{Responsibilities} \\ \hline
+\textbf{Mahad Ahmed, Farhan Rahman} & Backend and Integration Verification & Collaboratively design and maintain automated unit and integration tests using Jest and Supertest. Verify database operations and API endpoints for correctness, reliability, and adherence to data constraints. Perform end-to-end verification to confirm consistent data flow between backend, database, and frontend layers, ensuring transactional integrity and performance under load. \\ \hline
+\textbf{Abyan Jaigirdar, Ali Zia} & Frontend and Usability Verification & Conduct verification of user interfaces and workflows using Vitest and React Testing Library. Evaluate user experience, input validation, and navigation logic for consistency with SRS-defined behaviours. Lead task-based usability walkthroughs with MES stakeholders to validate functional clarity and intuitive interaction across web and mobile views. \\ \hline
+\textbf{Prerna Prabhu} & System Validation and Documentation Verification & Manage structured reviews of the SRS, V\&V Plan, and associated documentation through checklist-based inspections. Maintain the requirements traceability matrix and coordinate stakeholder validation meetings. Consolidate feedback from both functional and usability testing to ensure all requirements are met and fully validated against MES operational objectives. \\ \hline
+\textbf{Luke} & External Supervisor / Reviewer & Provides independent oversight of verification completeness and validates that all implemented features align with MES event-management goals. Participates in post-demo validation reviews and confirms system readiness for production testing. \\ \hline
+\end{tabular}
+\end{center}
+
+All verification and validation activities, test results, and stakeholder feedback will be tracked through GitHub Issues and linked to corresponding commits to ensure full traceability between requirements, verification outcomes, and corrective actions.
+
 
 \subsection{SRS Verification}
 
