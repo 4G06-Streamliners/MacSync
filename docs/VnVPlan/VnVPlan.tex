@@ -184,16 +184,56 @@ verified.  Techniques for this include review and mutation testing.}
 
 \subsection{Implementation Verification}
 
-\wss{You should at least point to the tests listed in this document and the unit
-  testing plan.}
+The implementation verification phase ensures that the developed system correctly satisfies both its functional and non-functional requirements as specified in the SRS document. Verification activities during implementation will be conducted through a combination of automated testing, static analysis, code reviews, and post-deployment validation.\\
+\noindent \newline This section provides an overview of how implementation verification will be achieved, how it connects to the defined system-level tests (Section 4.1 and 4.2), and how the forthcoming unit testing phase will integrate once the detailed design (MIS) document is finalized.
 
-\wss{In this section you would also give any details of any plans for static
-  verification of the implementation.  Potential techniques include code
-  walkthroughs, code inspection, static analyzers, etc.}
+\paragraph{Scope and Approach}
+\noindent \newline
+\noindent Implementation verification will primarily focus on confirming that the system behavior matches the requirements defined in the SRS, with emphasis on correctness, data integrity, and security. The verification plan follows a layered testing strategy:
 
-\wss{The final class presentation in CAS 741 could be used as a code
-walkthrough.  There is also a possibility of using the final presentation (in
-CAS741) for a partial usability survey.}
+\begin{itemize}
+    \item \textbf{Functional Verification:} Each feature will be tested using the system tests detailed in Section 4.1 (Tests for Functional Requirements), including ticket purchasing, bus/table registration, waiver submission, and event creation/management.
+    \item \textbf{Non-Functional Verification:} Performance, usability, security, data integrity, and reliability will be validated through the tests outlined in Section 4.2 (Tests for Nonfunctional Requirements).
+    \item \textbf{Static Verification:} Code walkthroughs and inspections will be conducted before integration to ensure compliance with internal coding standards, proper documentation, and modular design practices.
+\end{itemize}
+
+\noindent All implementation verification tests will be executed in the staging environment before release to production. Each test result will be logged and compared against the acceptance criteria specified in Section S.6 of the SRS.
+
+\paragraph{Testing Artifacts and Traceability}
+\noindent \newline
+Verification of the implementation will rely on the following artifacts:
+\begin{itemize}
+    \item \textbf{Automated Unit and Integration Tests:} To verify module-level correctness and interface behavior (to be completed post-MIS design stage).
+    \item \textbf{System Test Suite:} The detailed test cases documented in Sections 4.1 and 4.2 for both functional and non-functional requirements.
+    \item \textbf{Static Code Reviews:} Manual and tool-assisted code reviews to identify defects early in the development process.
+    \item \textbf{Traceability Matrix:} A mapping of all SRS requirements to corresponding test cases will ensure that all implementation aspects have been verified.
+\end{itemize}
+
+\paragraph{Automated Testing and Toolchain}
+\noindent \newline
+Implementation verification will leverage automated testing frameworks to ensure repeatability and scalability:
+\begin{itemize}
+    \item \textbf{Frontend/UI:} Cypress for end-to-end testing of user workflows (e.g., registration, login, payment).
+    \item \textbf{Backend/API:} Jest and Postman for integration, concurrency, and REST endpoint validation.
+    \item \textbf{Static Analysis and Style Checks:} ESLint and Prettier to enforce code quality and consistent formatting.
+    \item \textbf{Continuous Integration:} GitHub Actions for automated builds, test execution, and code coverage reporting.
+\end{itemize}
+
+\paragraph{Unit Testing Placeholder and Future Work}
+\noindent \newline
+Unit testing for individual modules (e.g., authentication, database operations, and payment processing) will be developed following the completion of the MIS (Module Interface Specification) document. At that stage, each module will have:
+\begin{itemize}
+    \item Defined input/output specifications.
+    \item A corresponding suite of automated unit tests.
+    \item Documentation describing test coverage and expected behavior.
+\end{itemize}
+
+\noindent Since the MIS defines the internal structure of each module, the unit test plan will be appended to this document once design finalization occurs. The unit testing phase will ensure that each software component behaves correctly in isolation before being integrated into the full system.
+
+\paragraph{Summary}
+\noindent \newline
+In summary, implementation verification combines automated testing, static analysis, and structured validation against the SRS. The test cases defined in Section 4.1 and Section 4.2 will serve as the primary basis for verification. Future unit testing will build upon this foundation once the design phase (MIS) is complete, ensuring comprehensive validation of both high-level and component-level system behavior.
+
 
 \subsection{Automated Testing and Verification Tools}
 
