@@ -171,11 +171,31 @@ The verification approach will involve the following steps:
 
 \subsection{Design Verification}
 
-\wss{Plans for design verification}
+The design verification process will confirm that the system architecture, data flow, and component design correctly satisfy all functional and non-functional requirements defined in the SRS. Verification will occur before implementation begins to ensure that the design is both complete and technically feasible.
 
-\wss{The review will include reviews by your classmates}
+\paragraph{Verification Approach:}The following activities will be used to verify the design:
+\begin{itemize}
+    \item \textbf{Peer Review:} Each design document will be reviewed by an assigned peer team within the course. Their feedback will focus on correctness, consistency, and alignment with the SRS. All comments will be logged and tracked through GitHub Issues until resolved.
+    \item \textbf{Team Review:} Internal walkthroughs will validate subsystem responsibilities, data flows, and interface consistency across the mobile app, admin dashboard, and backend service.
+    \item \textbf{Supervisor Review:} The supervisor will review key design decisions and architectural diagrams to ensure the proposed solution is feasible and satisfies project constraints.
+    \item \textbf{Traceability Check:} A mapping between SRS functional and non-functional requirements and corresponding design components will be created to confirm full coverage.
+\end{itemize}
 
-\wss{Create a checklists?}
+\paragraph{Design Verification Checklist}
+\begin{center}
+\begin{tabular}{|p{4cm}|p{9cm}|}
+\hline
+\textbf{Category} & \textbf{Verification Criteria} \\ \hline
+Completeness & All SRS requirements are represented in the design model. \\ \hline
+Consistency & No contradictory or missing data/control flows between modules. \\ \hline
+Feasibility & Each design decision is realistic given project constraints. \\ \hline
+Modularity & System is divided into clear, maintainable, and loosely coupled components. \\ \hline
+Traceability & Every requirement in the SRS can be traced to one or more design elements. \\ \hline
+\end{tabular}
+\end{center}
+
+\paragraph{Summary:}
+Design verification will rely on peer reviews by classmates, team walkthroughs, and supervisor feedback to confirm that the proposed architecture is correct, consistent, and feasible before implementation begins. Review outcomes will be documented and used to refine the design prior to implementation.
 
 \subsection{Verification and Validation Plan Verification}
 
