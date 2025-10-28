@@ -236,20 +236,17 @@ CAS741) for a partial usability survey.}
 
 \subsection{Automated Testing and Verification Tools}
 
-\wss{What tools are you using for automated testing.  Likely a unit testing
-  framework and maybe a profiling tool, like ValGrind.  Other possible tools
-  include a static analyzer, make, continuous integration tools, test coverage
-  tools, etc.  Explain your plans for summarizing code coverage metrics.
-  Linters are another important class of tools.  For the programming language
-  you select, you should look at the available linters.  There may also be tools
-  that verify that coding standards have been respected, like flake9 for
-  Python.}
+Automated testing will form the foundation of the verification process for the \textbf{Large Event Management Platform}, ensuring correctness, maintainability, and reliability throughout all development stages. The testing strategy integrates both frontend and backend verification frameworks with continuous integration pipelines to provide consistent and repeatable test execution.
 
-\wss{If you have already done this in the development plan, you can point to
-that document.}
+For the \textbf{frontend}, the team will use \textbf{Vitest}, the native testing framework for Vite-based projects, alongside the \textbf{React Testing Library} to verify component behaviour, routing, and user interactions. These tools allow developers to simulate real user actions such as form submissions, navigation, and event sign-ups to confirm compliance with the Software Requirements Specification (SRS). The frontend test suite will focus on validating component state management, data rendering, and input handling.
 
-\wss{The details of this section will likely evolve as you get closer to the
-  implementation.}
+For the \textbf{backend}, the team will use \textbf{Jest} in combination with \textbf{Supertest} to perform unit and integration testing of the NestJS API endpoints. These tests will validate service logic, controller routes, and database queries executed through Drizzle ORM against a local PostgreSQL instance. \textbf{Test containers} will be used to simulate isolated database environments for integration tests, ensuring consistent and reproducible results.
+
+Static verification will be maintained through the use of \textbf{ESLint} and \textbf{Prettier}, enforcing the Airbnb JavaScript style guide and consistent formatting across the codebase. Type correctness and interface verification will be handled by \textbf{TypeScript}, ensuring compatibility between frontend and backend modules. These static tools collectively reduce logical errors and ensure the system adheres to coding standards and best practices.
+
+Continuous Integration (CI) will be managed using \textbf{GitHub Actions}. Each pull request will trigger automated workflows that include linting, type checking, and full test execution. The CI pipeline will produce code coverage reports summarizing the percentage of tested lines and functions, which will be reviewed at the end of each sprint to assess verification completeness. A goal coverage target of 75\% will try to be maintained across all core modules to ensure adequate testing depth.
+
+These tools, configurations, and automation strategies are consistent with the team’s \textbf{Development Plan} and will evolve alongside implementation progress to support scalable and maintainable verification.
 
 \subsection{Software Validation}
 The software validation process will mainly be focussed on confirming the system is correctly achieving its objectives and addresses stakeholder needs and aligns with functional requirements identified in the SRS. For instance, verifying features such as the payment system, role and feature based access control and RSVP/Bus/Table sign-ups are implemented, and perform correctly. 
