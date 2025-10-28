@@ -3,6 +3,10 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{hyperref}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{caption}
+\captionsetup{justification=raggedright,singlelinecheck=false}
 \hypersetup{
     colorlinks,
     citecolor=blue,
@@ -93,40 +97,32 @@ This document ... \wss{provide an introductory blurb and roadmap of the
   its general functions.}
 
 \subsection{Objectives}
+This Verification and validation plan intends to accomplish the objective of ensuring the Large Event Management Platform for the McMaster Engineering Society meets its mission critical qualities that are most important as defined by the Software Requirements Specification (SRS) and Hazard Analysis (HA).
 
-\wss{State what is intended to be accomplished.  The objective will be around
-  the qualities that are most important for your project.  You might have
-  something like: ``build confidence in the software correctness,''
-  ``demonstrate adequate usability.'' etc.  You won't list all of the qualities,
-  just those that are most important.}
+The mission critical qualities intended to be accomplished as part of the objective are as follows:
+\begin{itemize}
+    \item \textbf{Functional Correctness:} The core system components and functionalities outlined in the SRS such as the payment system, role-based and feature-based access control and RSVP/Bus/Table signups should operate correctly and reliably to support the event operation of the platform for both admins and users.
+    \item \textbf{System Reliability:} The platform remains stable and responsive under expected and unexpected load conditions and supports users and admins to accomplish their tasks without hindrance.
+    \item \textbf{Safety and Security:} The platform must comply with security requirements documented in the HA relating to protection of payment information and personal user data as well as proper enforcement of role and feature based access controls.    
+\end{itemize}
 
-\wss{You should also list the objectives that are out of scope.  You don't have 
-the resources to do everything, so what will you be leaving out.  For instance, 
-if you are not going to verify the quality of usability, state this.  It is also 
-worthwhile to justify why the objectives are left out.}
+Out of scope objectives due to project scope and resource limitations include:
+\begin{itemize}
+    \item \textbf{Third party service verification:} External services provided by payment providers will not be verified. This objective is left out as these services are assumed to be reliable and safe for integration within the platform due to their existing brand recognition and usage in industry making this exclusion justified. 
+    \item \textbf{Accessibility features:} Accessibility features are beyond current needs and will not be verified for quality of usage. This objective is left out because a general user-friendly design is assumed to encompass most quality needs. This exclusion is justified as the required resources needed are disproportionate to its impact.    
+\end{itemize}
 
-\wss{The objectives are important because they highlight that you are aware of 
-limitations in your resources for verification and validation.  You can't do everything, 
-so what are you going to prioritize?  As an example, if your system depends on an 
-external library, you can explicitly state that you will assume that external library 
-has already been verified by its implementation team.}
 
 \subsection{Challenge Level and Extras}
 
-\wss{State the challenge level (advanced, general, basic) for your project.
-Your challenge level should exactly match what is included in your problem
-statement.  This should be the challenge level agreed on between you and the
-course instructor.  You can use a pull request to update your challenge level
-(in TeamComposition.csv or Repos.csv) if your plan changes as a result of the
-VnV planning exercise.}
+This project includes several approved extras designed to enhance the quality, usability, and long-term sustainability of the system beyond its core functional requirements. These activities aim to ensure that the final product is user-friendly, maintainable, and well-documented for future MES teams.
 
-\wss{Summarize the extras (if any) that were tackled by this project.  Extras
-can include usability testing, code walkthroughs, user documentation, formal
-proof, GenderMag personas, Design Thinking, etc.  Extras should have already
-been approved by the course instructor as included in your problem statement.
-You can use a pull request to update your extras (in TeamComposition.csv or
-Repos.csv) if your plan changes as a result of the VnV planning exercise.}
+\begin{itemize}
+    \item \textbf{Usability Testing:} The team will conduct structured usability sessions with MES organizers and student participants to evaluate workflow clarity and overall user experience. Feedback from these sessions will guide interface refinements and ensure the system remains intuitive for both attendees and administrators.
+    \item \textbf{User Documentation:} Comprehensive user and administrator documentation will be prepared to support onboarding, maintenance, and future development. This documentation will include setup instructions, feature overviews, and troubleshooting guidelines to help future MES teams effectively operate and extend the platform.
+\end{itemize}
 
+By including these extras, the project emphasizes usability, maintainability, and user-centered design. The planned activities will ensure that the system not only meets its core functional goals but also provides a reliable, accessible, and sustainable solution for event management within the MES environment.
 \subsection{Relevant Documentation}
 
 \wss{Reference relevant documentation.  This will definitely include your SRS
@@ -152,16 +148,26 @@ how they relate to your VnV efforts.}
   for the project's verification.  A table is a good way to summarize this information.}
 
 \subsection{SRS Verification}
+The SRS verification will be done through a multi-stage review process involving peer reviews, team reviews, supervisor feedback and checklist based inspection to confirm alignment with project objectives.
 
-\wss{List any approaches you intend to use for SRS verification.  This may
-  include ad hoc feedback from reviewers, like your classmates (like your
-  primary reviewer), or you may plan for something more rigorous/systematic.}
+The verification approach will involve the following steps:
+\begin{itemize}
+    \item \textbf{Peer Review (Primary reviewers):} Members of the primary reviewing team will take part in a structured review of the SRS where issues they find will be logged as GitHub Issues and resolved through tracked commits. The deliverable would be a consolidated review log documenting each issue identified and the resolution implemented by the member whose part is associated with the issue.
+    \item \textbf{Team Review:} Based on the review provided by the primary reviewers and the resolution implemented by the team member who was responsible for the associated issue, a different team member will work on identifying if the resolution sufficiently addresses the feedback and implements a corrective solution. The solutions that address the feedback will then be pushed to create the finalized document.
+    \item \textbf{Supervisor Review:} In this step, a meeting will be scheduled with the project supervisor in which a structured review walkthrough will take place to validate the SRS. The structured walkthrough will be a meeting in which the SRS will be presented. The agenda will cover the following: High level overviews of each aspect of the SRS to validate main functionalities, system processes and scope boundaries, critical requirements derived from problem statements and discussing the validity of assumptions made. The validation questions that will be asked will relate to understanding if all functional requirements are measurable and verifiable and if there are any gaps or ambiguities in assumptions or scope definitions. The supervisor feedback will be documented, addressed and resolved with traceability to the specific SRS sections.
+    \item \textbf{SRS Checklist:} In this final step the team will gather and use the below verification checklist to ensure comprehensive evaluation of the SRS using a Pass/Needs Revision criterion
+    \begin{center}
+    \begin{tabular}{|p{4cm}|p{9cm}|}
+        \hline
+        \textbf{Category} & \textbf{Verification Criteria} \\ \hline
+        Accuracy/Completeness & All requirements are included and clearly defined \\ \hline
+        Consistency & No conflicting/contradicting/overlapping requirements exist across sections \\ \hline
+        Clarity & Requirements are clear and leave no room for ambiguity \\ \hline
+        Feasibility & Requirements are achievable and realistically implementable \\ \hline
+    \end{tabular}
+    \end{center}
+\end{itemize}
 
-\wss{If you have a supervisor for the project, you shouldn't just say they will
-read over the SRS.  You should explain your structured approach to the review.
-Will you have a meeting?  What will you present?  What questions will you ask?
-Will you give them instructions for a task-based inspection?  Will you use your
-issue tracker?}
 
 \subsection{Design Verification}
 
@@ -231,24 +237,10 @@ that document.}
   implementation.}
 
 \subsection{Software Validation}
+The software validation process will mainly be focussed on confirming the system is correctly achieving its objectives and addresses stakeholder needs and aligns with functional requirements identified in the SRS. For instance, verifying features such as the payment system, role and feature based access control and RSVP/Bus/Table sign-ups are implemented, and perform correctly. 
 
-\wss{If there is any external data that can be used for validation, you should
-  point to it here.  If there are no plans for validation, you should state that
-  here.}
+Since the Large Event Management Platform is a new undertaking of event organization, there are no external data sources that can be used for validating if results align with intended real-world use cases or behaviors. Therefore the need arises to engage stakeholders such as club executives and event organizers in a structured review session to check that the SRS captures the requirements needed for their needs and goals. The approach taken for this can be task based inspection in which the stakeholders are focused on verifying compliance of the requirements document to their needs and assessing risk by focusing on already defined functions. Additionally, following the Rev 0 demo, a dedicated validation meeting will be done with the external supervisor of the team in which the team will demonstrate each core feature through task based inspection. The aim of the inspection is to allow the supervisor to observe and provide critique on critical workflows and functions as defined in the SRS such as creating events, processing payments, verifying access permissions and managing sign-ups. Validating these workflows, will aim to confirm their operational and functional expectations align with the SRS defined requirements focused on delivering functional requirements to the stakeholders. The combination of both stakeholder and technical validation through MES executives and the external supervisor will ensure that both system alignment to needs and practical utility is achieved
 
-\wss{You might want to use review sessions with the stakeholder to check that
-the requirements document captures the right requirements.  Maybe task based
-inspection?}
-
-\wss{For those capstone teams with an external supervisor, the Rev 0 demo should 
-be used as an opportunity to validate the requirements.  You should plan on 
-demonstrating your project to your supervisor shortly after the scheduled Rev 0 demo.  
-The feedback from your supervisor will be very useful for improving your project.}
-
-\wss{For teams without an external supervisor, user testing can serve the same purpose 
-as a Rev 0 demo for the supervisor.}
-
-\wss{This section might reference back to the SRS verification section.}
 
 \section{System Tests}
 
@@ -372,8 +364,49 @@ How test will be performed:
 
 \subsection{Traceability Between Test Cases and Requirements}
 
-\wss{Provide a table that shows which test cases are supporting which
-  requirements.}
+\begin{longtable}{|p{3.3cm}|p{5.2cm}|p{6.3cm}|}
+\caption{Traceability Between Test Cases and Requirements}
+\label{tab:traceability} \\
+\hline
+\textbf{Requirement ID} & \textbf{Requirement Description (SRS Reference)} & \textbf{Associated Test Cases} \\
+\hline
+\endfirsthead
+
+\multicolumn{3}{c}{{\bfseries Table \thetable\ (continued)}} \\
+\hline
+\textbf{Requirement ID} & \textbf{Requirement Description (SRS Reference)} & \textbf{Associated Test Cases} \\
+\hline
+\endhead
+
+\hline
+\endfoot
+
+\hline
+\endlastfoot
+
+FR1 & Ticket Purchase and Payment System. Users can purchase event tickets, process payments, handle invalid inputs, and receive confirmations. & FR1-T01-1--4, FR1-T02-1--3, FR1-T03-1--3 \\
+\hline
+FR2 & Bus and Table Registration. Supports seat selection, waitlists, and capacity enforcement. & FR2-T01-1--3, FR2-T02-1--3, FR2-T03-1--3 \\
+\hline
+FR3 & Waivers and Preferences. Allows users to submit waivers and preferences and stores data securely for organizer access. & FR3-T01-1--2, FR3-T02-1--2, FR3-T03-1--2 \\
+\hline
+FR4 & Role-Based Access Control (RBAC/FBAC). Verifies authentication, authorization, and correct privilege handling. & FR4-T01-1--3, FR4-T02-1--3, FR4-T03-1--3 \\
+\hline
+FR5 & Event Creation and Management. Enables organizers to create, edit, archive, and manage events. & FR5-T01-1--3, FR5-T02-1--3, FR5-T03-1--3 \\
+\hline
+NFR1 & Performance. Measures latency and throughput during registration, RSVP, and check-in. & NFR1-T01-1--2, NFR1-T02-1--2, NFR1-T03-1--2 \\
+\hline
+NFR2 & Data Integrity. Ensures no inconsistent or duplicate data appears under failure or concurrency. & NFR2-T01-1--2, NFR2-T02-1, NFR2-T03-1, NFR2-T04-1 \\
+\hline
+NFR3 & Usability. Evaluates ease of use, completion rate, and error recovery in user testing. & NFR3-T01-1--3 \\
+\hline
+NFR4 & Security Compliance. Checks RBAC enforcement, authentication, and protection of sensitive data. & NFR4-T01-1, NFR4-T02-1, NFR4-T03-1 \\
+\hline
+NFR5 & Reliability. Verifies uptime and system stability under continuous use. & NFR5-T01-1 \\
+\hline
+NFR6 & Auditability. Ensures all registration, payment, and event actions are logged for traceability. & NFR6-T01-1--2 \\
+\hline
+\end{longtable}
 
 \section{Unit Test Description}
 
