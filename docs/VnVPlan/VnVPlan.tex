@@ -93,23 +93,21 @@ This document ... \wss{provide an introductory blurb and roadmap of the
   its general functions.}
 
 \subsection{Objectives}
+This Verification and validation plan intends to accomplish the objective of ensuring the Large Event Management Platform for the McMaster Engineering Society meets its mission critical qualities that are most important as defined by the Software Requirements Specification (SRS) and Hazard Analysis (HA).
 
-\wss{State what is intended to be accomplished.  The objective will be around
-  the qualities that are most important for your project.  You might have
-  something like: ``build confidence in the software correctness,''
-  ``demonstrate adequate usability.'' etc.  You won't list all of the qualities,
-  just those that are most important.}
+The mission critical qualities intended to be accomplished as part of the objective are as follows:
+\begin{itemize}
+    \item \textbf{Functional Correctness:} The core system components and functionalities outlined in the SRS such as the payment system, role-based and feature-based access control and RSVP/Bus/Table signups should operate correctly and reliably to support the event operation of the platform for both admins and users.
+    \item \textbf{System Reliability:} The platform remains stable and responsive under expected and unexpected load conditions and supports users and admins to accomplish their tasks without hindrance.
+    \item \textbf{Safety and Security:} The platform must comply with security requirements documented in the HA relating to protection of payment information and personal user data as well as proper enforcement of role and feature based access controls.    
+\end{itemize}
 
-\wss{You should also list the objectives that are out of scope.  You don't have 
-the resources to do everything, so what will you be leaving out.  For instance, 
-if you are not going to verify the quality of usability, state this.  It is also 
-worthwhile to justify why the objectives are left out.}
+Out of scope objectives due to project scope and resource limitations include:
+\begin{itemize}
+    \item \textbf{Third party service verification:} External services provided by payment providers will not be verified. This objective is left out as these services are assumed to be reliable and safe for integration within the platform due to their existing brand recognition and usage in industry making this exclusion justified. 
+    \item \textbf{Accessibility features:} Accessibility features are beyond current needs and will not be verified for quality of usage. This objective is left out because a general user-friendly design is assumed to encompass most quality needs. This exclusion is justified as the required resources needed are disproportionate to its impact.    
+\end{itemize}
 
-\wss{The objectives are important because they highlight that you are aware of 
-limitations in your resources for verification and validation.  You can't do everything, 
-so what are you going to prioritize?  As an example, if your system depends on an 
-external library, you can explicitly state that you will assume that external library 
-has already been verified by its implementation team.}
 
 \subsection{Challenge Level and Extras}
 
