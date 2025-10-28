@@ -338,41 +338,318 @@ format for the tests given below.}
 How will they be done?  In cases like code (or document) walkthroughs, who will
 be involved? Be specific.}
 
-\subsubsection{Area of Testing1}
+This section will cover the system tests for Non-Functional Requirements identified in the MacSync SRS Document. The goal of these tests is to metricize the quality attributes and operational characteristics of the system, ensuring it performs its functional requirements to a high standard.
+
+\subsubsection{Performance (NFR1)}
+
 		
-\paragraph{Title for Test}
+\paragraph{Test Case NFR1-T01: End-to-End Registration}
 
 \begin{enumerate}
 
-\item{test-id1\\}
+\item{NFR1-T01-1\\}
 
-Type: Functional, Dynamic, Manual, Static etc.
+Type: Dynamic, Automatic, Performance
 					
-Initial State: 
+Initial State: DB with 5 events, with capacities varying from 50-500, 750 registered users.
 					
-Input/Condition: 
+Input/Condition: One user completes the registration workflow: browse $\rightarrow$ select ticket $\rightarrow$ pay $\rightarrow$ ticket issued.
 					
-Output/Result: 
+Output/Result:  End-to-end latency $\leq$ 2.0\,s, average $\leq$ 1.5\,s, zero timeouts.
 					
-How test will be performed: 
-					
-\item{test-id2\\}
+How test will be performed: Measure the time from starting registration to receiving the ticket confirmation.
 
-Type: Functional, Dynamic, Manual, Static etc.
-					
-Initial State: 
-					
-Input: 
-					
-Output: 
-					
-How test will be performed: 
+\item{NFR1-T01-2\\}
 
+Type: Dynamic, Automatic, Load/Stress
+					
+Initial State: DB with 5 events, with capacities varying from 50-500, 750 registered users.
+					
+Input/Condition: 200 users attempt to complete the full registration workflow concurrently.
+					
+Output/Result: Average end-to-end registration time $\leq$ 3.0\,s, and system successfully processes all registrations without errors or crashes.  
+					
+How test will be performed: Simulate 200 users concurrently registering for an event. Collect the total response time for each user and note any delayed transactions.
 \end{enumerate}
 
-\subsubsection{Area of Testing2}
+\paragraph{Test Case NFR1-T02: RSVP/Signups}
 
-...
+\begin{enumerate}
+
+\item{NFR1-T02-1\\}
+
+Type: Dynamic, Automatic, Performance
+					
+Initial State: Event/session with capacity set (e.g., 100 seats).
+					
+Input/Condition: One user submits an RSVP/sign-up.
+					
+Output/Result:  Operation completes in $\leq$ 1.0\,s. Confirmation returned to user.
+					
+How test will be performed: Measure API time from submit to confirmation.
+
+\item{NFR1-T02-2\\}
+
+Type: Dynamic, Automatic, Load/Stress
+
+Initial State: Event/session with capacity set (e.g., 100 seats).
+
+Input/Condition: 100 users submit RSVP/sign-up concurrently.
+
+Output/Result: Average completion time $\leq$ 1.5\,s, make sure there are no duplicate allocations. The final accepted count equals capacity.
+
+How test will be performed: Simulate 100 concurrent submissions, record response times and verify final counts.
+\end{enumerate}
+
+\paragraph{Test Case NFR1-T03: Check-In}
+
+\begin{enumerate}
+\item{NFR1-T03-1\\}
+Type: Dynamic, Automatic, Performance
+
+Initial State: Event with valid tickets issued.
+
+Input/Condition: Single QR code scan (valid ticket).
+
+Output/Result: Scan-to-confirmation time $\leq$ 0.30\,s. The staff will receive a valid ticket confirmation
+
+How test will be performed: Measure time from scan request to API confirmation.
+
+\item{NFR1-T03-2\\}
+Type: Dynamic, Automatic, Performance
+
+Initial State: Event with valid tickets issued.
+
+Input/Condition: Single QR code scan (invalid ticket).
+
+Output/Result: Scan-to-disconfirmation time $\leq$ 0.30\,s. The staff will receive a valid ticket disconfirmation
+
+How test will be performed: Measure time from scan request to API disconfirmation.
+\end{enumerate}
+
+\subsubsection{Data Integrity (NFR2)}
+
+\paragraph{Test Case NFR2-T01: Registration}
+
+\begin{enumerate}
+\item{NFR2-T01-1\\}
+
+Type: Dynamic, Automatic, Integrity
+
+Initial State: Event with capacity available, With payment provider enabled.
+
+Input/Condition: Force a \emph{payment failure} during registration 
+
+Output/Result: No rows created in \texttt{tickets}/\texttt{registrations} and no balance changes.
+
+How test will be performed: Execute registration up to payment $\rightarrow$ inject failure $\rightarrow$ assert zero side-effects across related tables.
+\end{enumerate}
+
+\begin{enumerate}
+\item{NFR2-T01-2\\}
+
+Type: Dynamic, Automatic, Integrity
+
+Initial State: Event with capacity available and payment provider enabled.
+
+Input/Condition: Force a \emph{payment success} during registration 
+
+Output/Result: rows created in \texttt{tickets}/\texttt{registrations}, balance changes.
+How test will be performed: Execute registration up to payment $\rightarrow$ inject success $\rightarrow$ assert updated rows across related tables.
+\end{enumerate}
+
+\paragraph{Test Case NFR2-T02: No Oversell Under Concurrency}
+
+\begin{enumerate}
+\item{NFR2-T02-1\\}
+
+Type: Dynamic, Automatic, Concurrency/Integrity
+
+Initial State: Event capacity = 100.
+
+Input/Condition: 120 users attempt to purchase the last 20 tickets \emph{simultaneously}.
+
+Output/Result: Final \textbf{sold = 100}; remaining attempts fail or are waitlisted. Ensure there are no duplicate ticket IDs.
+
+How test will be performed: Simulate concurrent purchases on a event with a capacity. Ensure, the total tickets sold equals the event capacity
+\end{enumerate}
+
+\paragraph{Test Case NFR2-T03: Idempotent Payment Webhooks}
+
+\begin{enumerate}
+\item{NFR2-T03-1\\}
+
+Type: Dynamic, Automatic, Integrity
+
+Initial State: Pending registration awaiting payment confirmation.
+
+Input/Condition: Deliver the \emph{same} payment\_succeeded webhook 3 times (duplicate delivery).
+
+Output/Result: Exactly one ticket issued, no double charges
+
+How test will be performed: Replay identical webhook payloads, assert one ticket.
+\end{enumerate}
+
+\paragraph{Test Case NFR2-T04: Admin Edits}
+
+\begin{enumerate}
+\item{NFR2-T04-1\\}
+
+Type: Dynamic, Automatic, Integrity
+
+Initial State: Existing attendee with linked registration, ticket, and assignments.
+
+Input/Condition: Admin edits attendee details (e.g., email) through the approved workflow.
+
+Output/Result: All references (login, receipts, notifications) reflect changes.
+
+How test will be performed: Perform admin edit, check references.
+\end{enumerate}
+
+\subsubsection{Usability (NFR3)}
+
+\paragraph{Test Case NFR3-T01: App Usage}
+
+\begin{enumerate}
+\item{NFR3-T01-1\\}
+
+Type: Dynamic, Manual, Usability
+
+Initial State: 10 representative users with no prior experience using MacSync.
+
+Input/Condition: Each user completes the full registration and ticket purchase workflow without assistance.
+
+Output/Result: $\geq$ 99\% task completion rate. Average completion time $\leq$ 3 minutes. Users report that the process to register is relatively easy on a post-test survey.
+
+How test will be performed: Conduct a post-test survey to identify how users like the registration process. Collect register time and completion rate.
+
+\item{NFR3-T01-2\\}
+
+Type: Dynamic, Manual, Usability
+
+Initial State: Deployed MacSync web interface available on desktop and mobile browsers.
+
+Input/Condition: Users locate and access three common features: Event browsing, Registration history, and View Tickets.
+
+Output/Result: 100\% of users locate all features within 15 seconds each.
+
+How test will be performed: Time users as they navigate to each feature. Record completion times.
+
+
+\item{NFR3-T01-3\\}
+
+Type: Dynamic, Manual, Usability
+
+Initial State: User attempts registration with input errors (e.g. missing field, invalid card, expired session).
+
+Input/Condition: Simulated controlled failures during form submission.
+
+Output/Result: Error messages clearly explain the issue and provide actionable recovery steps. Users can visually see these error messages to correct them.
+
+How test will be performed: Observe users encountering predefined error scenarios and verify recovery time and clarity of messages.
+\end{enumerate}
+
+\subsubsection{Security Compliance (NFR4)}
+
+\paragraph{Test Case NFR4-T01: Role-Based Access Control (RBAC/FBAC)}
+
+\begin{enumerate}
+\item{NFR4-T01-1\\}
+
+Type: Dynamic, Automatic, Security
+
+Initial State: Users with predefined roles exist in the system.
+
+Input/Condition: Each role attempts to access restricted endpoints outside its permission scope.
+
+Output/Result: Unauthorized actions are blocked with 403 Forbidden or 401 Unauthorized responses which means no data leakage occurs.
+
+How test will be performed: Attempt cross-role actions and verify correct denial responses.
+\end{enumerate}
+
+\paragraph{Test Case NFR4-T02: Authentication and Session Security}
+
+\begin{enumerate}
+\item{NFR4-T02-1\\}
+
+Type: Dynamic, Automatic, Security
+
+Initial State: Login and session management implemented.
+
+Input/Condition: Attempt login with invalid/valid credentials, expired sessions,
+
+Output/Result: System rejects all invalid attempts, approves valid attempts. All expired sessions should be prompted to revalidate their session.
+
+How test will be performed: Automated tests simulate invalid, valid and expired sessions. Confirm appropriate approval and rejection.
+\end{enumerate}
+
+\paragraph{Test Case NFR4-T03: Sensitive Data Protection}
+
+\begin{enumerate}
+\item{NFR4-T03-1\\}
+
+Type: Static + Dynamic, Security
+
+Initial State: Database entries with user and payment information.
+
+Input/Condition: Inspect data for exposure of personal information or financial details.
+
+Output/Result: No sensitive data (passwords, payment tokens) stored in plaintext. all sensitive data should be encrypted.
+
+How test will be performed: Review database schema and sample dumps for plaintext values.
+\end{enumerate}
+
+\subsubsection{Reliability (NFR5)}
+
+\paragraph{Test Case NFR5-T01: System Uptime}
+
+\begin{enumerate}
+\item{NFR5-T01-1\\}
+
+Type: Dynamic, Automatic, Reliability
+
+Initial State: MacSync deployed on the staging environment.
+
+Input/Condition: Continuous uptime monitoring over a 7-day period. 
+
+Output/Result: System uptime $\geq$ 99\% with no single outage exceeding 5 minutes.
+
+How test will be performed: Enable automatic monitoring every 60 seconds. Record uptime percentage and log all downtime intervals.
+\end{enumerate}
+
+\subsubsection{Auditability (NFR6)}
+
+\paragraph{Test Case NFR6-T01: Logging}
+
+\begin{enumerate}
+\item{NFR6-T01-1\\}
+
+Type: Dynamic, Automatic, Audit
+
+Initial State: System configured with active logging for all payment and registration operations.
+
+Input/Condition: User completes a registration and payment transaction.
+
+Output/Result: Each transaction automatically generates an audit log entry containing timestamp, user ID, event ID, payment ID, and status.
+
+How test will be performed: Perform a sample registration and verify that a corresponding audit log entry is created in the system’s logging database
+
+\item{NFR5-T01-2\\}
+
+Type: Dynamic, Automatic, Audit
+
+Initial State: Admin and Organizer accounts active in the system. and system configured with active logging
+
+Input/Condition: Admin performs actions such as modifying event details, refunding tickets, or changing user roles.
+
+Output/Result: Each action is logged with actor identity, timestamp, previous and new values, and action type.
+
+How test will be performed: Execute sample admin operations and confirm that log entries capture all relevant details, ensuring traceability.
+\end{enumerate}
+
+\noindent\textbf{Summary:}
+
+The tests above layout a detailed test plan for testing the non-functional requirements in the SRS document. Each test ensures clear input and outputs for tests to ensure separation for failed and passed test cases.
 
 \subsection{Traceability Between Test Cases and Requirements}
 
