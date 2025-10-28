@@ -129,16 +129,16 @@ This project includes several approved extras designed to enhance the quality, u
 By including these extras, the project emphasizes usability, maintainability, and user-centered design. The planned activities will ensure that the system not only meets its core functional goals but also provides a reliable, accessible, and sustainable solution for event management within the MES environment.
 \subsection{Relevant Documentation}
 
-\wss{Reference relevant documentation.  This will definitely include your SRS
-  and your other project documents (design documents, like MG, MIS, etc).  You
-  can include these even before they are written, since by the time the project
-  is done, they will be written.  You can create BibTeX entries for your
-  documents and within those entries include a hyperlink to the documents.}
-
-\citet{SRS}
-
-\wss{Don't just list the other documents.  You should explain why they are relevant and 
-how they relate to your VnV efforts.}
+\begin{itemize}
+    \item \textbf{Hazard Analysis (HA)} \citet{SL-HA}:\\
+    The Hazard Analysis document identifies potential hazards and system failures. The VnV includes test cases to test for these possible hazards and informs the VnV testing plan of what a failed test case would look like.
+    \item \textbf{Software Requirements Specification (SRS)} \citet{SL-SRS}:  \\
+    The SRS document describes in detail the functional and non-functional requirements of the system. The VnV plan reference this document as a baseline to ensure all requirements are being met.
+    \item \textbf{Development Plan} \citet{SL-DEVPLAN}:\\
+    The development plan includes the process of developing the MacSync platform. It supports the VnV plan by including how automated test cases and CI/CD pipelines will be used for verification and validation.
+    \item \textbf{Module Interface Specification (MIS) } \citet{SL-MIS}:\\
+    The MIS provides details of the expected inputs and outputs of each software module for the MacSync application. The MIS supports the VnV by providing concrete tests at the unit level for inputs and outputs of each isolated module.
+\end{itemize}
 
 \section{Plan}
 
