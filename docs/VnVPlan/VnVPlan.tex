@@ -152,18 +152,26 @@ how they relate to your VnV efforts.}
   for the project's verification.  A table is a good way to summarize this information.}
 
 \subsection{SRS Verification}
+The SRS verification will be done through a multi-stage review process involving peer reviews, team reviews, supervisor feedback and checklist based inspection to confirm alignment with project objectives.
 
-\wss{List any approaches you intend to use for SRS verification.  This may
-  include ad hoc feedback from reviewers, like your classmates (like your
-  primary reviewer), or you may plan for something more rigorous/systematic.}
+The verification approach will involve the following steps:
+\begin{itemize}
+    \item \textbf{Peer Review (Primary reviewers):} Members of the primary reviewing team will take part in a structured review of the SRS where issues they find will be logged as GitHub Issues and resolved through tracked commits. The deliverable would be a consolidated review log documenting each issue identified and the resolution implemented by the member whose part is associated with the issue.
+    \item \textbf{Team Review:} Based on the review provided by the primary reviewers and the resolution implemented by the team member who was responsible for the associated issue, a different team member will work on identifying if the resolution sufficiently addresses the feedback and implements a corrective solution. The solutions that address the feedback will then be pushed to create the finalized document.
+    \item \textbf{Supervisor Review:} In this step, a meeting will be scheduled with the project supervisor in which a structured review walkthrough will take place to validate the SRS. The structured walkthrough will be a meeting in which the SRS will be presented. The agenda will cover the following: High level overviews of each aspect of the SRS to validate main functionalities, system processes and scope boundaries, critical requirements derived from problem statements and discussing the validity of assumptions made. The validation questions that will be asked will relate to understanding if all functional requirements are measurable and verifiable and if there are any gaps or ambiguities in assumptions or scope definitions. The supervisor feedback will be documented, addressed and resolved with traceability to the specific SRS sections.
+    \item \textbf{SRS Checklist:} In this final step the team will gather and use the below verification checklist to ensure comprehensive evaluation of the SRS using a Pass/Needs Revision criterion
+    \begin{center}
+    \begin{tabular}{|p{4cm}|p{9cm}|}
+        \hline
+        \textbf{Category} & \textbf{Verification Criteria} \\ \hline
+        Accuracy/Completeness & All requirements are included and clearly defined \\ \hline
+        Consistency & No conflicting/contradicting/overlapping requirements exist across sections \\ \hline
+        Clarity & Requirements are clear and leave no room for ambiguity \\ \hline
+        Feasibility & Requirements are achievable and realistically implementable \\ \hline
+    \end{tabular}
+    \end{center}
+\end{itemize}
 
-\wss{If you have a supervisor for the project, you shouldn't just say they will
-read over the SRS.  You should explain your structured approach to the review.
-Will you have a meeting?  What will you present?  What questions will you ask?
-Will you give them instructions for a task-based inspection?  Will you use your
-issue tracker?}
-
-\wss{Maybe create an SRS checklist?}
 
 \subsection{Design Verification}
 
