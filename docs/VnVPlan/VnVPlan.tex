@@ -4,6 +4,7 @@
 \usepackage{tabularx}
 \usepackage{hyperref}
 \usepackage{float}
+\usepackage{amssymb}
 \usepackage{longtable}
 \usepackage{caption}
 \captionsetup{justification=raggedright,singlelinecheck=false}
@@ -214,12 +215,33 @@ Design verification will rely on peer reviews by classmates, team walkthroughs, 
 
 \subsection{Verification and Validation Plan Verification}
 
-\wss{The verification and validation plan is an artifact that should also be
-verified.  Techniques for this include review and mutation testing.}
+The Verification and Validation Plan for MacSync will be carried out by multiple techniques such as peer reviews, evaluation checklists, and mutation testing. The goal of this verification is to ensure that the VnV Plan is thorough, complete, and consistent. Successful completion of this verification will allow the team to verify that all objectives and requirements are align with the scope of the project.\\
 
-\wss{The review will include reviews by your classmates}
+Peer reviews will be conducted by classmates from other capstone groups, and potentially teaching assistants and capstone supervisors. Using a formal checklist, this will ensure the VnV plan traces back to the SRS requirements and project objectives. All feedback through peer reviews will be recorded on github as issues so the team can then conduct meetings to assess feedback and implement them if deemed appropriate.\\
 
-\wss{Create a checklists?}
+Mutation testing will also be done to quantify the coverage of the test plan. By introducing faults into the system we can ensure that our tests catch these faults and report them in the test report.
+
+\begin{table}[H]
+\centering
+\caption{VnV Plan Verification Checklist}
+\begin{tabular}{p{4cm}p{10cm}}
+\toprule
+\textbf{Criteria} & \textbf{Verification Tasks} \\
+\midrule
+\textbf{Coverage} &
+$\square$ Traceability to all functional and non-functional requirements \\
+& $\square$ Each requirement mapped to one or more test cases \\[0.5em]
+\hline
+\textbf{Methodology} &
+$\square$ Verification techniques justified and feasible (e.g., peer review, mutation testing) \\
+& $\square$ Validation strategies defined for stakeholder review sessions \\[0.5em]
+\hline
+\textbf{Process} &
+$\square$ Review feedback mechanism established via GitHub Issues \\
+& $\square$ Scheduled plan refinement meetings \\[0.5em]
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Implementation Verification}
 
