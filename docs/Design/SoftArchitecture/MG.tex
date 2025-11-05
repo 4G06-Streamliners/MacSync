@@ -199,7 +199,8 @@ transactions.
 
 \item [M2: RBAC/FBAC Access Control Module] Manages user permissions and determines
 which features are accessible to each user role within the mobile and web
-applications.
+applications. This module relies on the User Authorization Module for user
+authentication and identity verification.
 
 \item [M3: Sign-Up Module] Provides functionality for participants to register for
 different event activities. It contains shared logic for registration flows,
@@ -229,7 +230,16 @@ feature-based permissions, ensuring consistent authorization across the system.
 \item [M6: Registration Rules Module] Defines and enforces sign-up policies,
 including event deadlines, capacity limits, and participant prioritization
 criteria.
-\item [M7: Notification Handling Module] Manages the delivery of notifications to users across different parts of the system. It coordinates sending confirmations, updates, and reminders related to payments, and registrations. This module ensures that users receive timely and relevant information through email or in-app alerts.
+
+\item [M7: Notification Handling Module] Manages the delivery of notifications to
+users across different parts of the system. It coordinates sending confirmations,
+updates, and reminders related to payments and registrations. This module ensures
+that users receive timely and relevant information through email or in-app alerts.
+
+\item [M8: User Authorization Module] Handles user authentication, login, and
+session management. It verifies user credentials, and
+provides identity data to other modules such as RBAC/FBAC and Payment Processing.
+This module serves as the foundation for all user-based operations within the system.
 \end{description}
 
 \begin{table}[H]
@@ -242,7 +252,7 @@ criteria.
 {Hardware-Hiding Module} & ~ \\
 \midrule
 
-\multirow{7}{0.3\textwidth}{Behaviour-Hiding Module} 
+\multirow{8}{0.3\textwidth}{Behaviour-Hiding Module} 
 & Payment Processing Module\\
 & RBAC/FBAC Access Control Module\\
 & Sign-Up Module\\
@@ -250,6 +260,7 @@ criteria.
 & \hspace{1em} Bus Sign-Up Module\\
 & \hspace{1em} Table Sign-Up Module\\
 & \hspace{1em} RSVP Sign-Up Module\\
+& User Authorization Module\\
 \midrule
 
 \multirow{4}{0.3\textwidth}{Software Decision Module}
