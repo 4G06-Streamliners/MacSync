@@ -193,16 +193,19 @@ actually be implemented.
 \subsection*{User Interface Modules}
 
 \begin{description}
-\item [M1: Payment Processing Module] Handles the logic and communication between
+\refstepcounter{mnum}\label{M1}
+\item [M\themnum: Payment Processing Module] Handles the logic and communication between
 the frontend and backend services for processing event payments and verifying
 transactions.
 
-\item [M2: RBAC/FBAC Access Control Module] Manages user permissions and determines
+\refstepcounter{mnum}\label{M2}
+\item [M\themnum: RBAC/FBAC Access Control Module] Manages user permissions and determines
 which features are accessible to each user role within the mobile and web
 applications. This module relies on the User Authorization Module for user
 authentication and identity verification.
 
-\item [M3: Sign-Up Module] Provides functionality for participants to register for
+\refstepcounter{mnum}\label{M3}
+\item [M\themnum: Sign-Up Module] Provides functionality for participants to register for
 different event activities. It contains shared logic for registration flows,
 along with specific submodules for each type of sign-up.
 \begin{itemize}
@@ -220,23 +223,28 @@ along with specific submodules for each type of sign-up.
 \subsection*{Backend Modules}
 
 \begin{description}
-\item [M4: Payment Configuration Module] Stores and manages payment parameters such
+\refstepcounter{mnum}\label{M4}
+\item [M\themnum: Payment Configuration Module] Stores and manages payment parameters such
 as currency, and API integration details for supported payment
 methods.
 
-\item [M5: Access Control Module] Implements backend logic for role-based and
+\refstepcounter{mnum}\label{M5}
+\item [M\themnum: Access Control Module] Implements backend logic for role-based and
 feature-based permissions, ensuring consistent authorization across the system.
 
-\item [M6: Registration Rules Module] Defines and enforces sign-up policies,
+\refstepcounter{mnum}\label{M6}
+\item [M\themnum: Registration Rules Module] Defines and enforces sign-up policies,
 including event deadlines, capacity limits, and participant prioritization
 criteria.
 
-\item [M7: Notification Handling Module] Manages the delivery of notifications to
+\refstepcounter{mnum}\label{M7}
+\item [M\themnum: Notification Handling Module] Manages the delivery of notifications to
 users across different parts of the system. It coordinates sending confirmations,
 updates, and reminders related to payments and registrations. This module ensures
 that users receive timely and relevant information through email or in-app alerts.
 
-\item [M8: User Authorization Module] Handles user authentication, login, and
+\refstepcounter{mnum}\label{M8}
+\item [M\themnum: User Authorization Module] Handles user authentication, login, and
 session management. It verifies user credentials, and
 provides identity data to other modules such as RBAC/FBAC and Payment Processing.
 This module serves as the foundation for all user-based operations within the system.
