@@ -156,17 +156,43 @@ require changing the one module that hides the associated decision. The approach
 adapted here is called design for
 change.
 
-\begin{description}
-\item[\refstepcounter{acnum} \actheacnum \label{acHardware}:] The specific
-  hardware on which the software is running.
-\item[\refstepcounter{acnum} \actheacnum \label{acInput}:] The format of the
-  initial input data.
-\item ...
-\end{description}
+\makeatletter
+\renewcommand{\p@mnum}{M}
+\makeatother
 
-\wss{Anticipated changes relate to changes that would be made in requirements,
-design or implementation choices.  They are not related to changes that are made
-at run-time, like the values of parameters.}
+\begin{description}
+  
+\item[\refstepcounter{acnum} \actheacnum \label{acPaymentGateway}:] 
+Future updates to the \textbf{Payment Processing Module}~(\ref{M1}) may require migration 
+to different payment providers (e.g., Stripe, PayPal, Square) or McMaster’s internal 
+e-commerce API.
+
+\item[\refstepcounter{acnum} \actheacnum \label{acSignupTypes}:] 
+New event types (e.g., workshops, volunteer shifts) may require additional registration 
+flows beyond bus, table, and RSVP sign-ups. 
+\textbf{Affected Module:} Sign-Up Module~(\ref{M3}).
+
+\item[\refstepcounter{acnum} \actheacnum \label{acNotifications}:] 
+Notification delivery methods or content templates may expand to include SMS or 
+in-app alerts in addition to email and push notifications. 
+\textbf{Affected Module:} Notification Handling Module (\ref{M7}).
+
+\item[\refstepcounter{acnum} \actheacnum \label{acNotifications}:] 
+Notification delivery methods or content templates may expand to include SMS or 
+in-app alerts in addition to email and push notifications. 
+\textbf{Affected Module:} Notification Handling Module (\ref{M7}).
+
+\item[\refstepcounter{acnum} \actheacnum \label{acPolicyRules}:] 
+Event policies such as capacity limits, sign-up deadlines, or priority access 
+rules may change based on MES regulations. 
+\textbf{Affected Module:} Registration Rules (\ref{M6}).
+
+\item[\refstepcounter{acnum} \actheacnum \label{acAnalytics}:] 
+Admin dashboard metrics and analytics may expand with new reporting filters 
+or visualizations. 
+\textbf{Affected Module:} Admin Dashboard and Analytics (\ref{M5}).
+
+\end{description}
 
 \subsection{Unlikely Changes} \label{SecUchange}
 
@@ -178,9 +204,34 @@ will potentially need to be modified. Hence, it is not intended that these
 decisions will be changed.
 
 \begin{description}
-\item[\refstepcounter{ucnum} \uctheucnum \label{ucIO}:] Input/Output devices
-  (Input: File and/or Keyboard, Output: File, Memory, and/or Screen).
-\item ...
+
+\item[\refstepcounter{ucnum} \uctheucnum \label{ucTechStack}:] 
+The system's technology stack (Next.js/React frontend, NestJS backend, PostgreSQL database) 
+is a stable decision and unlikely to change during or after development.
+Altering this foundation would require complete re-architecture.
+
+\item[\refstepcounter{ucnum} \uctheucnum \label{ucHosting}:] 
+Hosting on DigitalOcean and database management using PostgreSQL containers 
+are fixed infrastructure decisions.
+
+\item[\refstepcounter{ucnum} \uctheucnum \label{ucPrivacy}:] 
+Compliance with PIPEDA and McMaster University privacy policies is a permanent 
+requirement that will not change. Any change would necessitate legal
+review and cross-module rewriting.
+
+\item[\refstepcounter{ucnum} \uctheucnum \label{ucRolesArch}:] 
+Security protocols such as TLS 1.3, AES-256 encryption, audit logging, and 
+fail-safe defaults are core safety standards defined in the Hazard Analysis
+and are not expected to change.
+
+\item[\refstepcounter{ucnum} \uctheucnum \label{ucRolesArch}:] 
+The role hierarchy (Attendee, Organizer, Executive) and three-tier architecture 
+(frontend, backend, database) are foundational and not expected to evolve.
+
+\item[\refstepcounter{ucnum} \uctheucnum \label{ucScope}:] 
+The system scope will remain focused on MES event management. Expansion to unrelated 
+domains (e.g., general club management or social networking) is not anticipated.
+
 \end{description}
 
 \section{Module Hierarchy} \label{SecMH}
