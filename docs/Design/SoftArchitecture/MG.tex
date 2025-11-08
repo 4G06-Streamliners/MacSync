@@ -330,20 +330,66 @@ to be implemented.
 \subsubsection{Payment Processing Module (\mref{M1})}
 
 \begin{description}
-\item[Secrets:]The format and structure of the input data.
-\item[Services:]Converts the input data into the data structure used by the
-  input parameters module.
-\item[Implemented By:] [Your Program Name Here]
-\item[Type of Module:] [Record, Library, Abstract Object, or Abstract Data Type]
-  [Information to include for leaf modules in the decomposition by secrets tree.]
+\item[Secrets:] Payment gateway integration, logic for the transaction workflows.
+\item[Services:] Allows for client to fulfill payment requests, executes charges/refunds, and reports all transactions to logs.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
 \subsubsection{RBAC/FBAC Access Control Module (\mref{M2})}
 
+\begin{description}
+\item[Secrets:] The mapping of roles to features that allow capabilities in the UI.
+\item[Services:] Determines what views/actions are allowed for a signed in user. 
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library Component
+\end{description}
+
 \subsubsection{Sign-Up Module (\mref{M3})}
+
+\begin{description}
+\item[Secrets:] Common sign up state machine (registered, confirmed, waitlisted).
+\item[Services:] Shared logic for creating and managing signups, delegates concrete services to submodules.  
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Bus Sign-up Module (\mref{M3.1})}
+
+\begin{description}
+\item[Secrets:] Capacity model, seat allocation logic and, waitlisting logic.
+\item[Services:] Allows users to reserve bus seat while enforcing capacity.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Table Sign-up Module (\mref{M3.2})}
+
+\begin{description}
+\item[Secrets:] Table size, number of tables, and grouping constraints.
+\item[Services:] Allows event organizers to create/manage table groups.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{RSVP Sign-up Module (\mref{M3.3})}
+
+\begin{description}
+\item[Secrets:] Event capacity, RSVP deadlines. 
+\item[Services:] Allows users to RSVP for events. enforces constraints/limits and reports user status.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
 
 \subsubsection{User Authorization Module (\mref{M8})}
 
+\begin{description}
+\item[Secrets:] Identity verification, session tokens. 
+\item[Services:] Authenticates the user, issues and validates session tokens, provides identity context to \mref{M2}.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
+\end{description}
 
 \subsection{Software Decision Module}
 
@@ -360,11 +406,40 @@ to be implemented.
 
 \subsubsection{Payment Configuration Module (\mref{M4})}
 
+\begin{description}
+\item[Secrets:] Supported providers, external/internal services, pricing schemas.
+\item[Services:] Stores and provides payment parameters to \mref{M1}. 
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library Component
+\end{description}
+
 \subsubsection{Access Control Module (\mref{M5})}
+
+\begin{description}
+\item[Secrets:] Logic to evaluate permissions and stores all policies.
+\item[Services:] Evaluates actions being performed by the user and grants them the correct views/resources. 
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
+\end{description}
+
 
 \subsubsection{Registration Rules Module (\mref{M6})}
 
+\begin{description}
+\item[Secrets:] Global event constraints (capacity, deadlines) holds all the default event details/policies.
+\item[Services:] Validates sign up operations across all sign up modules. Provides \mref{M3} with core information about events.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
 \subsubsection{Notification Handling Module (\mref{M7})}
+
+\begin{description}
+\item[Secrets:] Integrations (emails/push), notification templating, retry policies.
+\item[Services:] Sends confirmations, reminders and status updates triggered by \mref{M1}/\mref{M3}.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library Component.
+\end{description}
 
 \section{Traceability Matrix} \label{SecTM}
 
