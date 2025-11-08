@@ -165,23 +165,39 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsection{Module}
 
-\wss{Short name for the module}
+\wss{SignupModule}
 
 \subsection{Uses}
-
+\begin{itemize}
+    \item A back-end or configuration service to store and retrieve confirmed signups.
+    \item A front-end/UI component for users to input sign-up information.
+\end{itemize}
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
+\begin{itemize}
+    \item SIGNUP_TYPES: (“RSVP”, “Table”, “Bus”)
+    \begin{itemize}
+        \item Supported types of signup modules.
+    \end{itemize}
+    \item MAX_PARTICIPANTS_PER_EVENT: \mathbb{N}
+    \begin{itemize}
+        \item Maximum number of participants allowed per event.
+    \end{itemize}
+\end{itemize}
 
 \subsubsection{Exported Access Programs}
-
 \begin{center}
 \begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+submitSignup & userID: Str \newline eventID: Str \newline data: JSON & success: bool & SignupError \\
+\hline
+getSignupStatus & userID: Str \newline eventID: Str & status: JSON & NotFoundError \\
+\hline
+cancelSignup & userID: Str \newline eventID: Str & success: bool & CancellationError \\
 \hline
 \end{tabular}
 \end{center}
@@ -189,43 +205,64 @@ The following table is taken directly from the Module Guide document for this pr
 \subsection{Semantics}
 
 \subsubsection{State Variables}
-
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+    \item signupDetails: dict[(userID, eventID): JSON]
+    \begin{itemize}
+        \item Stores all signup information and metadata.
+    \end{itemize}
+\end{itemize}
 
 \subsubsection{Environment Variables}
-
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+\begin{itemize}
+    \item SIGNUP_API: Str
+    \begin{itemize}
+        \item API endpoint to database for sending and storing signup data to backend.
+    \end{itemize}
+\end{itemize}
 
 \subsubsection{Assumptions}
-
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+\begin{itemize}
+    \item A user has a valid session where they are authenticated before accessing the signup module.
+\end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent submitSignup(UserID, eventID, data):
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: Adds new entry to signupDetails for given userID and eventID.
+\item output: Returns true if signup is successful.
+\item exception: SignupError if validation fails or event is full.
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\noindent getSignupStatus(userID, eventID):
+\begin{itemize}
+\item transition: None.
+\item output: Returns JSON information with users signup details for the given event.
+\item exception: NotFoundError if no record exists.
+\end{itemize}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent cancelSignup(userID, eventID):
+\begin{itemize}
+\item transition: Removes signup for given userID and eventID.
+\item output: Returns true on successful deletion.
+\item exception: CancellationError if no record is found for deletion
+\end{itemize}
 
 \subsubsection{Local Functions}
+\noindent validateSignupData(formData: JSON):
+\begin{itemize}
+\item transition: None.
+\item output: Returns true if all required fields are complete.
+\item exception: ValidationError if required fields are missing or have invalid data format.s
+\end{itemize}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+\noindent checkCapacity(eventID: str):
+\begin{itemize}
+\item transition: None.
+\item output: Returns true if the current signup added to total signups is < MAX_PARTICIPANTS.
+\item exception: CapacityExceededError if event has reached full capacity.
+\end{itemize}
+
 
 \newpage
 
