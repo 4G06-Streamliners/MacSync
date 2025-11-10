@@ -168,6 +168,133 @@ The following table is taken directly from the Module Guide document for this pr
 \wss{Short name for the module}
 
 \subsection{Uses}
+\section{MIS of Payment Configuration Module}
+
+\subsection{Module}
+
+\texttt{PaymentConfigModule}
+
+\subsection{Uses}
+
+\begin{itemize}
+    \item Provides configuration data such as API keys, supported currencies, and webhook URLs to the \texttt{PaymentProcessingModule}.
+    \item Ensures payment-related parameters are securely retrieved, stored, and updated within the backend environment.
+    \item Interfaces with the database or environment configuration store to read/write payment provider settings.
+    \item Supplies configuration information to other modules that require payment-related metadata (e.g., \texttt{NotificationHandlingModule} for payment receipt messages).
+\end{itemize}
+
+\subsection{Syntax}
+ 
+\subsubsection{Exported Constants}
+
+\begin{itemize}
+    \item \texttt{SUPPORTED\_PROVIDERS: list[str]}\\
+    List of third-party payment processors integrated with the system (e.g., \texttt{["Stripe", "PayPal"]}).
+    \item \texttt{DEFAULT\_CURRENCY: str}\\
+    Default currency code for all transactions (e.g., \texttt{"CAD"}).
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+\texttt{getProviderConfig} & providerName: str & config: JSON & ProviderNotFound \\
+\texttt{updateProviderConfig} & providerName: str, newConfig: JSON & success: bool & ValidationError \\
+\texttt{getSupportedProviders} & - & providers: list[str] & - \\
+\texttt{getDefaultCurrency} & - & currency: str & - \\
+\texttt{setDefaultCurrency} & currency: str & success: bool & InvalidCurrencyError \\
+\texttt{refreshCache} & - & success: bool & CacheUpdateError \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+    \item \texttt{providerConfigs: dict[str, JSON]}\\
+    Maps provider names to their configuration details (API keys, endpoints, etc.).
+    \item \texttt{defaultCurrency: str}\\
+    The currently selected default currency used for transactions.
+    \item \texttt{cacheLastUpdated: datetime}\\
+    Timestamp of the most recent configuration cache refresh.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+    \item \texttt{CONFIG\_STORE\_PATH: str|path}\\
+    Path to configuration store or environment variable directory where secure credentials are located.
+    \item \texttt{ENV: str}\\
+    Defines the running environment (\texttt{"development"}, \texttt{"staging"}, \texttt{"production"}).
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+    \item The configuration store or environment variables are properly initialized before module invocation.
+    \item Only authorized backend services can call configuration update functions.
+    \item Provider configuration schemas remain compatible with the expected format.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent \texttt{getProviderConfig(providerName: str)}:
+\begin{itemize}
+    \item transition: None
+    \item input: Name of the payment provider (e.g., \texttt{"Stripe"}).
+    \item output: Returns JSON containing configuration values for the provider (API key, webhook URL, etc.).
+    \item exception: \texttt{ProviderNotFound} if the specified provider does not exist in the configuration store.
+\end{itemize}
+
+\noindent \texttt{updateProviderConfig(providerName: str, newConfig: JSON)}:
+\begin{itemize}
+    \item transition: Updates \texttt{providerConfigs[providerName]} with validated \texttt{newConfig}.
+    \item input: Provider name and new configuration payload.
+    \item output: Returns \texttt{True} if configuration update succeeds.
+    \item exception: \texttt{ValidationError} if configuration schema fails validation.
+\end{itemize}
+
+\noindent \texttt{getSupportedProviders()}:
+\begin{itemize}
+    \item transition: None
+    \item output: Returns a list of all available payment providers.
+\end{itemize}
+
+\noindent \texttt{getDefaultCurrency()}:
+\begin{itemize}
+    \item transition: None
+    \item output: Returns the default currency used for transactions.
+\end{itemize}
+
+\noindent \texttt{setDefaultCurrency(currency: str)}:
+\begin{itemize}
+    \item transition: Updates the stored default currency.
+    \item input: Currency code to set as new default (must follow ISO 4217 format).
+    \item output: Returns \texttt{True} on success.
+    \item exception: \texttt{InvalidCurrencyError} if provided currency is not supported.
+\end{itemize}
+
+\noindent \texttt{refreshCache()}:
+\begin{itemize}
+    \item transition: Reloads all provider configurations from the configuration store and updates \texttt{cacheLastUpdated}.
+    \item output: Returns \texttt{True} if cache is successfully refreshed.
+    \item exception: \texttt{CacheUpdateError} if reload fails due to inaccessible configuration source.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+    \item \texttt{validateConfig(config: JSON) $\mapsto$ bool}\\
+    Validates that the provided configuration JSON matches expected schema fields (API key, secret, currency).
+\end{itemize}
+
+\newpage
+
 
 
 \subsection{Syntax}
