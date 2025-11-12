@@ -156,32 +156,51 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of \wss{Module Name}} \label{Module} \wss{Use labels for
-  cross-referencing}
 
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
+\newpage
+\section{Module Interface Specifications} \label{SecMIS}
 
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+This section provides the Module Interface Specifications (MIS) for each module 
+defined in the Module Guide. Each module is documented independently, following 
+the notation and structure described in Section 2.
 
-\subsection{Module}
+\subsection{MIS of Payment Processing Module (M1)} \label{MIS_M1}
 
-\wss{Short name for the module}
+\subsubsection{Module}
 
-\subsection{Uses}
+Payment Processing Module (M1)
 
+This module prepares and submits payment requests from the client side.  
+It validates the payment data, attaches authentication headers, and communicates 
+with the backend API that integrates with Stripe. The module does not handle 
+any payment verification or charge confirmation locally. Instead, verification 
+is performed by the backend through Stripe’s secure payment APIs, configured 
+in the Payment Configuration Module (M4).
+
+\subsubsection{Uses}
+
+\begin{itemize}
+    \item API Layer (HTTP communication with backend)
+    \item User Authorization Module (Frontend) (M8F)
+    \item Payment Configuration Module (M4) (indirect, via backend)
+\end{itemize}
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
+None.
+
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{3cm} p{4cm} p{4cm} p{2cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+submitPayment & PaymentInfo & ConfirmationResponse & InvalidPaymentData, NetworkError \\
+\hline
+validatePaymentData & PaymentInfo & Boolean & InvalidPaymentData \\
 \hline
 \end{tabular}
 \end{center}
@@ -190,42 +209,57 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+None.
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+\begin{itemize}
+    \item Network connection to the backend API
+    \item AuthToken from M8F
+\end{itemize}
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+\begin{itemize}
+    \item User must be authenticated before submitting a payment.
+    \item Device must have a stable network connection.
+    \item The backend exposes a REST endpoint \texttt{POST /api/payments/create-intent}
+          for initializing Stripe PaymentIntents.
+    \item The backend handles all Stripe secret keys and secure payment operations.
+\end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent \textbf{submitPayment}(paymentInfo):
+
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+    \item transition: None.
+    \item output: A ConfirmationResponse containing the client secret, payment result, 
+    or any backend-supplied status (e.g., requires\_action, succeeded, failed).
+    \item exception: InvalidPaymentData if required fields are missing or malformed; 
+    NetworkError if the request fails.
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\vspace{0.2cm}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent \textbf{validatePaymentData}(paymentInfo):
+
+\begin{itemize}
+    \item transition: None.
+    \item output: Returns true if all required fields (amount, event ID, billing details) 
+    are correctly defined.
+    \item exception: InvalidPaymentData if fields are empty or violate basic constraints.
+\end{itemize}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+\begin{itemize}
+    \item formatRequestBody(paymentInfo): builds the JSON payload for creating a Stripe PaymentIntent.
+    \item attachAuthHeader(): retrieves user Authorization token from M8F and attaches it 
+          to the API request.
+    \item handleApiResponse(response): converts backend JSON into a ConfirmationResponse 
+          (e.g., extracting client\_secret or error information).
+\end{itemize}
 
 \newpage
 
