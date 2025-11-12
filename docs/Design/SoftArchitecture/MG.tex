@@ -30,6 +30,7 @@
 \newcounter{mnum}
 \newcommand{\mthemnum}{M\themnum}
 \newcommand{\mref}[1]{M\ref{#1}}
+\newcounter{submnum}
 
 \begin{document}
 
@@ -261,8 +262,6 @@ different event activities. It contains shared logic for registration flows,
 along with specific submodules for each type of sign-up.
 \renewcommand{\thesubmnum}{\themnum.\arabic{submnum}}
 \begin{itemize}
-    \item [\refstepcounter{submnum}\label{M3.1}\textbf{M\thesubmnum:}] \textbf{Sign-Up Adapter} Standardizes registration logic and
-    offers a unified interface to connect multiple sign-up submodules.
     \item [\refstepcounter{submnum}\label{M3.2}\textbf{M\thesubmnum:}] \textbf{Bus Sign-Up Module} Handles registration for bus
     transportation, including capacity validation and seat allocation.
     \item [\refstepcounter{submnum}\label{M3.3}\textbf{M\thesubmnum:}] \textbf{Table Sign-Up Module} Manages registration and table
@@ -316,7 +315,6 @@ This module serves as the foundation for all user-based operations within the sy
 & Payment Processing Module\\
 & RBAC/FBAC Access Control Module\\
 & Sign-Up Module\\
-& \hspace{1em} Sign-Up Adapter\\
 & \hspace{1em} Bus Sign-Up Module\\
 & \hspace{1em} Table Sign-Up Module\\
 & \hspace{1em} RSVP Sign-Up Module\\
