@@ -173,59 +173,63 @@ Payment Processing Module (M1)
 This module prepares and submits payment requests from the client side.  
 It validates the payment data, attaches authentication headers, and communicates 
 with the backend API that integrates with Stripe. The module does not handle 
-any payment verification or charge confirmation locally. Instead, verification 
-is performed by the backend through Stripe’s secure payment APIs, configured 
-in the Payment Configuration Module (M4).
+any payment verification locally. Instead, verification and 
+execution of charges or refunds are performed by the backend using Stripe’s 
+secure payment APIs, configured in the Payment Configuration Module (M4).
 
 \subsubsection{Uses}
 
 \begin{itemize}
     \item API Layer (HTTP communication with backend)
-    \item User Authorization Module (Frontend) (M8F)
-    \item Payment Configuration Module (M4) (indirect, via backend)
+    \item User Authorization Module (M8)
+    \item Payment Configuration Module (M4)
+    \item Notification Handling Module (M7)
 \end{itemize}
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
-
-None.
+N/A
 
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{3cm} p{4cm} p{4cm} p{2cm}}
-\hline
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
-\hline
-submitPayment & PaymentInfo & ConfirmationResponse & InvalidPaymentData, NetworkError \\
-\hline
-validatePaymentData & PaymentInfo & Boolean & InvalidPaymentData \\
-\hline
-\end{tabular}
+\midrule
+submitPayment       & PaymentInfo & ConfirmationResponse & InvalidPaymentData, NetworkError \\
+validatePaymentData & PaymentInfo & Boolean              & InvalidPaymentData \\
+requestRefund       & RefundRequest & RefundResponse      & InvalidRefundRequest, NetworkError \\
+\bottomrule
+\end{tabularx}
 \end{center}
 
 \subsection{Semantics}
 
 \subsubsection{State Variables}
 
-None.
+N/A
 
 \subsubsection{Environment Variables}
 
 \begin{itemize}
     \item Network connection to the backend API
-    \item AuthToken from M8F
+    \item AuthToken from User Authorization Module (M8)
 \end{itemize}
 
 \subsubsection{Assumptions}
 
 \begin{itemize}
-    \item User must be authenticated before submitting a payment.
+    \item User must be authenticated before submitting a payment or requesting a refund.
     \item Device must have a stable network connection.
-    \item The backend exposes a REST endpoint \texttt{POST /api/payments/create-intent}
-          for initializing Stripe PaymentIntents.
-    \item The backend handles all Stripe secret keys and secure payment operations.
+    \item The backend exposes REST endpoints:
+        \begin{itemize}
+            \item \texttt{POST /api/payments}: initialize Stripe PaymentIntent
+            \item \texttt{POST /api/payments/refund}: request a Stripe refund
+        \end{itemize}
+    \item The backend manages all Stripe secret keys and secure payment operations.
 \end{itemize}
 
 \subsubsection{Access Routine Semantics}
@@ -233,11 +237,14 @@ None.
 \noindent \textbf{submitPayment}(paymentInfo):
 
 \begin{itemize}
-    \item transition: None.
+    \item transition: N/A.
     \item output: A ConfirmationResponse containing the client secret, payment result, 
-    or any backend-supplied status (e.g., requires\_action, succeeded, failed).
-    \item exception: InvalidPaymentData if required fields are missing or malformed; 
-    NetworkError if the request fails.
+    or any backend-supplied status (e.g., succeeded, failed).
+    \item exception: 
+        \begin{itemize}
+            \item InvalidPaymentData: required fields missing or malformed  
+            \item NetworkError: request fails or cannot reach backend 
+        \end{itemize}
 \end{itemize}
 
 \vspace{0.2cm}
@@ -245,20 +252,33 @@ None.
 \noindent \textbf{validatePaymentData}(paymentInfo):
 
 \begin{itemize}
-    \item transition: None.
+    \item transition: N/A
     \item output: Returns true if all required fields (amount, event ID, billing details) 
     are correctly defined.
     \item exception: InvalidPaymentData if fields are empty or violate basic constraints.
 \end{itemize}
 
+\vspace{0.2cm}
+
+\noindent \textbf{requestRefund}(refundRequest):
+
+\begin{itemize}
+    \item transition: N/A
+    \item output: A RefundResponse containing refund status, amount refunded,  
+    and backend-supplied outcome (e.g. pending, succeeded, failed).
+    \item exception:
+        \begin{itemize}
+            \item InvalidRefundRequest: missing payment ID, invalid amount  
+            \item NetworkError: unable to send or receive the refund request
+        \end{itemize}
+\end{itemize}
+
 \subsubsection{Local Functions}
 
 \begin{itemize}
-    \item formatRequestBody(paymentInfo): builds the JSON payload for creating a Stripe PaymentIntent.
-    \item attachAuthHeader(): retrieves user Authorization token from M8F and attaches it 
-          to the API request.
-    \item handleApiResponse(response): converts backend JSON into a ConfirmationResponse 
-          (e.g., extracting client\_secret or error information).
+    \item submitAPIRequest(jsonBody, authToken, endpoint): sends the HTTP POST request to the backend API.
+    \item handleAPIResponse(response): converts backend JSON into the correct response object 
+          (ConfirmationResponse or RefundResponse).
 \end{itemize}
 
 \newpage
