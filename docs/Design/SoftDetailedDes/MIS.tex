@@ -156,32 +156,44 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of \wss{Module Name}} \label{Module} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{MIS of Access Control Module (M5)} 
 
 \subsection{Module}
 
-\wss{Short name for the module}
+\texttt{AccessControlService}
 
 \subsection{Uses}
+
+\begin{itemize}
+    \item Authorization Module (M8)
+    \item Persistence Layer (DB): stores roles, features, capabilities, and user assignments.
+    \item Caching Layer: speeds up permission lookups.
+\end{itemize}
 
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
+\begin{itemize}
+    \item \texttt{POLICY\_SCHEMA : JSON}\\
+    Defines valid structure for permission rules.
+    \item \texttt{AUTH\_ERROR\_CODE : Int}\\
+    Code returned when an API call is forbidden.
+\end{itemize}
+
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+\texttt{checkPermission} & action: Str & authorized: bool & AuthorizationError \\
+\texttt{assignRole} & userID: Str, role: Str & success: bool & RoleError \\
+\texttt{revokeRole} & userID: Str, role: Str & success: bool & RoleError \\
+\texttt{setPolicy} & policy: JSON & success: bool & PolicyError\\
+\texttt{getPolicy} & - & policy: JSON & -\\
 \hline
 \end{tabular}
 \end{center}
@@ -190,42 +202,79 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+    \item \texttt{roleAssignments : dict[userID → set[role]]}\\
+    Maps each user role to its permitted features.
+    \item \texttt{policyDocument : JSON}\\
+    Full mapping of roles → features → capabilities
+    \item \texttt{policyVersion : Int}\\
+    Incremented upon policy update.
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+\begin{itemize}
+    \item \texttt{AUTH\_DB\_URI : Str}\\
+    Path to policy store.
+    \item \texttt{CACHE\_URI : Str}\\
+    Cache location for capabilities.
+\end{itemize}
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+\begin{itemize}
+    \item All callers (Payment, Forms, Check-In, etc.) consult this module before performing protected actions.
+    \item M2 calls this module to enforce its authority, it does not make up its own rules.
+\end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent \texttt{checkPermission(action: Str)}:
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: None
+\item input: the attempted action.
+\item output: Returns True if the user has the required capability to perform the requested action.
+\item exception: \texttt{AuthorizationError}  if the user is not permitted to perform the action.
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\noindent \texttt{assignRole(userID: Str, role: Str)}:
+\begin{itemize}
+\item transition: Adds the specified role to the user's stored role assignments. 
+\item input: A unique user identifier and a valid role string.
+\item output: Returns True on successful role assignment.
+\item exception: \texttt{RoleError} if the role does not exist or cannot be assigned.
+\end{itemize}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent \texttt{revokeRole(userID: Str, role: Str)}:
+\begin{itemize}
+\item transition: Removes the specified role from the user's role assignments.
+\item input: A unique user identifier and a valid role string.
+\item output: Returns True on successful role removal.
+\item exception: \texttt{RoleError} if the specified role is not currently assigned to the user.
+\end{itemize}
+
+\noindent \texttt{setPolicy(policy: JSON)}:
+\begin{itemize}
+\item transition: Validates and replaces the policy document with the new policy, increments the internal policy version counter.
+\item input: A JSON object containing an updated set of roles, features, capabilities, and guard rules.
+\item output: Returns \texttt{True} on success.
+\item exception: \texttt{PolicyError} if the policy does not match the defined schema or cannot be persisted.
+\end{itemize}
+
+\noindent \texttt{getPolicy()}:
+\begin{itemize}
+\item transition: None.
+\item input: None.
+\item output: Returns the current policy document in JSON format.
+\item exception: None.
+\end{itemize}
+
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+\begin{itemize}
+    \item None.
+\end{itemize}
 
 \newpage
 
