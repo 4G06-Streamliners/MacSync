@@ -156,18 +156,17 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of RBAC/FBAC Access Control Module} 
+\section{MIS of RBAC/FBAC Access Control Module (M2)} 
 
 \subsection{Module}
 
-\texttt{AccessControlService}
+\texttt{RBACModule}
 
 \subsection{Uses}
 
 \begin{itemize}
-    \item Authorization Module (M8)
-    \item Persistence Layer (DB): stores roles, features, capabilities, and user assignments.
-    \item Caching Layer: speeds up permission lookups.
+    \item User Authorization Module (M8)
+    \item Access Control Service Module (M5)
 \end{itemize}
 
 
@@ -176,10 +175,10 @@ The following table is taken directly from the Module Guide document for this pr
 \subsubsection{Exported Constants}
 
 \begin{itemize}
-    \item \texttt{POLICY\_SCHEMA : JSON}\\
-    Defines valid structure for permission rules.
-    \item \texttt{AUTH\_ERROR\_CODE : Int}\\
-    Code returned when an API call is forbidden.
+    \item \texttt{DEFAULT\_ROLE}: \texttt{str}\\
+    Default user role when signing up for the platform.
+    \item \texttt{ACCESS\_POLICY\_SCHEMA: JSON}\\
+    Schema for the capability snapshot retrieved from backend M5.
 \end{itemize}
 
 \subsubsection{Exported Access Programs}
@@ -189,11 +188,10 @@ The following table is taken directly from the Module Guide document for this pr
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\texttt{checkPermission} & action: Str & authorized: bool & AuthorizationError \\
-\texttt{assignRole} & userID: Str, role: Str & success: bool & RoleError \\
-\texttt{revokeRole} & userID: Str, role: Str & success: bool & RoleError \\
-\texttt{setPolicy} & policy: JSON & success: bool & PolicyError\\
-\texttt{getPolicy} & - & policy: JSON & -\\
+\texttt{getUserRole} & userID: Str & role: Str & UserNotFound \\
+\texttt{getUserCapabilities} & userID: Str & capabilities: list[Str] & UserNotFound \\
+\texttt{authorizeAction} & action: Str & authorized: bool & AuthorizationError\\
+\texttt{syncCapabilities} & userID: Str & success: bool & FetchError \\
 \hline
 \end{tabular}
 \end{center}
@@ -203,70 +201,58 @@ The following table is taken directly from the Module Guide document for this pr
 \subsubsection{State Variables}
 
 \begin{itemize}
-    \item \texttt{roleAssignments : dict[userID → set[role]]}\\
-    Maps each user role to its permitted features.
-    \item \texttt{policyDocument : JSON}\\
-    Full mapping of roles → features → capabilities
-    \item \texttt{policyVersion : Int}\\
-    Incremented upon policy update.
+    \item \texttt{capabilitySnapshot : dict[Str, list[Str]]}\\
+    Locally cached copy of backend-authorized capabilities for the active user.
+    \item \texttt{userRole: Str}\\
+    UI-level role used for UX grouping.
 \end{itemize}
 
 \subsubsection{Environment Variables}
 
 \begin{itemize}
-    \item \texttt{AUTH\_DB\_URI : Str}\\
-    Path to policy store.
-    \item \texttt{CACHE\_URI : Str}\\
-    Cache location for capabilities.
+    \item \texttt{ACCESS\_CONTROL\_ENDPOINT : Str}\\
+    Backend API to fetch the authoritative permissions.
 \end{itemize}
 
 \subsubsection{Assumptions}
 
 \begin{itemize}
-    \item All callers (Payment, Forms, Check-In, etc.) consult this module before performing protected actions.
-    \item M2 calls this module to enforce its authority, it does not make up its own rules.
+    \item Authorization requests are made only for defined features or actions.
+    \item M5 always provides the source-of-truth permission set.
 \end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \texttt{checkPermission(action: Str)}:
+\noindent \texttt{getUserRole(userID: Str)}:
 \begin{itemize}
 \item transition: None
-\item input: the attempted action.
-\item output: Returns True if the user has the required capability to perform the requested action.
-\item exception: \texttt{AuthorizationError}  if the user is not permitted to perform the action.
+\item input: A unique user identifier.
+\item output: Returns the role string associated with the given user.
+\item exception: \texttt{UserNotFound} If UUID cannot be identified.
 \end{itemize}
 
-\noindent \texttt{assignRole(userID: Str, role: Str)}:
+\noindent \texttt{getUserCapabilities(userID: Str)}:
 \begin{itemize}
-\item transition: Adds the specified role to the user's stored role assignments. 
-\item input: A unique user identifier and a valid role string.
-\item output: Returns True on successful role assignment.
-\item exception: \texttt{RoleError} if the role does not exist or cannot be assigned.
+\item transition: None
+\item input: A unique user identifier.
+\item output: Returns list of available features/actions.
+\item exception: \texttt{UserNotFound} If UUID cannot be identified.
 \end{itemize}
 
-\noindent \texttt{revokeRole(userID: Str, role: Str)}:
+\noindent \texttt{authorizeAction(userID: Str, action: Str)}:
 \begin{itemize}
-\item transition: Removes the specified role from the user's role assignments.
-\item input: A unique user identifier and a valid role string.
-\item output: Returns True on successful role removal.
-\item exception: \texttt{RoleError} if the specified role is not currently assigned to the user.
+\item transition: None
+\item input: User ID and attempted action.
+\item output: Returns \texttt{True} if the action is permitted by user's role/capabilities.
+\item exception: \texttt{AuthorizationError}  if access is denied.
 \end{itemize}
 
-\noindent \texttt{setPolicy(policy: JSON)}:
+\noindent \texttt{syncCapabilities(userID: Str)}:
 \begin{itemize}
-\item transition: Validates and replaces the policy document with the new policy, increments the internal policy version counter.
-\item input: A JSON object containing an updated set of roles, features, capabilities, and guard rules.
+\item transition: Fetches the capability snapshot from M5 and updates internal policy schema.
+\item input: User ID
 \item output: Returns \texttt{True} on success.
-\item exception: \texttt{PolicyError} if the policy does not match the defined schema or cannot be persisted.
-\end{itemize}
-
-\noindent \texttt{getPolicy()}:
-\begin{itemize}
-\item transition: None.
-\item input: None.
-\item output: Returns the current policy document in JSON format.
-\item exception: None.
+\item exception: \texttt{FetchError} if backend cannot be reached.
 \end{itemize}
 
 
