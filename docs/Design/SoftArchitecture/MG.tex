@@ -30,6 +30,7 @@
 \newcounter{mnum}
 \newcommand{\mthemnum}{M\themnum}
 \newcommand{\mref}[1]{M\ref{#1}}
+\newcounter{submnum}
 
 \begin{document}
 
@@ -259,17 +260,17 @@ authentication and identity verification.
 \item [M\themnum: Sign-Up Module] Provides functionality for participants to register for
 different event activities. It contains shared logic for registration flows,
 along with specific submodules for each type of sign-up.
-%\renewcommand{\thesubmnum}{\themnum.\arabic{submnum}}
-%\begin{itemize}
-%    \item [\refstepcounter{submnum}\label{M3.1}\textbf{M\thesubmnum:}] \textbf{Sign-Up Adapter} Standardizes registration logic and
-%    offers a unified interface to connect multiple sign-up submodules.
-%    \item [\refstepcounter{submnum}\label{M3.2}\textbf{M\thesubmnum:}] \textbf{Bus Sign-Up Module} Handles registration for bus
-%    transportation, including capacity validation and seat allocation.
-%    \item [\refstepcounter{submnum}\label{M3.3}\textbf{M\thesubmnum:}] \textbf{Table Sign-Up Module} Manages registration and table
-%    assignments for group events.
-%    \item [\refstepcounter{submnum}\label{M3.4}\textbf{M\thesubmnum:}] \textbf{RSVP Sign-Up Module} Handles RSVP submissions and
-%    confirmation tracking for events.
-%\end{itemize}
+\renewcommand{\thesubmnum}{\themnum.\arabic{submnum}}
+\begin{itemize}
+    \item [\refstepcounter{submnum}\label{M3.1}\textbf{M\thesubmnum:}] \textbf{Sign-Up Adapter} Standardizes registration logic and
+    offers a unified interface to connect multiple sign-up submodules.
+    \item [\refstepcounter{submnum}\label{M3.2}\textbf{M\thesubmnum:}] \textbf{Bus Sign-Up Module} Handles registration for bus
+    transportation, including capacity validation and seat allocation.
+    \item [\refstepcounter{submnum}\label{M3.3}\textbf{M\thesubmnum:}] \textbf{Table Sign-Up Module} Manages registration and table
+    assignments for group events.
+    \item [\refstepcounter{submnum}\label{M3.4}\textbf{M\thesubmnum:}] \textbf{RSVP Sign-Up Module} Handles RSVP submissions and
+    confirmation tracking for events.
+\end{itemize}
 \end{description}
 
 \subsection*{Backend Modules}
@@ -518,7 +519,7 @@ needed. Drawings, Sketches, Figma}
 
 \section{Timeline} \label{SecTimeline}
 
-A breakdown of the team’s task delegation and schedule can be found in the GitHub repository
+A breakdown of the team's task delegation and schedule can be found in the GitHub repository
 under the Issues and Projects tabs. The delegation assumes even workload distribution as outlined
 in the Development Plan.\\\\
 \noindent
@@ -532,51 +533,51 @@ The following outlines the implementation timeline:
 \begin{itemize}
     \item \textbf{Phase 1: Proof-of-Concept Demo (due November 2025)}  
     \begin{itemize}
-        \item \textbf{M1: Payment Processing Module}  
+        \item \textbf{\ref{M4}: Payment Processing Module}
         \begin{itemize}
-            \item Payment workflow prototype and API integration testing (Mahad)  
+            \item Payment workflow prototype and API integration testing (Abyan)  
             \item Sandbox transactions with Stripe (Farhan)
         \end{itemize}
-        \item \textbf{M2: RBAC/FBAC Access Control Module}  
+        \item \textbf{\ref{M2}: RBAC/FBAC Access Control Module}  
         \begin{itemize}
-            \item Role and permission model research (Ali)  
-            \item Prototype admin/attendee login flows (Ali)
+            \item Role and permission model research (Mahad)  
+            \item Prototype admin/attendee login flows (Mahad)
         \end{itemize}
-        \item \textbf{M3: Sign-Up Module}  
+        \item \textbf{\ref{M3}: Sign-Up Module}  
         \begin{itemize}
-            \item RSVP and table sign-up prototype (Abyan, Prerna)  
-            \item Early UI mockups and capacity validation logic (Prerna)
+            \item RSVP and table sign-up prototype (Ali, Prerna)  
+            \item Early UI mockups and capacity validation logic (Ali, Prerna)
         \end{itemize}
     \end{itemize}
 
     \item \textbf{Phase 2: Revision 0 Implementation (due February 2026)}  
     \begin{itemize}
-        \item \textbf{M1: Payment Processing Module}  
+        \item \textbf{\ref{M1}: Payment Processing Module}  
         \begin{itemize}
-            \item Finalize secure transaction pipeline and refund logic (Mahad)  
+            \item Finalize secure transaction pipeline and refund logic (Abyan)  
             \item Implement audit trail for financial operations (Farhan)
         \end{itemize}
-        \item \textbf{M2: RBAC/FBAC Access Control Module}  
+        \item \textbf{\ref{M2}: RBAC/FBAC Access Control Module}  
         \begin{itemize}
-            \item Implement role templates and privilege hierarchy (Ali)  
-            \item Integrate authentication middleware (Ali, Farhan)
+            \item Implement role templates and privilege hierarchy (Mahad)  
+            \item Integrate authentication middleware (Mahad, Farhan)
         \end{itemize}
-        \item \textbf{M3: Sign-Up Module}  
+        \item \textbf{\ref{M3}: Sign-Up Module}  
         \begin{itemize}
             \item Full bus/table/RSVP integration (Abyan, Prerna)  
             \item Database schema and validation rules (Prerna)
         \end{itemize}
-        \item \textbf{M5: Admin Dashboard and Analytics Module}  
+        \item \textbf{\ref{M5}: Admin Dashboard and Analytics Module}  
         \begin{itemize}
-            \item Dashboard UI and analytics metrics (Farhan, Abyan)  
-            \item Implement sales/capacity charts (Abyan)
+            \item Dashboard UI and analytics metrics (Ali, Abyan)  
+            \item Implement sales/capacity charts (Ali)
         \end{itemize}
-        \item \textbf{M6: Registration Rules Module}  
+        \item \textbf{\ref{M6}: Registration Rules Module}  
         \begin{itemize}
             \item Develop configuration logic for deadlines and waitlists (Prerna)  
             \item Link with sign-up validation rules (Mahad)
         \end{itemize}
-        \item \textbf{M7: Notification Handling Module}  
+        \item \textbf{\ref{M7}: Notification Handling Module}  
         \begin{itemize}
             \item Email and push notification service setup (Farhan)  
             \item Implement confirmation and reminder templates (Abyan)
@@ -585,19 +586,16 @@ The following outlines the implementation timeline:
 
     \item \textbf{Phase 2.5: System Integration with MES Teams (January 2026)}  
     \begin{itemize}
-        \item Conduct cross-team integration with the other MES Capstone groups to merge the
-        \textbf{Payments}, \textbf{Access Control}, and \textbf{Event Creation} subsystems.  
+        \item Conduct cross-team integration with the other MES Capstone groups to merge the Payments, Access Control, and Event Creation subsystems.  
         \item Establish shared database schema and API endpoints for unified platform operation.  
-        \item Perform integration testing of inter-module communication (auth tokens, event sync,
-        and ticket validation).  
-        \item Align with MES technical leads to confirm production hosting configuration and
-        shared environment variables.  
+        \item Perform integration testing of inter-module communication (auth tokens, event sync, and ticket validation).  
+        \item Align with MES technical leads to confirm production hosting configuration and shared environment variables.  
         \item Responsibilities:  
         \begin{itemize}
-            \item Farhan – Cross-team liaison and CI/CD pipeline alignment  
-            \item Mahad – Backend API merging and shared database migration scripts  
-            \item Ali – Access token compatibility and role enforcement validation  
-            \item Abyan, Prerna – Front-end integration testing and UI regression checks
+            \item Farhan - Cross-team liaison and CI/CD pipeline alignment  
+            \item Mahad - Backend API merging and shared database migration scripts  
+            \item Ali - Access token compatibility and role enforcement validation  
+            \item Abyan, Prerna - Front-end integration testing and UI regression checks
         \end{itemize}
     \end{itemize}
 
@@ -618,94 +616,6 @@ The following outlines the implementation timeline:
 \noindent
 All testing and CI/CD pipelines will be continuously maintained during each phase to ensure
 progress toward a stable and verified Rev 0 release.
-
-\section{Timeline} \label{SecTimeline}
-
-A breakdown of the team’s delegation and progress tracking is maintained in GitHub
-(\emph{Issues} and \emph{Projects}). Work is organized to respect module dependencies from
-Section~\ref{SecMD}: configuration before processing (\mref{M4} $\rightarrow$ \mref{M1}),
-authorization before access control (\mref{M8} $\rightarrow$ \mref{M2}), and rules before
-sign-ups (\mref{M6} $\rightarrow$ \mref{M3}, \mref{M3.1}–\mref{M3.3}). Documentation is due by
-the \textbf{Final Documentation} deadline (April 2026). Functional/non-functional features
-are due before the \textbf{Final Demonstration} and \textbf{Capstone Expo}.
-
-\begin{itemize}
-  \item \textbf{Phase 1: Proof-of-Concept Demo (due November 2025)}
-  \begin{itemize}
-    \item \textbf{Bootstrap \& Vertical Slice}
-      \begin{itemize}
-        \item Minimal pipeline from sign-up UI to payment sandbox:
-              \mref{M3} (stub) $\rightarrow$ \mref{M4} (seed config) $\rightarrow$ \mref{M1} (sandbox charge) $\rightarrow$ \mref{M7} (email stub).
-        \item Auth baseline: \mref{M8} issues session tokens; \mref{M2} consumes identity for simple view gating.
-      \end{itemize}
-    \item \textbf{Module first passes}
-      \begin{itemize}
-        \item \mref{M4} Payment Configuration: provider keys (dev), currency, environment toggles.
-        \item \mref{M1} Payment Processing: sandbox charge/refund, idempotency, basic logging.
-        \item \mref{M8} User Authorization: login/session token issuance; token validation hook.
-        \item \mref{M2} RBAC/FBAC Access Control: role map (Attendee/Organizer/Exec) with 1–2 guarded routes.
-        \item \mref{M6} Registration Rules: capacity/deadline fields defined; validation function skeletons.
-        \item \mref{M3} Sign-Up (shell) with one concrete flow (pick \mref{M3.3} RSVP) from submit $\rightarrow$ confirm.
-      \end{itemize}
-    \item \textbf{PoC Exit Criteria}
-      \begin{itemize}
-        \item One user can RSVP, complete a sandbox payment, and receive a confirmation email.
-        \item Tokens from \mref{M8} successfully gate a protected action in \mref{M2}.
-      \end{itemize}
-  \end{itemize}
-
-  \item \textbf{Phase 2: Rev~0 Core Implementation (due February 2026)}
-  \begin{itemize}
-    \item \textbf{Back-end hardening \& breadth}
-      \begin{itemize}
-        \item \mref{M4}: provider switching (feature flag), audit settings, refund policy config.
-        \item \mref{M1}: full charge/refund flows, receipts, retry/idempotency; structured logs for finance audit.
-        \item \mref{M8}: session expiry/refresh; hooks for downstream modules; error taxonomy.
-        \item \mref{M2}: permission policies for organizer actions (capacity edits, manual overrides).
-        \item \mref{M6}: waitlist semantics; global \& event-level overrides; conflict resolution.
-      \end{itemize}
-    \item \textbf{Sign-up family completion}
-      \begin{itemize}
-        \item \mref{M3.1} Bus: capacity model, seat allocation, waitlist promotion.
-        \item \mref{M3.2} Table: group constraints, table sizing, organizer assignment tools.
-        \item \mref{M3.3} RSVP: deadline enforcement, status transitions (registered/confirmed/waitlisted).
-        \item \mref{M3}: shared state machine and validation orchestration across submodules.
-      \end{itemize}
-    \item \textbf{Notifications}
-      \begin{itemize}
-        \item \mref{M7}: templates (paid, refunded, moved from waitlist); delivery retries; provider adapter seam.
-      \end{itemize}
-    \item \textbf{Rev~0 Exit Criteria}
-      \begin{itemize}
-        \item All three sign-up paths (\mref{M3.1}, \mref{M3.2}, \mref{M3.3}) callable via \mref{M3} with \mref{M6} validation.
-        \item Payments (\mref{M1}) succeed/fail cleanly and emit audit logs; notifications (\mref{M7}) dispatched.
-      \end{itemize}
-  \end{itemize}
-
-  \item \textbf{Phase 2.5: System Integration with MES Teams (January 2026)}
-  \begin{itemize}
-    \item Cross-team merge of Payments/Access/Sign-Ups; align shared schema and API contracts.
-    \item Token/role interoperability: \mref{M8} token claims verified end-to-end; \mref{M2} policy parity confirmed.
-    \item Event sync \& ticket validation paths exercised across teams.
-    \item CI/CD unification: shared environment variables, migrations, and seed data.
-    \item \textbf{Integration Exit Criteria}: cross-team E2E passes for RSVP/Table/Bus with payment and notification.
-  \end{itemize}
-
-  \item \textbf{Phase 3: Full System Testing \& Stabilization (due March 2026)}
-  \begin{itemize}
-    \item Unit \& integration tests expanded (per-module suites for \mref{M1}–\mref{M7}, \mref{M3.1}–\mref{M3.3}); contract tests on public APIs.
-    \item Non-functional validation (security, reliability, auditability) aligned to SRS fit criteria.
-    \item Load tests on sign-up spikes and payment bursts; soak tests on waitlist promotions.
-    \item Defect triage, performance tuning (e.g., idempotency windows, queue backoffs in \mref{M7}).
-  \end{itemize}
-
-  \item \textbf{Phase 4: Final Demo \& Capstone Expo (due April 2026)}
-  \begin{itemize}
-    \item Documentation (Module Guide \& MIS updates), ops runbooks, and migration checklists.
-    \item Final polish of user flows; demo data seeding; presentation and poster deliverables.
-  \end{itemize}
-\end{itemize}
-
 
 \bibliographystyle {plainnat}
 \bibliography{../../../refs/References}
