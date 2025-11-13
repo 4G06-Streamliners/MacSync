@@ -186,26 +186,6 @@ payments.
     \texttt{/api/payments}, \texttt{/api/payments/refund}).
 \end{itemize}
 
-\subsection{Secrets}
-
-\begin{itemize}
-    \item Logic for loading, validating, and refreshing the Stripe public key.
-    \item Internal rules governing which backend payment endpoints are used for
-    specific operations.
-    \item Caching policy for PaymentIntent client secrets and how TTL expiration is computed.
-    \item Currency, tax, and rounding configuration used to compute final ticket prices.
-\end{itemize}
-
-\subsection{Services}
-
-\begin{itemize}
-    \item Provide safe access to Stripe public configuration values.
-    \item Provide canonical backend payment endpoints for payment creation,
-    confirmation, and refunds.
-    \item Provide currency and tax configuration for all payment flows.
-    \item Indicate whether a cached PaymentIntent requires refreshing.
-    \item Provide receipt and invoice formatting configuration for notifications.
-\end{itemize}
 
 \subsection{Syntax}
 
