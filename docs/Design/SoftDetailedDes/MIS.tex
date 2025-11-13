@@ -156,76 +156,142 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of \wss{Module Name}} \label{Module} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{MIS of User Authorization Module (M8)}
 
 \subsection{Module}
 
-\wss{Short name for the module}
+\texttt{UserAuthorizationModule}\\
+
+\noindent
+This module provides authentication and identity verification for all other 
+modules in the system. It manages login sessions, token issuance, token 
+validation, and user identity retrieval. The module integrates with external 
+authentication providers when applicable and acts as the system’s source of 
+truth for authenticated user identity data used by RBAC/FBAC (M5/M2) and any 
+module requiring secure access.
 
 \subsection{Uses}
 
+\begin{itemize}
+    \item Access Control Module (M5): Uses identity and token validation functions to determine a user's permissions.
+    \item Payment Processing Module (M1): Requires a verified user identity before initiating payment or refund operations.
+    \item Sign-Up Module (M3): Uses authenticated user identifiers when  creating bus/table/RSVP sign-up records.
+    \item Notification Handling Module (M7): Uses authenticated user information to route notifications to the correct recipient.
+    \item External Authentication Provider (e.g., OAuth/SSO): Provides the 
+    underlying authentication mechanism for secure login.
+\end{itemize}
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
+\begin{itemize}
+    \item \texttt{TOKEN\_EXPIRY\_MIN : Nat}\\
+    The number of minutes before an issued access token expires.
+    \item \texttt{REFRESH\_TOKEN\_SUPPORTED : Bool}\\
+    Indicates whether refresh tokens are enabled in the current 
+    deployment configuration.
+\end{itemize}
+
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
-\hline
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
-\hline
-\wss{accessProg} & - & - & - \\
-\hline
-\end{tabular}
+\midrule
+\texttt{login} & Credentials & AuthToken & InvalidCredentials, NetworkError \\
+\texttt{logout} & AuthToken & Bool & TokenError \\
+\texttt{validateToken} & AuthToken & Bool & TokenExpired, TokenInvalid \\
+\texttt{getUserInfo} & AuthToken & UserProfile & TokenInvalid, NetworkError \\
+\texttt{refreshToken} & RefreshToken & AuthToken & TokenInvalid, NotSupported \\
+\bottomrule
+\end{tabularx}
 \end{center}
 
 \subsection{Semantics}
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+    \item \texttt{activeSessions : dict[token $\rightarrow$ UserID]} \\
+    Stores active session mappings for all authenticated users.
+    \item \texttt{tokenExpiryTimes : dict[token $\rightarrow$ Time]} \\
+    Tracks expiration timestamps for each active token.
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+\begin{itemize}
+    \item \texttt{AUTH\_SERVER\_URL : URL} \\
+    External authentication provider endpoint (OAuth/SSO).
+    \item \texttt{SystemTime : Time} \\
+    Used to validate token expiration.
+\end{itemize}
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+\begin{itemize}
+    \item All modules calling this one must supply a token obtained from \texttt{login} or \texttt{refreshToken}.
+    \item The external authentication provider (OAuth/SSO) is available and reliable.
+    \item Tokens are cryptographically signed by the authentication provider and cannot be tampered with by the client.
+    \item Session expiry rules follow the SRS and Hazard Analysis requirements (e.g., 15-minute admin timeout).
+\end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent\textbf{\texttt{login(credentials)}}
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: Adds new entry to \texttt{activeSessions} and \texttt{tokenExpiryTimes}.
+\item output: Returns a newly issued \texttt{AuthToken}.
+\item exception: \texttt{InvalidCredentials} if credentials rejected or \texttt{NetworkError} if authentication provider is unreachable.
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\vspace{0.2cm}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent\textbf{\texttt{logout(token)}}
+\begin{itemize}
+\item transition: Removes \texttt{token} from all session maps.
+\item output: \texttt{true} on success.
+\item exception: \texttt{TokenError} if token is not active.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{validateToken(token)}}
+\begin{itemize}
+\item transition: none.
+\item output: \texttt{true} if token is valid and unexpired.
+\item exception: \texttt{TokenInvalid} or \texttt{TokenExpired}.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getUserInfo(token)}}
+\begin{itemize}
+\item transition: none.
+\item output: Returns the authenticated user's profile (ID, email, name, role).
+\item exception: \texttt{TokenInvalid} or \texttt{NetworkError}.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{refreshToken(refreshToken)}}
+\begin{itemize}
+\item transition: Replaces expired/expiring token with new token, if supported.
+\item output: Returns newly issued \texttt{AuthToken}.
+\item exception: \texttt{TokenInvalid} if the supplied refresh token is invalid, \texttt{NotSupported} if refresh tokens are disabled.
+\end{itemize}
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+\begin{itemize}
+    \item \texttt{decodeToken(token)}: Verifies token signature and extracts identity data.
+    \item \texttt{isExpired(token)}: Checks whether current time exceeds stored expiry.
+    \item \texttt{requestAuthServer(endpoint, payload)}: Handles secure communication with the external authentication provider.
+\end{itemize}
+
 
 \newpage
 
