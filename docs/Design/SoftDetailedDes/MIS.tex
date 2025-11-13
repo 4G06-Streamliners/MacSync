@@ -156,59 +156,89 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of \wss{Module Name}} \label{Module} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{MIS of Payment Configuration Module (M4)}
 
 \subsection{Module}
 
-\wss{Short name for the module}
+\texttt{PaymentConfigurationModule}\\
 
-\subsection{Uses}
-\section{MIS of Payment Configuration Module}
-
-\subsection{Module}
-
-\texttt{PaymentConfigModule}
+\noindent
+This module centralizes all configuration required for secure payment operations.
+It exposes safe, restricted payment settings to other modules such as the Payment
+Processing Module (M1) while hiding sensitive Stripe configuration logic and
+backend API wiring. It ensures a single source of truth for currency rules,
+tax configuration, receipt formatting, and API endpoint definitions related to
+payments.
 
 \subsection{Uses}
 
 \begin{itemize}
-    \item Provides configuration data such as API keys, supported currencies, and webhook URLs to the \texttt{PaymentProcessingModule}.
-    \item Ensures payment-related parameters are securely retrieved, stored, and updated within the backend environment.
-    \item Interfaces with the database or environment configuration store to read/write payment provider settings.
-    \item Supplies configuration information to other modules that require payment-related metadata (e.g., \texttt{NotificationHandlingModule} for payment receipt messages).
+    \item Payment Processing Module (M1): Uses exported configuration values
+    to construct valid payment requests and interact with backend payment endpoints.
+    \item User Authorization Module (M8): Provides authentication tokens required
+    when modules call backend payment APIs.
+    \item Access Control Module (M5): Ensures that only authorized user roles may
+    access payment configuration or initiate restricted payment operations.
+    \item Notification Handling Module (M7): Uses configured receipt and invoice
+    formatting rules when sending payment confirmations.
+    \item Backend Stripe Integration Service: Provides the actual
+    PaymentIntent creation, confirmation, and refund endpoints (e.g., 
+    \texttt{/api/payments}, \texttt{/api/payments/refund}).
+\end{itemize}
+
+\subsection{Secrets}
+
+\begin{itemize}
+    \item Logic for loading, validating, and refreshing the Stripe public key.
+    \item Internal rules governing which backend payment endpoints are used for
+    specific operations.
+    \item Caching policy for PaymentIntent client secrets and how TTL expiration is computed.
+    \item Currency, tax, and rounding configuration used to compute final ticket prices.
+\end{itemize}
+
+\subsection{Services}
+
+\begin{itemize}
+    \item Provide safe access to Stripe public configuration values.
+    \item Provide canonical backend payment endpoints for payment creation,
+    confirmation, and refunds.
+    \item Provide currency and tax configuration for all payment flows.
+    \item Indicate whether a cached PaymentIntent requires refreshing.
+    \item Provide receipt and invoice formatting configuration for notifications.
 \end{itemize}
 
 \subsection{Syntax}
- 
+
 \subsubsection{Exported Constants}
 
 \begin{itemize}
-    \item \texttt{SUPPORTED\_PROVIDERS: list[str]}\\
-    List of third-party payment processors integrated with the system (e.g., \texttt{"Stripe"}).
-    \item \texttt{DEFAULT\_CURRENCY: str}\\
-    Default currency code for all transactions (e.g., \texttt{"CAD"}).
+    \item \texttt{STRIPE\_PUBLIC\_KEY : Str}\\
+    The publishable Stripe key used by the frontend; never contains secret keys.
+    \item \texttt{PAYMENT\_API\_BASE : URL}\\
+    Base backend endpoint for payment operations.
+    \item \texttt{CURRENCY\_CODE : Str}\\
+    Currency used for all events (\texttt{CAD}).
+    \item \texttt{TAX\_RATE : Float}\\
+    The global tax percentage applied to event payments.
+    \item \texttt{INTENT\_CACHE\_TTL\_SEC : Nat}\\
+    TTL for caching Stripe PaymentIntent client secrets.
 \end{itemize}
 
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
-\hline
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
-\hline
-\texttt{getProviderConfig} & providerName: str & config: JSON & ProviderNotFound \\
-\texttt{updateProviderConfig} & providerName: str, newConfig: JSON & success: bool & ValidationError \\
-\texttt{getSupportedProviders} & - & providers: list[str] & - \\
-\texttt{getDefaultCurrency} & - & currency: str & - \\
-\texttt{setDefaultCurrency} & currency: str & success: bool & InvalidCurrencyError \\
-\texttt{refreshCache} & - & success: bool & CacheUpdateError \\
-\hline
-\end{tabular}
+\midrule
+\texttt{getPublicStripeKey} & -- & Str & KeyNotAvailable \\
+\texttt{getPaymentAPIEndpoint} & OperationType & URL & InvalidOperationType \\
+\texttt{getCurrencyConfig} & -- & CurrencyConfig & -- \\
+\texttt{shouldRefreshPaymentIntent} & LastUpdated: Time & Bool & -- \\
+\texttt{getReceiptConfig} & -- & ReceiptConfig & -- \\
+\bottomrule
+\end{tabularx}
 \end{center}
 
 \subsection{Semantics}
@@ -216,143 +246,85 @@ The following table is taken directly from the Module Guide document for this pr
 \subsubsection{State Variables}
 
 \begin{itemize}
-    \item \texttt{providerConfigs: dict[str, JSON]}\\
-    Maps provider names to their configuration details (API keys, endpoints, etc.).
-    \item \texttt{defaultCurrency: str}\\
-    The currently selected default currency used for transactions.
-    \item \texttt{cacheLastUpdated: datetime}\\
-    Timestamp of the most recent configuration cache refresh.
+    \item \texttt{publicKey : Str}
+    \item \texttt{paymentAPIMap : dict[OperationType $\rightarrow$ URL]}
+    \item \texttt{currencyConfig : CurrencyConfig}
+    \item \texttt{receiptConfig : ReceiptConfig}
+    \item \texttt{cacheTTL : Nat}
 \end{itemize}
 
 \subsubsection{Environment Variables}
 
 \begin{itemize}
-    \item \texttt{CONFIG\_STORE\_PATH: str|path}\\
-    Path to configuration store or environment variable directory where secure credentials are located.
-    \item \texttt{ENV: str}\\
-    Defines the running environment (\texttt{"development"}, \texttt{"staging"}, \texttt{"production"}).
+    \item \texttt{ENV\_STRIPE\_PUBLIC\_KEY : Str} - Loaded from build-time environment.
+    \item \texttt{ENV\_PAYMENT\_API\_BASE : URL} - Backend service base URL.
+    \item \texttt{SystemTime : Time} - Used for TTL and expiration checks.
 \end{itemize}
 
 \subsubsection{Assumptions}
 
 \begin{itemize}
-    \item The configuration store or environment variables are properly initialized before module invocation.
-    \item Only authorized backend services can call configuration update functions.
-    \item Provider configuration schemas remain compatible with the expected format.
+    \item Stripe secret keys are stored only on the backend and never exposed to the client.
+    \item Backend exposes the routes \texttt{/api/payments}, 
+    \texttt{/api/payments/confirm}, and \texttt{/api/payments/refund}.
+    \item All callers of this module have been authenticated by M8 and authorized by M5.
+    \item Configuration is loaded once per application session.
 \end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \texttt{getProviderConfig(providerName: str)}:
+\noindent\textbf{\texttt{getPublicStripeKey()}}
 \begin{itemize}
-    \item transition: None
-    \item input: Name of the payment provider (e.g., \texttt{"Stripe"}).
-    \item output: Returns JSON containing configuration values for the provider (API key, webhook URL, etc.).
-    \item exception: \texttt{ProviderNotFound} if the specified provider does not exist in the configuration store.
+\item transition: none
+\item output: \texttt{publicKey}
+\item exception: \texttt{KeyNotAvailable} if key is missing or invalid.
 \end{itemize}
 
-\noindent \texttt{updateProviderConfig(providerName: str, newConfig: JSON)}:
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getPaymentAPIEndpoint(opType)}}
 \begin{itemize}
-    \item transition: Updates \texttt{providerConfigs[providerName]} with validated \texttt{newConfig}.
-    \item input: Provider name and new configuration payload.
-    \item output: Returns \texttt{True} if configuration update succeeds.
-    \item exception: \texttt{ValidationError} if configuration schema fails validation.
+\item transition: none
+\item output: returns URL mapped to the given operation type.
+\item exception: \texttt{InvalidOperationType} if no mapping is defined.
 \end{itemize}
 
-\noindent \texttt{getSupportedProviders()}:
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getCurrencyConfig()}}
 \begin{itemize}
-    \item transition: None
-    \item output: Returns a list of all available payment providers.
+\item transition: none
+\item output: returns currency and tax configuration.
+\item exception: none.
 \end{itemize}
 
-\noindent \texttt{getDefaultCurrency()}:
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{shouldRefreshPaymentIntent(lastUpdated)}}
 \begin{itemize}
-    \item transition: None
-    \item output: Returns the default currency used for transactions.
+\item transition: none
+\item output: \texttt{true} if the PaymentIntent cache TTL has expired.
+\item exception: none.
 \end{itemize}
 
-\noindent \texttt{setDefaultCurrency(currency: str)}:
-\begin{itemize}
-    \item transition: Updates the stored default currency.
-    \item input: Currency code to set as new default (must follow ISO 4217 format).
-    \item output: Returns \texttt{True} on success.
-    \item exception: \texttt{InvalidCurrencyError} if provided currency is not supported.
-\end{itemize}
+\vspace{0.2cm}
 
-\noindent \texttt{refreshCache()}:
+\noindent\textbf{\texttt{getReceiptConfig()}}
 \begin{itemize}
-    \item transition: Reloads all provider configurations from the configuration store and updates \texttt{cacheLastUpdated}.
-    \item output: Returns \texttt{True} if cache is successfully refreshed.
-    \item exception: \texttt{CacheUpdateError} if reload fails due to inaccessible configuration source.
+\item transition: none
+\item output: returns canonical receipt formatting settings for notifications.
+\item exception: none.
 \end{itemize}
 
 \subsubsection{Local Functions}
 
 \begin{itemize}
-    \item \texttt{validateConfig(config: JSON) $\mapsto$ bool}\\
-    Validates that the provided configuration JSON matches expected schema fields (API key, secret, currency).
+    \item \texttt{loadEnvValue(key)}: safely retrieves build-time environment variables.
+    \item \texttt{buildEndpoint(base, suffix)}: constructs consistent backend payment URLs.
+    \item \texttt{validatePublicKey(str)}: checks prefix/type of Stripe public key.
+    \item \texttt{computeTTL(t)}: helper for determining TTL expiration.
 \end{itemize}
 
-\newpage
-
-
-
-\subsection{Syntax}
-
-\subsubsection{Exported Constants}
-
-\subsubsection{Exported Access Programs}
-
-\begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
-\hline
-\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
-\hline
-\wss{accessProg} & - & - & - \\
-\hline
-\end{tabular}
-\end{center}
-
-\subsection{Semantics}
-
-\subsubsection{State Variables}
-
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
-
-\subsubsection{Environment Variables}
-
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
-
-\subsubsection{Assumptions}
-
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
-
-\subsubsection{Access Routine Semantics}
-
-\noindent \wss{accessProg}():
-\begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
-\end{itemize}
-
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
-
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
-
-\subsubsection{Local Functions}
-
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
 
 \newpage
 
