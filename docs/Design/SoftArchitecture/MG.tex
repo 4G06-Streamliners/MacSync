@@ -75,7 +75,6 @@ This section records information for easy reference.
   SRS & Software Requirements Specification\\
   \progname & Explanation of program name\\
   UC & Unlikely Change \\
-  \wss{etc.} & \wss{...}\\
   \bottomrule
 \end{tabular}\\
 
@@ -339,50 +338,57 @@ The design of the Large Event Management System is intended to satisfy the funct
 requirements (F101–F116) and the associated non-functional requirements identified in the
 Software Requirements Specification (SRS). This section explains how these requirements
 guided the modular decomposition of the system into the components presented in
-Section~\ref{SecMH}. The connection between requirements and modules is listed in Table~\ref{TblRT}.
+Section~\ref{SecMH}. The connection between requirements and modules is listed in Table~\ref{TblRT}.\\
 
+\noindent
 Requirements related to \textbf{event registration and ticketing} (F101–F104) are
-satisfied through the \textit{Sign-Up Module (M3)} and its submodules
-(\textit{M3.1–M3.4}). These modules handle all user registration flows including ticket
+satisfied through the \textit{Sign-Up Module \ref{M3}} and its submodules
+(\textit{\mref{M3.1}–\mref{M3.3}}). These modules handle all user registration flows including ticket
 purchasing, bus and table sign-ups, RSVPs, and refund management. They interact with the
-\textit{Registration Rules Module (M6)} to enforce deadlines, seat capacities, and
+\textit{Registration Rules Module \ref{M6}} to enforce deadlines, seat capacities, and
 prioritization policies, ensuring that registration logic remains consistent and adaptable
-to different event configurations.
+to different event configurations. \\
 
+\noindent
 \textbf{Payment-related requirements} (F105–F107) are fulfilled by the
-\textit{Payment Processing Module (M1)} and the \textit{Payment Configuration Module
+\textit{Payment Processing Module \ref{M1}} and the \textit{Payment Configuration Module
 (M4)}. Together they manage secure payment gateway integration, transaction verification,
 and storage of configuration data such as currency types, merchant keys, and payment
 methods. This modular separation supports both extensibility—allowing future integration
-with new payment providers—and maintainability by isolating external API dependencies.
+with new payment providers—and maintainability by isolating external API dependencies. \\
 
+\noindent
 \textbf{Sign-up and allocation requirements} (F108–F110), including bus registration,
 table assignments, and RSVP limits, are handled by specific submodules within the
-\textit{Sign-Up Module (M3)}. Each submodule provides a tailored workflow for its
+\textit{Sign-Up Module \ref{M3}}. Each submodule provides a tailored workflow for its
 respective function, while common logic is centralized through the \textit{Sign-Up
-Adapter (M3.1)}. This satisfies the SRS need for flexible and reusable registration
-components that can be applied across multiple event types.
+Adapter \mref{M3.1}}. This satisfies the SRS need for flexible and reusable registration
+components that can be applied across multiple event types.\\
 
+\noindent
 \textbf{Access-control requirements} (F111–F113) motivated the inclusion of both the
-\textit{RBAC/FBAC Access Control Module (M2)} and the backend
-\textit{Access Control Module (M5)}. These modules collectively enforce role-based and
+\textit{RBAC/FBAC Access Control Module \ref{M2}} and the backend
+\textit{Access Control Module \ref{M5}}. These modules collectively enforce role-based and
 feature-based access restrictions, ensuring that users—such as administrators, volunteers,
 or attendees—only interact with features appropriate to their permissions. This design
-choice provides fine-grained authorization while remaining scalable for future event roles.
+choice provides fine-grained authorization while remaining scalable for future event roles.\\
 
+\noindent
 \textbf{Security, privacy, and integrity requirements} (F114–F116) are addressed through
-the \textit{User Authorization Module (M8)} in conjunction with other backend modules
-(\textit{M4–M7}). The authorization module manages user authentication and secure session
+the \textit{User Authorization Module \ref{M8}} in conjunction with other backend modules
+(\textit{\ref{M4}–\ref{M7}}). The authorization module manages user authentication and secure session
 handling, while supporting encryption and data-protection mechanisms across network
 communications. These features guarantee that sensitive user and payment data comply with
-privacy regulations and institutional security standards.
+privacy regulations and institutional security standards.\\
 
+\noindent
 Finally, cross-cutting requirements for \textbf{notifications, confirmations, and user
-communication} are met by the \textit{Notification Handling Module (M7)}. This module
+communication} are met by the \textit{Notification Handling Module \ref{M7}}. This module
 delivers confirmations, reminders, and updates via email and in-app alerts, ensuring that
 both attendees and administrators receive timely feedback on their actions within the
-system.
+system. \\
 
+\noindent
 By associating each major requirement group in the SRS with a dedicated set of modules,
 the overall architecture remains flexible, maintainable, and extensible. This structured
 approach ensures that any future modifications—such as supporting new payment methods,
@@ -406,7 +412,7 @@ Only the leaf modules in the hierarchy have to be implemented. If a dash
 (\emph{--}) is shown, this means that the module is not a leaf and will not have
 to be implemented.
 
-\subsection{Hardware Hiding Modules (\mref{mHH})}
+\subsection{Hardware Hiding Modules} % (\mref{mHH})}
 
 \begin{description}
 \item[Secrets:]The data structure and algorithm used to implement the virtual
@@ -426,10 +432,10 @@ to be implemented.
   documents. This module serves as a communication layer between the
   hardware-hiding module and the software decision module. The programs in this
   module will need to change if there are changes in the SRS.
-\item[Implemented By:] --
+\item[Implemented By:] 
 \end{description}
 
-\subsubsection{Payment Processing Module (\mref{M1})}
+\subsubsection{Payment Processing Module (\ref{M1})}
 
 \begin{description}
 \item[Secrets:] Payment gateway integration, logic for the transaction workflows.
@@ -438,7 +444,7 @@ to be implemented.
 \item[Type of Module:] Abstract Object
 \end{description}
 
-\subsubsection{RBAC/FBAC Access Control Module (\mref{M2})}
+\subsubsection{RBAC/FBAC Access Control Module (\ref{M2})}
 
 \begin{description}
 \item[Secrets:] The mapping of roles to features that allow capabilities in the UI.
@@ -447,7 +453,7 @@ to be implemented.
 \item[Type of Module:] Library Component
 \end{description}
 
-\subsubsection{Sign-Up Module (\mref{M3})}
+\subsubsection{Sign-Up Module (\ref{M3})}
 
 \begin{description}
 \item[Secrets:] Common sign up state machine (registered, confirmed, waitlisted).
@@ -484,11 +490,11 @@ to be implemented.
 \end{description}
 
 
-\subsubsection{User Authorization Module (\mref{M8})}
+\subsubsection{User Authorization Module (\ref{M8})}
 
 \begin{description}
 \item[Secrets:] Identity verification, session tokens. 
-\item[Services:] Authenticates the user, issues and validates session tokens, provides identity context to \mref{M2}.
+\item[Services:] Authenticates the user, issues and validates session tokens, provides identity context to \ref{M2}.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Library
 \end{description}
@@ -506,16 +512,16 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Payment Configuration Module (\mref{M4})}
+\subsubsection{Payment Configuration Module (\ref{M4})}
 
 \begin{description}
 \item[Secrets:] Supported providers, external/internal services, pricing schemas.
-\item[Services:] Stores and provides payment parameters to \mref{M1}. 
+\item[Services:] Stores and provides payment parameters to \ref{M1}. 
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Library Component
 \end{description}
 
-\subsubsection{Access Control Module (\mref{M5})}
+\subsubsection{Access Control Module (\ref{M5})}
 
 \begin{description}
 \item[Secrets:] Logic to evaluate permissions and stores all policies.
@@ -525,20 +531,20 @@ to be implemented.
 \end{description}
 
 
-\subsubsection{Registration Rules Module (\mref{M6})}
+\subsubsection{Registration Rules Module (\ref{M6})}
 
 \begin{description}
 \item[Secrets:] Global event constraints (capacity, deadlines) holds all the default event details/policies.
-\item[Services:] Validates sign up operations across all sign up modules. Provides \mref{M3} with core information about events.
+\item[Services:] Validates sign up operations across all sign up modules. Provides \ref{M3} with core information about events.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Abstract Object
 \end{description}
 
-\subsubsection{Notification Handling Module (\mref{M7})}
+\subsubsection{Notification Handling Module (\ref{M7})}
 
 \begin{description}
 \item[Secrets:] Integrations (emails/push), notification templating, retry policies.
-\item[Services:] Sends confirmations, reminders and status updates triggered by \mref{M1}/\mref{M3}.
+\item[Services:] Sends confirmations, reminders and status updates triggered by \ref{M1}/\ref{M3}.
 \item[Implemented By:] \progname{}
 \item[Type of Module:] Library Component.
 \end{description}
@@ -556,11 +562,11 @@ Section~\ref{SecChange} to the modules that would be affected.
 \toprule
 \textbf{Req. ID} & \textbf{Modules Implementing Requirement}\\
 \midrule
-F101--F104 & \mref{M3} (Sign-Up Module), \mref{M3.1--M3.4} (Sign-Up Submodules), \mref{M6} (Registration Rules Module)\\
-F105--F107 & \mref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
-F108--F110 & \mref{M3} (Sign-Up Module), \mref{M3.1--M3.4} (Sign-Up Submodules), \mref{M6} (Registration Rules Module)\\
-F111--F113 & \mref{M2} (RBAC/FBAC Access Control Module), \mref{M5} (Access Control Module)\\
-F114--F116 & \mref{M8} (User Authorization Module), \mref{M4--M7} (Backend Modules)\\
+F101--F104 & \ref{M3} (Sign-Up Module), \mref{M3.1}-\mref{M3.3} (Sign-Up Submodules), \ref{M6} (Registration Rules Module)\\
+F105--F107 & \ref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
+F108--F110 & \ref{M3} (Sign-Up Module), \mref{M3.1}-\mref{M3.3} (Sign-Up Submodules), \ref{M6} (Registration Rules Module)\\
+F111--F113 & \ref{M2} (RBAC/FBAC Access Control Module), \ref{M5} (Access Control Module)\\
+F114--F116 & \ref{M8} (User Authorization Module), \ref{M4}-\ref{M7} (Backend Modules)\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Requirements and Modules}
@@ -573,11 +579,11 @@ F114--F116 & \mref{M8} (User Authorization Module), \mref{M4--M7} (Backend Modul
 \toprule
 \textbf{Anticipated Change (AC)} & \textbf{Modules Affected}\\
 \midrule
-\acref{acPaymentGateway} & \mref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
-\acref{acSignupTypes} & \mref{M3} (Sign-Up Module), \mref{M6} (Registration Rules Module)\\
-\acref{acNotifications} & \mref{M7} (Notification Handling Module)\\
-\acref{acPolicyRules} & \mref{M6} (Registration Rules Module), \mref{M3} (Sign-Up Submodules)\\
-\acref{acAnalytics} & \mref{M5} (Access Control Module), \mref{M7} (Notification Handling Module)\\
+\acref{acPaymentGateway} & \ref{M1} (Payment Processing Module), \ref{M4} (Payment Configuration Module)\\
+\acref{acSignupTypes} & \ref{M3} (Sign-Up Module), \ref{M6} (Registration Rules Module)\\
+\acref{acNotifications} & \ref{M7} (Notification Handling Module)\\
+\acref{acPolicyRules} & \ref{M6} (Registration Rules Module), \ref{M3} (Sign-Up Submodules)\\
+\acref{acAnalytics} & \ref{M5} (Access Control Module), \ref{M7} (Notification Handling Module)\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Anticipated Changes and Modules}
@@ -644,14 +650,7 @@ Stripe will be used as the primary gateway for handling all necessary transcatio
 
 \subsection{Authentication and Authorization: McMaster MacID SSO}
 
-The MacSync platform will integrate with McMaster's identity platform to authenticate users and support \mref{M2}. After logging in via MacID their profile will be linked to key information such as unique identifier (MacID), email address, given name, and affiliation (student, employee). By using the university SSO, we ensure that only valid McMaster students are registered on the platform and reduces authentication overhead.
-
-
-\section{Timeline}
-
-\wss{Schedule of tasks and who is responsible}
-
-\wss{You can point to GitHub if this information is included there}
+The MacSync platform will integrate with McMaster's identity platform to authenticate users and support \ref{M2}. After logging in via MacID their profile will be linked to key information such as unique identifier (MacID), email address, given name, and affiliation (student, employee). By using the university SSO, we ensure that only valid McMaster students are registered on the platform and reduces authentication overhead.
 
 \section{Timeline} \label{SecTimeline}
 
