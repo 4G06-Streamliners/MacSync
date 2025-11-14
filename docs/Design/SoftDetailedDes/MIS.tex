@@ -62,9 +62,7 @@ Date 2 & 1.1 & Notes\\
 
 \section{Symbols, Abbreviations and Acronyms}
 
-See SRS Documentation at \wss{give url}
-
-\wss{Also add any additional symbols, abbreviations or acronyms}
+See SRS Documentation at \href{https://github.com/4G06-Streamliners/MacSync-SRS/blob/main/index.pdf}{SRS} and MG Documentation at \href{https://github.com/4G06-Streamliners/MacSync/blob/main/docs/Design/SoftArchitecture/MG.pdf}{MG}.
 
 \newpage
 
@@ -124,30 +122,33 @@ described by giving their type signature followed by their specification.
 
 The following table is taken directly from the Module Guide document for this project.
 
-\begin{table}[h!]
+\begin{table}[H]
 \centering
 \begin{tabular}{p{0.3\textwidth} p{0.6\textwidth}}
 \toprule
 \textbf{Level 1} & \textbf{Level 2}\\
 \midrule
 
-{Hardware-Hiding} & ~ \\
+{Hardware-Hiding Module} & ~ \\
 \midrule
 
-\multirow{7}{0.3\textwidth}{Behaviour-Hiding} & Input Parameters\\
-& Output Format\\
-& Output Verification\\
-& Temperature ODEs\\
-& Energy Equations\\
-& Control Module\\
-& Specification Parameters Module\\
+\multirow{8}{0.3\textwidth}{Behaviour-Hiding Module} 
+& Payment Processing Module\\
+& RBAC/FBAC Access Control Module\\
+& Sign-Up Module\\
+& \hspace{1em} Sign-Up Adapter\\
+& \hspace{1em} Bus Sign-Up Module\\
+& \hspace{1em} Table Sign-Up Module\\
+& \hspace{1em} RSVP Sign-Up Module\\
+& User Authorization Module\\
 \midrule
 
-\multirow{3}{0.3\textwidth}{Software Decision} & {Sequence Data Structure}\\
-& ODE Solver\\
-& Plotting\\
+\multirow{4}{0.3\textwidth}{Software Decision Module}
+& Payment Configuration Module\\
+& Access Control Module\\
+& Registration Rules Module\\
+& Notification Handling Module\\
 \bottomrule
-
 \end{tabular}
 \caption{Module Hierarchy}
 \label{TblMH}
@@ -421,10 +422,17 @@ N/A
     \item \texttt{MAX\_PARTICIPANTS\_PER\_EVENT}: $\mathbb{N}$
 \end{itemize}
 
+\begin{itemize}
+    \item \texttt{DEFAULT\_ROLE}: \texttt{str}\\
+    Default user role when signing up for the platform.
+    \item \texttt{ACCESS\_POLICY\_SCHEMA: JSON}\\
+    Schema for the capability snapshot retrieved from backend M5.
+\end{itemize}
+
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
@@ -1059,20 +1067,102 @@ graduate attribute of Problem Analysis and Design.
 
 \input{../../Reflection.tex}
 
+\subsection{Mahad Ahmed}
+
 \begin{enumerate}
-  \item What went well while writing this deliverable?
-  \item What pain points did you experience during this deliverable, and how
+    \item What went well while writing this deliverable? 
+
+    Something that went well while writing this deliverable was my knowledge for designing system architecture from previous courses. Specifically, 3A04 where we designed system architecture similar to this before creating our software. Using that previous knowledge really helped me complete this document.
+    
+    \item What pain points did you experience during this deliverable, and how
     did you resolve them?
+
+    I was tasked with creating the MIS for the RBAC Module. I found it challenging due to my lack of understanding of how a RBAC/FBAC system functions, so creating the functions and design for it proved to be challenging. To resolve this, I did research on RBAC/FBAC on how they are designed and their capabilities.
+    
+\end{enumerate}
+
+\subsection{Prerna Prabhu}
+
+\begin{enumerate}
+    \item What went well while writing this deliverable? 
+
+    During this deliverable, I think we learned from our pervious deliverables and we were able to divide up tasks pretty evenly and quickly at the start based on the estimated amount of work each one would be, and we also looked at any dependencies between the different sections prior to assigning the work to each team member. In this case this meant figuring out the modules that we needed for our project, discussing them, and reviewing sections and work that were solely focused on explaining the modules, so that the other parts that depended on module definition could be completed on time without rush.
+
+    \item What pain points did you experience during this deliverable, and how
+    did you resolve them?
+
+    During this deliverable, we initially experienced difficulties with what modules we wanted to define and how the would be defined. We were also confused as a team on what some of the requirements were for these modules and how they would be defined. Through discussion as a team, we were able to identify the modules that were needed and tweak any changes and improvements early on, without waiting until closer to the deadline. We were also able to ask more questions to our supervisor and TA to work through these challenges and gain more insight on what was expected from us.
+    
+\end{enumerate}
+
+\subsection{Ali Zia}
+
+\begin{enumerate}
+    \item What went well while writing this deliverable? 
+
+    The division of labour went really well where tasks were assigned fairly and we continued to improve in terms of communicaiton and coordinating our efforts to achieve results and complete our tasks in time
+
+    \item What pain points did you experience during this deliverable, and how
+    did you resolve them?
+
+    A challenge we encountered was figuring out how to group the system functionaliteis into modules without overlapping responsiblites and there were moments where team members had slightly different interpretations. However, through open communication and spending time understanding our perspectives and feedback we were able to overcome and address the hallenges
+
+\end{enumerate}
+
+\subsection{Farhan Rahman}
+
+\begin{enumerate}
+    \item What went well while writing this deliverable? 
+
+    Our team divided the work effectively and continued the same collaboration approach from earlier milestones, but this time we were more intentional about distributing effort based on each person’s strengths rather than just splitting sections. This helped us produce higher-quality work and kept progress steady. We also leveraged each member’s area of expertise to ensure each part was written clearly and aligned with the system’s design. 
+
+    \item What pain points did you experience during this deliverable, and how
+    did you resolve them?
+
+    Because this deliverable involved defining key modules and system components, it took time to fine-tune the details and ensure accuracy that could be carried forward to implementation. Some sections required multiple iterations to make sure they were both technically correct and consistent with the overall system architecture. Coordinating these interdependent parts and aligning them with previous milestones was challenging, but careful reviews and group collaboration helped us resolve it.
+
+\end{enumerate}
+
+\subsection{Abyan Jaigirdar}
+
+\begin{enumerate}
+    \item What went well while writing this deliverable? 
+
+    Our team worked really well together during this milestone. We divided up the sections early on and made sure everyone understood their part before starting. Communication was smooth, and we checked in often to make sure everything fit together. This helped us stay organized and finish the deliverable on time without last-minute stress.
+
+    \item What pain points did you experience during this deliverable, and how
+    did you resolve them?
+
+    At first, we had trouble deciding how to separate the system into modules and which features belonged where. Some overlap and confusion came up during drafting, but after a few team discussions and review sessions, we cleared things up and finalized a structure we were all confident in.
+
+\end{enumerate}
+
+\subsection{Team}
+
+\begin{enumerate}
   \item Which of your design decisions stemmed from speaking to your client(s)
   or a proxy (e.g. your peers, stakeholders, potential users)? For those that
   were not, why, and where did they come from?
+
+    Several of our design decisions came from directly talking to MES executives. For example, RBAC/FBAC came from stakeholder feedback emphasizing the need for permission management across the platform. Furthermore, the integration of Stripe for payments is another design decision directly influenced by our stakeholder where they emphasized the need for secure payments. 
+  
   \item While creating the design doc, what parts of your other documents (e.g.
-  requirements, hazard analysis, etc), if any, needed to be changed, and why?
-  \item What are the limitations of your solution? Put another way, given
-  unlimited resources, what could you do to make the project better?
-  \item Give a brief overview of other design solutions you considered. What
+  requirements, hazard analysis, etc), it any, needed to be changed, and why?
+
+    While creating the design doc, multiple areas were identified where updates would be necessary. An example is in the hazard analysis such as potential authorization issues. These changes have been taken note of and will be updated in the next revision of the document.
+  
+  \item What are the limitations of your solution?  Put another way, given
+  unlimited resources, what could you do to make the project better?(LO\_ProbSolutions)
+
+    A limitation to our solution is our dependency on external services. For example, we are depending on Stripe to have 99.99\% uptime to meet our software needs. Another dependency is using the McMaster identity platform to sign-in and authenticate users. If we had the luxury of time and resources, we would opt to create our own payment gateway that met the security concerns of our stakeholder.
+  
+  \item Give a brief overview of other design solutions you considered.  What
   are the benefits and tradeoffs of those other designs compared with the chosen
-  design?
-\end{enumerate}
+  design?  From all the potential options, why did you select the documented design?
+  (LO\_Explores)
+
+    We considered many design solutions for our payment gateway such as paddle or square, but we settled with Stripe with our stakeholder for its simplicty and easy integration. We also considered many types of authentication for the platform such as creating our own authentication where users sign up and register with their own email. However, we decided to use the McMaster identity platfrom since it would be the easiest to verify users and keep users to only valid McMaster students.
+
+  \end{enumerate}
 
 \end{document}

@@ -30,6 +30,7 @@
 \newcounter{mnum}
 \newcommand{\mthemnum}{M\themnum}
 \newcommand{\mref}[1]{M\ref{#1}}
+\newcounter{submnum}
 
 \begin{document}
 
@@ -261,13 +262,11 @@ different event activities. It contains shared logic for registration flows,
 along with specific submodules for each type of sign-up.
 \renewcommand{\thesubmnum}{\themnum.\arabic{submnum}}
 \begin{itemize}
-    \item [\refstepcounter{submnum}\label{M3.1}\textbf{M\thesubmnum:}] \textbf{Sign-Up Adapter} Standardizes registration logic and
-    offers a unified interface to connect multiple sign-up submodules.
-    \item [\refstepcounter{submnum}\label{M3.2}\textbf{M\thesubmnum:}] \textbf{Bus Sign-Up Module} Handles registration for bus
+    \item [\refstepcounter{submnum}\label{M3.1}\textbf{M\thesubmnum:}] \textbf{Bus Sign-Up Module} Handles registration for bus
     transportation, including capacity validation and seat allocation.
-    \item [\refstepcounter{submnum}\label{M3.3}\textbf{M\thesubmnum:}] \textbf{Table Sign-Up Module} Manages registration and table
+    \item [\refstepcounter{submnum}\label{M3.2}\textbf{M\thesubmnum:}] \textbf{Table Sign-Up Module} Manages registration and table
     assignments for group events.
-    \item [\refstepcounter{submnum}\label{M3.4}\textbf{M\thesubmnum:}] \textbf{RSVP Sign-Up Module} Handles RSVP submissions and
+    \item [\refstepcounter{submnum}\label{M3.3}\textbf{M\thesubmnum:}] \textbf{RSVP Sign-Up Module} Handles RSVP submissions and
     confirmation tracking for events.
 \end{itemize}
 \end{description}
@@ -316,7 +315,6 @@ This module serves as the foundation for all user-based operations within the sy
 & Payment Processing Module\\
 & RBAC/FBAC Access Control Module\\
 & Sign-Up Module\\
-& \hspace{1em} Sign-Up Adapter\\
 & \hspace{1em} Bus Sign-Up Module\\
 & \hspace{1em} Table Sign-Up Module\\
 & \hspace{1em} RSVP Sign-Up Module\\
@@ -387,19 +385,69 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Input Format Module (\mref{mInput})}
+\subsubsection{Payment Processing Module (\mref{M1})}
 
 \begin{description}
-\item[Secrets:]The format and structure of the input data.
-\item[Services:]Converts the input data into the data structure used by the
-  input parameters module.
-\item[Implemented By:] [Your Program Name Here]
-\item[Type of Module:] [Record, Library, Abstract Object, or Abstract Data Type]
-  [Information to include for leaf modules in the decomposition by secrets tree.]
+\item[Secrets:] Payment gateway integration, logic for the transaction workflows.
+\item[Services:] Allows for client to fulfill payment requests, executes charges/refunds, and reports all transactions to logs.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
 \end{description}
 
-\subsubsection{Etc.}
+\subsubsection{RBAC/FBAC Access Control Module (\mref{M2})}
 
+\begin{description}
+\item[Secrets:] The mapping of roles to features that allow capabilities in the UI.
+\item[Services:] Determines what views/actions are allowed for a signed in user. 
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library Component
+\end{description}
+
+\subsubsection{Sign-Up Module (\mref{M3})}
+
+\begin{description}
+\item[Secrets:] Common sign up state machine (registered, confirmed, waitlisted).
+\item[Services:] Shared logic for creating and managing signups, delegates concrete services to submodules.  
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Bus Sign-up Module (\mref{M3.1})}
+
+\begin{description}
+\item[Secrets:] Capacity model, seat allocation logic and, waitlisting logic.
+\item[Services:] Allows users to reserve bus seat while enforcing capacity.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Table Sign-up Module (\mref{M3.2})}
+
+\begin{description}
+\item[Secrets:] Table size, number of tables, and grouping constraints.
+\item[Services:] Allows event organizers to create/manage table groups.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{RSVP Sign-up Module (\mref{M3.3})}
+
+\begin{description}
+\item[Secrets:] Event capacity, RSVP deadlines. 
+\item[Services:] Allows users to RSVP for events. enforces constraints/limits and reports user status.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+
+\subsubsection{User Authorization Module (\mref{M8})}
+
+\begin{description}
+\item[Secrets:] Identity verification, session tokens. 
+\item[Services:] Authenticates the user, issues and validates session tokens, provides identity context to \mref{M2}.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
+\end{description}
 
 \subsection{Software Decision Module}
 
@@ -414,32 +462,61 @@ to be implemented.
 \item[Implemented By:] --
 \end{description}
 
-\subsubsection{Etc.}
+\subsubsection{Payment Configuration Module (\mref{M4})}
+
+\begin{description}
+\item[Secrets:] Supported providers, external/internal services, pricing schemas.
+\item[Services:] Stores and provides payment parameters to \mref{M1}. 
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library Component
+\end{description}
+
+\subsubsection{Access Control Module (\mref{M5})}
+
+\begin{description}
+\item[Secrets:] Logic to evaluate permissions and stores all policies.
+\item[Services:] Evaluates actions being performed by the user and grants them the correct views/resources. 
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library
+\end{description}
+
+
+\subsubsection{Registration Rules Module (\mref{M6})}
+
+\begin{description}
+\item[Secrets:] Global event constraints (capacity, deadlines) holds all the default event details/policies.
+\item[Services:] Validates sign up operations across all sign up modules. Provides \mref{M3} with core information about events.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Abstract Object
+\end{description}
+
+\subsubsection{Notification Handling Module (\mref{M7})}
+
+\begin{description}
+\item[Secrets:] Integrations (emails/push), notification templating, retry policies.
+\item[Services:] Sends confirmations, reminders and status updates triggered by \mref{M1}/\mref{M3}.
+\item[Implemented By:] \progname{}
+\item[Type of Module:] Library Component.
+\end{description}
 
 \section{Traceability Matrix} \label{SecTM}
 
-This section shows two traceability matrices: between the modules and the
-requirements and between the modules and the anticipated changes.
+This section presents two traceability matrices: the first shows how each
+functional requirement from the SRS (F101–F116) is satisfied by one or more
+modules; the second links the anticipated changes identified in
+Section~\ref{SecChange} to the modules that would be affected.
 
-% the table should use mref, the requirements should be named, use something
-% like fref
 \begin{table}[H]
 \centering
-\begin{tabular}{p{0.2\textwidth} p{0.6\textwidth}}
+\begin{tabular}{p{0.22\textwidth} p{0.68\textwidth}}
 \toprule
-\textbf{Req.} & \textbf{Modules}\\
+\textbf{Req. ID} & \textbf{Modules Implementing Requirement}\\
 \midrule
-R1 & \mref{mHH}, \mref{mInput}, \mref{mParams}, \mref{mControl}\\
-R2 & \mref{mInput}, \mref{mParams}\\
-R3 & \mref{mVerify}\\
-R4 & \mref{mOutput}, \mref{mControl}\\
-R5 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R6 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R7 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R8 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R9 & \mref{mVerifyOut}\\
-R10 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}\\
-R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
+F101--F104 & \mref{M3} (Sign-Up Module), \mref{M3.1--M3.4} (Sign-Up Submodules), \mref{M6} (Registration Rules Module)\\
+F105--F107 & \mref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
+F108--F110 & \mref{M3} (Sign-Up Module), \mref{M3.1--M3.4} (Sign-Up Submodules), \mref{M6} (Registration Rules Module)\\
+F111--F113 & \mref{M2} (RBAC/FBAC Access Control Module), \mref{M5} (Access Control Module)\\
+F114--F116 & \mref{M8} (User Authorization Module), \mref{M4--M7} (Backend Modules)\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Requirements and Modules}
@@ -448,22 +525,15 @@ R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
 
 \begin{table}[H]
 \centering
-\begin{tabular}{p{0.2\textwidth} p{0.6\textwidth}}
+\begin{tabular}{p{0.28\textwidth} p{0.62\textwidth}}
 \toprule
-\textbf{AC} & \textbf{Modules}\\
+\textbf{Anticipated Change (AC)} & \textbf{Modules Affected}\\
 \midrule
-\acref{acHardware} & \mref{mHH}\\
-\acref{acInput} & \mref{mInput}\\
-\acref{acParams} & \mref{mParams}\\
-\acref{acVerify} & \mref{mVerify}\\
-\acref{acOutput} & \mref{mOutput}\\
-\acref{acVerifyOut} & \mref{mVerifyOut}\\
-\acref{acODEs} & \mref{mODEs}\\
-\acref{acEnergy} & \mref{mEnergy}\\
-\acref{acControl} & \mref{mControl}\\
-\acref{acSeqDS} & \mref{mSeqDS}\\
-\acref{acSolver} & \mref{mSolver}\\
-\acref{acPlot} & \mref{mPlot}\\
+\acref{acPaymentGateway} & \mref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
+\acref{acSignupTypes} & \mref{M3} (Sign-Up Module), \mref{M6} (Registration Rules Module)\\
+\acref{acNotifications} & \mref{M7} (Notification Handling Module)\\
+\acref{acPolicyRules} & \mref{M6} (Registration Rules Module), \mref{M3} (Sign-Up Submodules)\\
+\acref{acAnalytics} & \mref{M5} (Access Control Module), \mref{M7} (Notification Handling Module)\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Anticipated Changes and Modules}
@@ -483,18 +553,9 @@ the modules. It can be seen that the graph is a directed acyclic graph
 system, and modules in the higher level of the hierarchy are essentially simpler
 because they use modules from the lower levels.
 
-\wss{The uses relation is not a data flow diagram.  In the code there will often
-be an import statement in module A when it directly uses module B.  Module B
-provides the services that module A needs.  The code for module A needs to be
-able to see these services (hence the import statement).  Since the uses
-relation is transitive, there is a use relation without an import, but the
-arrows in the diagram typically correspond to the presence of import statement.}
-
-\wss{If module A uses module B, the arrow is directed from A to B.}
-
 \begin{figure}[H]
 \centering
-%\includegraphics[width=0.7\textwidth]{UsesHierarchy.png}
+\includegraphics[width=0.9\textwidth]{UsesHierarchy.png}
 \caption{Use hierarchy among modules}
 \label{FigUH}
 \end{figure}
@@ -503,12 +564,44 @@ arrows in the diagram typically correspond to the presence of import statement.}
 
 \section{User Interfaces}
 
-\wss{Design of user interface for software and hardware.  Attach an appendix if
-needed. Drawings, Sketches, Figma}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Signup.png}
+    \caption{Signup Page}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Payment.png}
+    \caption{Payment Page}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Access_Control.png}
+    \caption{Role-based/Feautre-based Access Control}
+\end{figure}
 
 \section{Design of Communication Protocols}
 
-\wss{If appropriate}
+This section outlines the external services that will be used by the MacSync platform ensuring appropriate integration between the application and third-party systems.
+
+\subsection{External Services Overview}
+
+The MacSync platform will interface with 2 key external APIs to support event management functions:
+\begin{itemize}
+    \item \textbf{Stripe API} for secure online payments.
+    \item \textbf{McMaster MacID SSO} to authenticate and authorise users
+\end{itemize}
+
+\subsection{Payment Service: Stripe}
+
+Stripe will be used as the primary gateway for handling all necessary transcations for registering for events. All communication with Stripe occurs over secure HTTPS via Stripes RESTful API. All transaction records will be recorded, logged and stored within our database to maintain past records. This enables a secure way to integrate payments within our application without having to worry about the implications of building a custom payment stack.
+
+\subsection{Authentication and Authorization: McMaster MacID SSO}
+
+The MacSync platform will integrate with McMaster's identity platform to authenticate users and support \mref{M2}. After logging in via MacID their profile will be linked to key information such as unique identifier (MacID), email address, given name, and affiliation (student, employee). By using the university SSO, we ensure that only valid McMaster students are registered on the platform and reduces authentication overhead.
+
 
 \section{Timeline}
 
