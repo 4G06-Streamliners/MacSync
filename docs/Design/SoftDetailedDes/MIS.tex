@@ -95,9 +95,6 @@ found at \url{https://github.com/4G06-Streamliners/MacSync}.
 
 \section{Notation}
 
-\wss{You should describe your notation.  You can use what is below as
-  a starting point.}
-
 The structure of the MIS for modules comes from \citet{HoffmanAndStrooper1995},
 with the addition that template modules have been adapted from
 \cite{GhezziEtAl2003}.  The mathematical notation comes from Chapter 3 of
@@ -118,6 +115,22 @@ character & char & a single symbol or digit\\
 integer & $\mathbb{Z}$ & a number without a fractional component in (-$\infty$, $\infty$) \\
 natural number & $\mathbb{N}$ & a number without a fractional component in [1, $\infty$) \\
 real & $\mathbb{R}$ & any number in (-$\infty$, $\infty$)\\
+string & \texttt{Str} & sequence of \texttt{char} \\
+tuple & \(\langle x_1,\ldots,x_k\rangle\) & Tuple (heterogeneous) \\
+boolean &\texttt{Bool} & boolean value \texttt{True} or \texttt{False} \\
+integer & \texttt{Nat} & non-negative integer (\(0,\infty\)) when counts/TTL are permitted to be \(0\) \\
+timestamp & \texttt{Time} & timestamp on system clock; used for TTL or expiry checks \\
+set & \texttt{set}[T] & Finite unordered set of \(T\) (i.e. \texttt{set[Str]}) \\
+dictionary & \texttt{dict}[K \(\to\) V] & Finite map from \(K\) to \(V\) (i.e. \texttt{dict[OperationType \(\to\) URL]}) \\
+list & \texttt{list}[T] & Finite ordered list of \(T\) (i.e. \texttt{list[Str]}) \\
+object & \texttt{JSON} & JSON object as a (key \(\to\) value) mapping with JSON-serializable values \\
+ & \texttt{URL} & Absolute/relative URI string for backend endpoints \\
+ & \texttt{opType} & Operation discriminator used as a map key (i.e. \texttt{`create'}, \texttt{`refund'}) \\
+identifier & \texttt{SRS-FR\#} & Functional Requirement in the \textit{SRS} \\
+identifier & \texttt{SRS-NFR\#} & Non-Functional Requirement in the \textit{SRS} \\
+identifier & \texttt{SSR-\#} & Safety/Security Requirement from the \textit{Hazard Analysis} \\
+identifier & \texttt{M\#} & Module identifier used throughout the MIS (e.g. \textit{M1 - Payment Processing Module}) \\
+identifier & \texttt{M\#.\#} & Submodule identifier when applicable (e.g. \textit{M3.2 - Table Sign-Up Submodule}) \\
 \bottomrule
 \end{tabular} 
 \end{center}
