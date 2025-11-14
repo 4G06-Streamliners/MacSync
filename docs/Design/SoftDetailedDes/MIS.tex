@@ -306,6 +306,846 @@ N/A
           (ConfirmationResponse or RefundResponse).
 \end{itemize}
 
+\subsection{MIS of RBAC/FBAC Access Control Module (M2)} 
+
+\subsubsection{Module}
+
+\texttt{RBACModule}
+
+\subsubsection{Uses}
+
+\begin{itemize}
+    \item User Authorization Module (M8)
+    \item Access Control Service Module (M5)
+\end{itemize}
+
+\subsubsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\begin{itemize}
+    \item \texttt{DEFAULT\_ROLE}: \texttt{str}\\
+    Default user role when signing up for the platform.
+    \item \texttt{ACCESS\_POLICY\_SCHEMA: JSON}\\
+    Schema for the capability snapshot retrieved from backend M5.
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+\texttt{getUserRole} & userID: Str & role: Str & UserNotFound \\
+\texttt{getUserCapabilities} & userID: Str & capabilities: list[Str] & UserNotFound \\
+\texttt{authorizeAction} & action: Str & authorized: bool & AuthorizationError\\
+\texttt{syncCapabilities} & userID: Str & success: bool & FetchError \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+    \item \texttt{capabilitySnapshot : dict[Str, list[Str]]}\\
+    Locally cached copy of backend-authorized capabilities for the active user.
+    \item \texttt{userRole: Str}\\
+    UI-level role used for UX grouping.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+    \item \texttt{ACCESS\_CONTROL\_ENDPOINT : Str}\\
+    Backend API to fetch the authoritative permissions.
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+    \item Authorization requests are made only for defined features or actions.
+    \item M5 always provides the source-of-truth permission set.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent \texttt{getUserRole(userID: Str)}:
+\begin{itemize}
+\item transition: None
+\item input: A unique user identifier.
+\item output: Returns the role string associated with the given user.
+\item exception: \texttt{UserNotFound} If UUID cannot be identified.
+\end{itemize}
+
+\noindent \texttt{getUserCapabilities(userID: Str)}:
+\begin{itemize}
+\item transition: None
+\item input: A unique user identifier.
+\item output: Returns list of available features/actions.
+\item exception: \texttt{UserNotFound} If UUID cannot be identified.
+\end{itemize}
+
+\noindent \texttt{authorizeAction(userID: Str, action: Str)}:
+\begin{itemize}
+\item transition: None
+\item input: User ID and attempted action.
+\item output: Returns \texttt{True} if the action is permitted by user's role/capabilities.
+\item exception: \texttt{AuthorizationError}  if access is denied.
+\end{itemize}
+
+\noindent \texttt{syncCapabilities(userID: Str)}:
+\begin{itemize}
+\item transition: Fetches the capability snapshot from M5 and updates internal policy schema.
+\item input: User ID
+\item output: Returns \texttt{True} on success.
+\item exception: \texttt{FetchError} if backend cannot be reached.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+    \item None.
+\end{itemize}
+
+\subsection{MIS of Sign-Up Module (M3)} \label{MIS_M3}
+
+\subsubsection{Module}
+
+\wss{SignupModule}
+
+\subsubsection{Uses}
+\begin{itemize}
+    \item A back-end or configuration service to store and retrieve confirmed signups.
+    \item A front-end/UI component for users to input sign-up information.
+\end{itemize}
+
+\subsubsection{Syntax}
+
+\subsubsection{Exported Constants}
+\begin{itemize}
+    \item \texttt{SIGNUP\_TYPES}: ("RSVP", "Table", "Bus")
+    \begin{itemize}
+        \item Supported types of signup modules.
+    \end{itemize}
+
+    \item \texttt{MAX\_PARTICIPANTS\_PER\_EVENT}: $\mathbb{N}$
+    \begin{itemize}
+        \item Maximum number of participants allowed per event.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+\begin{center}
+\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+submitSignup & userID: Str \newline eventID: Str \newline data: JSON & success: bool & SignupError \\
+\hline
+getSignupStatus & userID: Str \newline eventID: Str & status: JSON & NotFoundError \\
+\hline
+cancelSignup & userID: Str \newline eventID: Str & success: bool & CancellationError \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+\begin{itemize}
+    \item signupDetails: dict[(userID, eventID): JSON]
+    \begin{itemize}
+        \item Stores all signup information and metadata.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Environment Variables}
+\begin{itemize}
+    \item SIGNUP\_API: Str
+    \begin{itemize}
+        \item API endpoint to database for sending and storing signup data to backend.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Assumptions}
+\begin{itemize}
+    \item A user has a valid session where they are authenticated before accessing the signup module.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent submitSignup(UserID, eventID, data):
+\begin{itemize}
+\item transition: Adds new entry to signupDetails for given userID and eventID.
+\item output: Returns true if signup is successful.
+\item exception: SignupError if validation fails or event is full.
+\end{itemize}
+
+\noindent getSignupStatus(userID, eventID):
+\begin{itemize}
+\item transition: None.
+\item output: Returns JSON information with users signup details for the given event.
+\item exception: NotFoundError if no record exists.
+\end{itemize}
+
+\noindent cancelSignup(userID, eventID):
+\begin{itemize}
+\item transition: Removes signup for given userID and eventID.
+\item output: Returns true on successful deletion.
+\item exception: CancellationError if no record is found for deletion
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\noindent validateSignupData(formData: JSON):
+\begin{itemize}
+\item transition: None.
+\item output: Returns true if all required fields are complete.
+\item exception: ValidationError if required fields are missing or have invalid data format.s
+\end{itemize}
+
+\noindent checkCapacity(eventID: str):
+\begin{itemize}
+\item transition: None.
+\item output: Returns true if the current signup added to total signups is < MAX\_PARTICIPANTS.
+\item exception: CapacityExceededError if event has reached full capacity.
+\end{itemize}
+
+\subsection{MIS of Payment Configuration Module (M4)}
+
+\subsubsection{Module}
+
+\texttt{PaymentConfigurationModule}\\
+
+\noindent
+This module centralizes all configuration required for secure payment operations.
+It exposes safe, restricted payment settings to other modules such as the Payment
+Processing Module (M1) while hiding sensitive Stripe configuration logic and
+backend API wiring. It ensures a single source of truth for currency rules,
+tax configuration, receipt formatting, and API endpoint definitions related to
+payments.
+
+\subsubsection{Uses}
+
+\begin{itemize}
+    \item Payment Processing Module (M1): Uses exported configuration values
+    to construct valid payment requests and interact with backend payment endpoints.
+    \item User Authorization Module (M8): Provides authentication tokens required
+    when modules call backend payment APIs.
+    \item Access Control Module (M5): Ensures that only authorized user roles may
+    access payment configuration or initiate restricted payment operations.
+    \item Notification Handling Module (M7): Uses configured receipt and invoice
+    formatting rules when sending payment confirmations.
+    \item Backend Stripe Integration Service: Provides the actual
+    PaymentIntent creation, confirmation, and refund endpoints (e.g., 
+    \texttt{/api/payments}, \texttt{/api/payments/refund}).
+\end{itemize}
+
+\subsubsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\begin{itemize}
+    \item \texttt{STRIPE\_PUBLIC\_KEY : Str}\\
+    The publishable Stripe key used by the frontend; never contains secret keys.
+    \item \texttt{PAYMENT\_API\_BASE : URL}\\
+    Base backend endpoint for payment operations.
+    \item \texttt{CURRENCY\_CODE : Str}\\
+    Currency used for all events (\texttt{CAD}).
+    \item \texttt{TAX\_RATE : Float}\\
+    The global tax percentage applied to event payments.
+    \item \texttt{INTENT\_CACHE\_TTL\_SEC : Nat}\\
+    TTL for caching Stripe PaymentIntent client secrets.
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\midrule
+\texttt{getPublicStripeKey} & -- & Str & KeyNotAvailable \\
+\texttt{getPaymentAPIEndpoint} & OperationType & URL & InvalidOperationType \\
+\texttt{getCurrencyConfig} & -- & CurrencyConfig & -- \\
+\texttt{shouldRefreshPaymentIntent} & LastUpdated: Time & Bool & -- \\
+\texttt{getReceiptConfig} & -- & ReceiptConfig & -- \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+    \item \texttt{publicKey : Str}
+    \item \texttt{paymentAPIMap : dict[OperationType $\rightarrow$ URL]}
+    \item \texttt{currencyConfig : CurrencyConfig}
+    \item \texttt{receiptConfig : ReceiptConfig}
+    \item \texttt{cacheTTL : Nat}
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+    \item \texttt{ENV\_STRIPE\_PUBLIC\_KEY : Str} - Loaded from build-time environment.
+    \item \texttt{ENV\_PAYMENT\_API\_BASE : URL} - Backend service base URL.
+    \item \texttt{SystemTime : Time} - Used for TTL and expiration checks.
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+    \item Stripe secret keys are stored only on the backend and never exposed to the client.
+    \item Backend exposes the routes \texttt{/api/payments}, 
+    \texttt{/api/payments/confirm}\allowbreak, and \texttt{/api/payments/refund}.
+    \item All callers of this module have been authenticated by M8 and authorized by M5.
+    \item Configuration is loaded once per application session.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent\textbf{\texttt{getPublicStripeKey()}}
+\begin{itemize}
+\item transition: none
+\item output: \texttt{publicKey}
+\item exception: \texttt{KeyNotAvailable} if key is missing or invalid.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getPaymentAPIEndpoint(opType)}}
+\begin{itemize}
+\item transition: none
+\item output: returns URL mapped to the given operation type.
+\item exception: \texttt{InvalidOperationType} if no mapping is defined.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getCurrencyConfig()}}
+\begin{itemize}
+\item transition: none
+\item output: returns currency and tax configuration.
+\item exception: none.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{shouldRefreshPaymentIntent(lastUpdated)}}
+\begin{itemize}
+\item transition: none
+\item output: \texttt{true} if the PaymentIntent cache TTL has expired.
+\item exception: none.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getReceiptConfig()}}
+\begin{itemize}
+\item transition: none
+\item output: returns canonical receipt formatting settings for notifications.
+\item exception: none.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+    \item \texttt{loadEnvValue(key)}: safely retrieves build-time environment variables.
+    \item \texttt{buildEndpoint(base, suffix)}: constructs consistent backend payment URLs.
+    \item \texttt{validatePublicKey(str)}: checks prefix/type of Stripe public key.
+    \item \texttt{computeTTL(t)}: helper for determining TTL expiration.
+\end{itemize}
+
+\subsection{MIS of Access Control Module (M5)}
+
+\subsubsection{Module}
+
+\texttt{AccessControlService}
+
+\subsubsection{Uses}
+
+\begin{itemize}
+    \item Authorization Module (M8)
+    \item Persistence Layer (DB): stores roles, features, capabilities, and user assignments.
+    \item Caching Layer: speeds up permission lookups.
+\end{itemize}
+
+\subsubsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\begin{itemize}
+    \item \texttt{POLICY\_SCHEMA : JSON}\\
+    Defines valid structure for permission rules.
+    \item \texttt{AUTH\_ERROR\_CODE : Int}\\
+    Code returned when an API call is forbidden.
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+\texttt{checkPermission} & action: Str & authorized: bool & AuthorizationError \\
+\texttt{assignRole} & userID: Str, role: Str & success: bool & RoleError \\
+\texttt{revokeRole} & userID: Str, role: Str & success: bool & RoleError \\
+\texttt{setPolicy} & policy: JSON & success: bool & PolicyError \\
+\texttt{getPolicy} & - & policy: JSON & - \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+    \item \texttt{roleAssignments : dict[userID → set[role]]}\\
+    Maps each user role to its permitted features.
+    \item \texttt{policyDocument : JSON}\\
+    Full mapping of roles → features → capabilities
+    \item \texttt{policyVersion : Int}\\
+    Incremented upon policy update.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+    \item \texttt{AUTH\_DB\_URI : Str}\\
+    Path to policy store.
+    \item \texttt{CACHE\_URI : Str}\\
+    Cache location for capabilities.
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+    \item All callers (Payment, Forms, Check-In, etc.) consult this module before performing protected actions.
+    \item M2 calls this module to enforce its authority, it does not make up its own rules.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent \texttt{checkPermission(action: Str)}:
+\begin{itemize}
+\item transition: None
+\item input: the attempted action.
+\item output: Returns True if the user has the required capability to perform the requested action.
+\item exception: \texttt{AuthorizationError} if the user is not permitted to perform the action.
+\end{itemize}
+
+\noindent \texttt{assignRole(userID: Str, role: Str)}:
+\begin{itemize}
+\item transition: Adds the specified role to the user's stored role assignments. 
+\item input: A unique user identifier and a valid role string.
+\item output: Returns True on successful role assignment.
+\item exception: \texttt{RoleError} if the role does not exist or cannot be assigned.
+\end{itemize}
+
+\noindent \texttt{revokeRole(userID: Str, role: Str)}:
+\begin{itemize}
+\item transition: Removes the specified role from the user's role assignments.
+\item input: A unique user identifier and a valid role string.
+\item output: Returns True on successful role removal.
+\item exception: \texttt{RoleError} if the specified role is not currently assigned to the user.
+\end{itemize}
+
+\noindent \texttt{setPolicy(policy: JSON)}:
+\begin{itemize}
+\item transition: Validates and replaces the policy document with the new policy, increments the internal policy version counter.
+\item input: A JSON object containing an updated set of roles, features, capabilities, and guard rules.
+\item output: Returns \texttt{True} on success.
+\item exception: \texttt{PolicyError} if the policy does not match the defined schema or cannot be persisted.
+\end{itemize}
+
+\noindent \texttt{getPolicy()}:
+\begin{itemize}
+\item transition: None.
+\item input: None.
+\item output: Returns the current policy document in JSON format.
+\item exception: None.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+    \item None.
+\end{itemize}
+
+\subsection{MIS of Registration Rules Module (M6)} \label{MIS_M6}
+
+\subsubsection{Module}
+
+Registration Rules Module (M6)
+
+This module enforces all event-level registration constraints for 
+Bus Sign-Up (M3.1), Table Sign-Up (M3.2), and RSVP Sign-Up (M3.3). It retrieves 
+event rules such as capacity limits, table constraints, bus seating limits, 
+registration deadlines, and RSVP policies from the backend datastore.  
+It validates whether a user is allowed to register, whether an event has 
+remaining capacity, and whether any additional restrictions apply.  
+All rule enforcement occurs before entries are recorded or notifications are triggered.
+
+\subsubsection{Uses}
+
+\begin{itemize}
+    \item Access Control Module (M5): for checking user roles and eligibility
+    \item User Authorization Module (M8): for identity data required in rule checks
+    \item Backend datastore (via data access layer): for retrieving event rules and counts
+    \item Sign-Up Module (M3): requests rule validation during sign-up flows
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+N/A
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\midrule
+validateCapacity     & EventInfo, UserInfo & Boolean & EventFull, InvalidEvent \\
+validateDeadline     & EventInfo, UserInfo & Boolean & DeadlinePassed, InvalidEvent \\
+validateEligibility  & EventInfo, UserInfo & Boolean & PermissionDenied \\
+getEventRules        & EventID             & EventRules & InvalidEvent \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+None.
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+    \item Database connection (event metadata, capacity counts, deadlines)
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+    \item The database contains valid and up-to-date event policies.
+    \item EventInfo passed in from M3 contains a valid event ID.
+    \item UserInfo contains a valid authenticated user ID.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent \textbf{validateCapacity}(eventInfo, userInfo):
+
+\begin{itemize}
+    \item transition: N/A
+    \item output: Returns true if event capacity has not been reached.
+    \item exception: EventFull if capacity is exhausted, InvalidEvent if event does not exist.
+\end{itemize}
+
+\vspace{0.15cm}
+
+\noindent \textbf{validateDeadline}(eventInfo, userInfo):
+
+\begin{itemize}
+    \item transition: N/A
+    \item output: Returns true if registration is still open.
+    \item exception: DeadlinePassed if the cutoff time has passed, InvalidEvent otherwise.
+\end{itemize}
+
+\vspace{0.15cm}
+
+\noindent \textbf{validateEligibility}(eventInfo, userInfo):
+
+\begin{itemize}
+    \item transition: N/A
+    \item output: Returns true if the user meets role-based or event-specific criteria.
+    \item exception: PermissionDenied if the user is not allowed to register.
+\end{itemize}
+
+\vspace{0.15cm}
+
+\noindent \textbf{getEventRules}(eventID):
+
+\begin{itemize}
+    \item transition: N/A
+    \item output: Returns the complete rule set for the given event (capacity, deadlines, policies).
+    \item exception: InvalidEvent if the event does not exist.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+    \item lookupRules(eventID): fetches the rule set for an event from the datastore.
+    \item isBeforeDeadline(eventInfo): compares current time to stored deadline.
+    \item hasRemainingCapacity(eventInfo): queries current participant count.
+    \item meetsEligibilityCriteria(eventInfo, userInfo): checks role access and custom restrictions.
+\end{itemize}
+
+\subsection{MIS of Notification Handling Module (M7)} \label{MIS_M7}
+
+\subsubsection{Module}
+
+NotificationModule
+
+\subsubsection{Uses}
+\begin{itemize}
+    \item A front-end/UI component for displaying notifications.
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+\begin{itemize}
+    \item \texttt{NOTIFICATION\_TYPES}: 
+    \begin{itemize}
+        \item ("Confirmation", "Reminder", "Cancellation")
+        \item Supported types of notifications.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\begin{tabular}{p{2.5cm} p{4.5cm} p{3.5cm} p{3cm}}
+\hline
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\hline
+SendNotification 
+& \texttt{userID: Str}\\ \texttt{message: Str}\\ \texttt{notification\_type: Str}
+& success: bool 
+& NotificationError \\
+\hline
+getNotificationHistory 
+& \texttt{userID: Str} 
+& Notifications: List[Str] 
+& RetrievalError \\
+\hline
+subscribeUser 
+& \texttt{userID: Str}\\ \texttt{subscribed: bool}
+& success: bool 
+& SubscribingError \\
+\hline
+UnsubscribeUser 
+& \texttt{userID: Str}\\ \texttt{subscribed: bool}
+& success: bool 
+& \texttt{UnsubscribingError} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+\begin{itemize}
+    \item userNotifPreference: dict[UserID: bool]
+    \begin{itemize}
+        \item Contains users notification preference.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Environment Variables}
+\begin{itemize}
+    \item \texttt{EMAIL\_API}: Str
+    \begin{itemize}
+        \item API endpoint for email notification delivery.
+    \end{itemize}
+    \item \texttt{SMS\_API}: Str
+    \begin{itemize}
+        \item API endpoint for SMS notification delivery.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Assumptions}
+\begin{itemize}
+    \item Users have opted into receiving notifications.
+    \item Third party email and SMS APIs are functional.
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent SendNotification(userID, message, notification\_type):
+\begin{itemize}
+\item transition: send notification via Email and SMS API.
+\item output: Returns true if successfully sent.
+\item exception: NotificationError if API fails and message cannot be sent.
+\end{itemize}
+
+\noindent getNotificationHistory(userID):
+\begin{itemize}
+\item transition: None.
+\item output: Returns list of previously sent out notifications.
+\item exception: RetrievalError if no history exists.
+\end{itemize}
+
+\noindent subscribeUser(userID, subscribed):
+\begin{itemize}
+\item transition: Adds user to the userNotifPreference list and sets value to true.
+\item output: Returns true upon successful subscription.
+\item exception: SubscribingError if invalid subscription.
+\end{itemize}
+
+\noindent UnsubscribeUser(userID, subscribed):
+\begin{itemize}
+\item transition: Updates userNotifPreference of specified user to false.
+\item output: Returns true on successful unsubscribing.
+\item exception: UnsubscribingError if user is not subscribed.
+\end{itemize}
+
+\subsubsection{Local Functions}
+\begin{itemize}
+\item None
+\end{itemize}
+
+\subsection{MIS of User Authorization Module (M8)} \label{MIS_M8}
+
+\subsubsection{Module}
+
+\texttt{UserAuthorizationModule}\\
+
+\noindent
+This module provides authentication and identity verification for all other 
+modules in the system. It manages login sessions, token issuance, token 
+validation, and user identity retrieval. The module integrates with external 
+authentication providers when applicable and acts as the system’s source of 
+truth for authenticated user identity data used by RBAC/FBAC (M5/M2) and any 
+module requiring secure access.
+
+\subsubsection{Uses}
+
+\begin{itemize}
+    \item Access Control Module (M5): Uses identity and token validation functions to determine a user's permissions.
+    \item Payment Processing Module (M1): Requires a verified user identity before initiating payment or refund operations.
+    \item Sign-Up Module (M3): Uses authenticated user identifiers when creating bus/table/RSVP sign-up records.
+    \item Notification Handling Module (M7): Uses authenticated user information to route notifications to the correct recipient.
+    \item External Authentication Provider (e.g., OAuth/SSO): Provides the 
+    underlying authentication mechanism for secure login.
+\end{itemize}
+
+\subsection{Syntax}
+
+\subsubsection{Exported Constants}
+
+\begin{itemize}
+    \item \texttt{TOKEN\_EXPIRY\_MIN : Nat}\\
+    The number of minutes before an issued access token expires.
+    \item \texttt{REFRESH\_TOKEN\_SUPPORTED : Bool}\\
+    Indicates whether refresh tokens are enabled in the current 
+    deployment configuration.
+\end{itemize}
+
+\subsubsection{Exported Access Programs}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
+\midrule
+\texttt{login} & Credentials & AuthToken & InvalidCredentials, NetworkError \\
+\texttt{logout} & AuthToken & Bool & TokenError \\
+\texttt{validateToken} & AuthToken & Bool & TokenExpired, TokenInvalid \\
+\texttt{getUserInfo} & AuthToken & UserProfile & TokenInvalid, NetworkError \\
+\texttt{refreshToken} & RefreshToken & AuthToken & TokenInvalid, NotSupported \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Semantics}
+
+\subsubsection{State Variables}
+
+\begin{itemize}
+    \item \texttt{activeSessions : dict[token $\rightarrow$ UserID]} \\
+    Stores active session mappings for all authenticated users.
+    \item \texttt{tokenExpiryTimes : dict[token $\rightarrow$ Time]} \\
+    Tracks expiration timestamps for each active token.
+\end{itemize}
+
+\subsubsection{Environment Variables}
+
+\begin{itemize}
+    \item \texttt{AUTH\_SERVER\_URL : URL} \\
+    External authentication provider endpoint (OAuth/SSO).
+    \item \texttt{SystemTime : Time} \\
+    Used to validate token expiration.
+\end{itemize}
+
+\subsubsection{Assumptions}
+
+\begin{itemize}
+    \item All modules calling this one must supply a token obtained from \texttt{login} or \texttt{refreshToken}.
+    \item The external authentication provider (OAuth/SSO) is available and reliable.
+    \item Tokens are cryptographically signed by the authentication provider and cannot be tampered with by the client.
+    \item Session expiry rules follow the SRS and Hazard Analysis requirements (e.g., 15-minute admin timeout).
+\end{itemize}
+
+\subsubsection{Access Routine Semantics}
+
+\noindent\textbf{\texttt{login(credentials)}}
+\begin{itemize}
+\item transition: Adds new entry to \texttt{activeSessions} and \texttt{tokenExpiryTimes}.
+\item output: Returns a newly issued \texttt{AuthToken}.
+\item exception: \texttt{InvalidCredentials} if credentials rejected or \texttt{NetworkError} if authentication provider is unreachable.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{logout(token)}}
+\begin{itemize}
+\item transition: Removes \texttt{token} from all session maps.
+\item output: \texttt{true} on success.
+\item exception: \texttt{TokenError} if token is not active.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{validateToken(token)}}
+\begin{itemize}
+\item transition: none.
+\item output: \texttt{true} if token is valid and unexpired.
+\item exception: \texttt{TokenInvalid} or \texttt{TokenExpired}.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{getUserInfo(token)}}
+\begin{itemize}
+\item transition: none.
+\item output: Returns the authenticated user's profile (ID, email, name, role).
+\item exception: \texttt{TokenInvalid} or \texttt{NetworkError}.
+\end{itemize}
+
+\vspace{0.2cm}
+
+\noindent\textbf{\texttt{refreshToken(refreshToken)}}
+\begin{itemize}
+\item transition: Replaces expired/expiring token with new token, if supported.
+\item output: Returns newly issued \texttt{AuthToken}.
+\item exception: \texttt{TokenInvalid} if the supplied refresh token is invalid, \texttt{NotSupported} if refresh tokens are disabled.
+\end{itemize}
+
+\subsubsection{Local Functions}
+
+\begin{itemize}
+    \item \texttt{decodeToken(token)}: Verifies token signature and extracts identity data.
+    \item \texttt{isExpired(token)}: Checks whether current time exceeds stored expiry.
+    \item \texttt{requestAuthServer(endpoint, payload)}: Handles secure communication with the external authentication provider.
+\end{itemize}
+
+
 \newpage
 
 \bibliographystyle {plainnat}
