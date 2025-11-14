@@ -396,8 +396,9 @@ N/A
 
 \subsection{Uses}
 \begin{itemize}
-    \item A back-end or configuration service to store and retrieve confirmed signups.
-    \item A front-end/UI component for users to input sign-up information.
+    \item Registration Rules (M6)
+    \item Payment Configuration (M4)
+    \item Access Control (M5)
 \end{itemize}
 
 \subsection{Syntax}
@@ -421,11 +422,9 @@ N/A
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\texttt{submitSignup} & userID: Str \newline eventID: Str \newline data: JSON & success: bool & SignupError \\
-\hline
-\texttt{getSignupStatus} & userID: Str \newline eventID: Str & status: JSON & NotFoundError \\
-\hline
-\texttt{cancelSignup} & userID: Str \newline eventID: Str & success: bool & CancellationError \\
+\texttt{submitSignup} & userID: Str, eventID: Str, data: JSON & success: bool & SignupError \\
+\texttt{getSignupStatus} & userID: Str, eventID: Str & status: JSON & NotFoundError \\
+\texttt{cancelSignup} & userID: Str, eventID: Str & success: bool & CancellationError \\
 \hline
 \end{tabular}
 \end{center}
