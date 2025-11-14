@@ -169,7 +169,9 @@ NotificationModule
 
 \subsection{Uses}
 \begin{itemize}
-    \item A front-end/UI component for displaying notifications.
+    \item User Authorization (M8)
+    \item Registration Rules (M6)
+    \item Payment Configuration (M4)
 \end{itemize}
 
 
@@ -186,20 +188,18 @@ NotificationModule
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-SendNotification & userID: Str \newline message: Str \newline notification_type: Str & success: bool & NotificationError \\
-\hline
-getNotificationHistory & userID: Str & Notifications: List[Str] & RetrievalError \\
-\hline
-subscribeUser & userID: Str \newline subscribed: bool & success: bool & SubscribingError \\
-\hline
-UnsubscribeUser & userID: Str \newline subscribed: bool & success: bool & UnsubscribingError \\
+\texttt{SendNotification} & userID: Str, message: Str, notification\_type: Str & success: bool & NotificationError \\
+\texttt{getNotificationHistory} & userID: Str & Notifications: List[Str] & RetrievalError \\
+\texttt{subscribeUser} & userID: Str, subscribed: bool & success: bool & SubscribingError \\
+\texttt{UnsubscribeUser} & userID: Str, subscribed: bool & success: bool & UnsubscribingError \\
 \hline
 \end{tabular}
 \end{center}
+
 
 \subsection{Semantics}
 
