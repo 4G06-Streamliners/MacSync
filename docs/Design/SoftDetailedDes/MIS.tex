@@ -864,7 +864,9 @@ None.
 
 \subsection{Uses}
 \begin{itemize}
-    \item A front-end/UI component for displaying notifications.
+    \item User Authorization (M8)
+    \item Registration Rules (M6)
+    \item Payment Configuration (M4)
 \end{itemize}
 
 \subsection{Syntax}
@@ -881,29 +883,14 @@ None.
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2.5cm} p{4.5cm} p{3.5cm} p{3cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-SendNotification 
-& \texttt{userID: Str}\\ \texttt{message: Str}\\ \texttt{notification\_type: Str}
-& success: bool 
-& NotificationError \\
-\hline
-getNotificationHistory 
-& \texttt{userID: Str} 
-& Notifications: List[Str] 
-& RetrievalError \\
-\hline
-subscribeUser 
-& \texttt{userID: Str}\\ \texttt{subscribed: bool}
-& success: bool 
-& SubscribingError \\
-\hline
-UnsubscribeUser 
-& \texttt{userID: Str}\\ \texttt{subscribed: bool}
-& success: bool 
-& \texttt{UnsubscribingError} \\
+\texttt{SendNotification} & userID: Str, message: Str, notification\_type: Str & success: bool & NotificationError \\
+\texttt{getNotificationHistory} & userID: Str & Notifications: List[Str] & RetrievalError \\
+\texttt{subscribeUser} & userID: Str, subscribed: bool & success: bool & SubscribingError \\
+\texttt{UnsubscribeUser} & userID: Str, subscribed: bool & success: bool & UnsubscribingError \\
 \hline
 \end{tabular}
 \end{center}
