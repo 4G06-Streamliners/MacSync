@@ -171,26 +171,16 @@ The following table is taken directly from the Module Guide document for this pr
 
 
 \newpage
-\section{Module Interface Specifications} \label{SecMIS}
+\section{MIS of Payment Processing Module (M1)} \label{SecMIS}
 
-This section provides the Module Interface Specifications (MIS) for each module 
-defined in the Module Guide. Each module is documented independently, following 
-the notation and structure described in Section 2.
 
-\subsection{MIS of Payment Processing Module (M1)} \label{MIS_M1}
+\subsection{Module}
 
-\subsubsection{Module}
+\texttt{PaymentProcessingModule}
 
-Payment Processing Module (M1)
 
-This module prepares and submits payment requests from the client side.  
-It validates the payment data, attaches authentication headers, and communicates 
-with the backend API that integrates with Stripe. The module does not handle 
-any payment verification locally. Instead, verification and 
-execution of charges or refunds are performed by the backend using Stripe’s 
-secure payment APIs, configured in the Payment Configuration Module (M4).
 
-\subsubsection{Uses}
+\subsection{Uses}
 
 \begin{itemize}
     \item API Layer (HTTP communication with backend)
@@ -294,20 +284,20 @@ N/A
           (ConfirmationResponse or RefundResponse).
 \end{itemize}
 
-\subsection{MIS of RBAC/FBAC Access Control Module (M2)} 
+\section{MIS of RBAC/FBAC Access Control Module (M2)} 
 
-\subsubsection{Module}
+\subsection{Module}
 
 \texttt{RBACModule}
 
-\subsubsection{Uses}
+\subsection{Uses}
 
 \begin{itemize}
     \item User Authorization Module (M8)
     \item Access Control Service Module (M5)
 \end{itemize}
 
-\subsubsection{Syntax}
+\subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
@@ -398,19 +388,19 @@ N/A
     \item None.
 \end{itemize}
 
-\subsection{MIS of Sign-Up Module (M3)} \label{MIS_M3}
+\section{MIS of Sign-Up Module (M3)} \label{MIS_M3}
 
-\subsubsection{Module}
+\subsection{Module}
 
 \texttt{SignUpModule}\\
 
-\subsubsection{Uses}
+\subsection{Uses}
 \begin{itemize}
     \item A back-end or configuration service to store and retrieve confirmed signups.
     \item A front-end/UI component for users to input sign-up information.
 \end{itemize}
 
-\subsubsection{Syntax}
+\subsection{Syntax}
 
 \subsubsection{Exported Constants}
 \begin{itemize}
@@ -502,21 +492,13 @@ cancelSignup & userID: Str \newline eventID: Str & success: bool & CancellationE
 \item exception: CapacityExceededError if event has reached full capacity.
 \end{itemize}
 
-\subsection{MIS of Payment Configuration Module (M4)}
+\section{MIS of Payment Configuration Module (M4)}
 
-\subsubsection{Module}
+\subsection{Module}
 
 \texttt{PaymentConfigurationModule}\\
 
-\noindent
-This module centralizes all configuration required for secure payment operations.
-It exposes safe, restricted payment settings to other modules such as the Payment
-Processing Module (M1) while hiding sensitive Stripe configuration logic and
-backend API wiring. It ensures a single source of truth for currency rules,
-tax configuration, receipt formatting, and API endpoint definitions related to
-payments.
-
-\subsubsection{Uses}
+\subsection{Uses}
 
 \begin{itemize}
     \item Payment Processing Module (M1): Uses exported configuration values
@@ -532,7 +514,7 @@ payments.
     \texttt{/api/payments}, \texttt{/api/payments/refund}).
 \end{itemize}
 
-\subsubsection{Syntax}
+\subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
@@ -566,7 +548,7 @@ payments.
 \end{tabularx}
 \end{center}
 
-\subsubsection{Semantics}
+\subsection{Semantics}
 
 \subsubsection{State Variables}
 
@@ -650,13 +632,13 @@ payments.
     \item \texttt{computeTTL(t)}: helper for determining TTL expiration.
 \end{itemize}
 
-\subsection{MIS of Access Control Module (M5)}
+\section{MIS of Access Control Module (M5)}
 
-\subsubsection{Module}
+\subsection{Module}
 
 \texttt{AccessControlService}
 
-\subsubsection{Uses}
+\subsection{Uses}
 
 \begin{itemize}
     \item Authorization Module (M8)
@@ -664,7 +646,7 @@ payments.
     \item Caching Layer: speeds up permission lookups.
 \end{itemize}
 
-\subsubsection{Syntax}
+\subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
@@ -691,7 +673,7 @@ payments.
 \end{tabular}
 \end{center}
 
-\subsubsection{Semantics}
+\subsection{Semantics}
 
 \subsubsection{State Variables}
 
@@ -768,21 +750,13 @@ payments.
     \item None.
 \end{itemize}
 
-\subsection{MIS of Registration Rules Module (M6)} \label{MIS_M6}
+\section{MIS of Registration Rules Module (M6)} \label{MIS_M6}
 
-\subsubsection{Module}
+\subsection{Module}
 
-Registration Rules Module (M6)
+\texttt{RegistrationRulesModule}
 
-This module enforces all event-level registration constraints for 
-Bus Sign-Up (M3.1), Table Sign-Up (M3.2), and RSVP Sign-Up (M3.3). It retrieves 
-event rules such as capacity limits, table constraints, bus seating limits, 
-registration deadlines, and RSVP policies from the backend datastore.  
-It validates whether a user is allowed to register, whether an event has 
-remaining capacity, and whether any additional restrictions apply.  
-All rule enforcement occurs before entries are recorded or notifications are triggered.
-
-\subsubsection{Uses}
+\subsection{Uses}
 
 \begin{itemize}
     \item Access Control Module (M5): for checking user roles and eligibility
@@ -882,13 +856,13 @@ None.
     \item meetsEligibilityCriteria(eventInfo, userInfo): checks role access and custom restrictions.
 \end{itemize}
 
-\subsection{MIS of Notification Handling Module (M7)} \label{MIS_M7}
+\section{MIS of Notification Handling Module (M7)} \label{MIS_M7}
 
-\subsubsection{Module}
+\subsection{Module}
 
-NotificationModule
+\texttt{NotificationModule}
 
-\subsubsection{Uses}
+\subsection{Uses}
 \begin{itemize}
     \item A front-end/UI component for displaying notifications.
 \end{itemize}
@@ -997,21 +971,13 @@ UnsubscribeUser
 \item None
 \end{itemize}
 
-\subsection{MIS of User Authorization Module (M8)} \label{MIS_M8}
+\section{MIS of User Authorization Module (M8)} \label{MIS_M8}
 
-\subsubsection{Module}
+\subsection{Module}
 
 \texttt{UserAuthorizationModule}\\
 
-\noindent
-This module provides authentication and identity verification for all other 
-modules in the system. It manages login sessions, token issuance, token 
-validation, and user identity retrieval. The module integrates with external 
-authentication providers when applicable and acts as the system’s source of 
-truth for authenticated user identity data used by RBAC/FBAC (M5/M2) and any 
-module requiring secure access.
-
-\subsubsection{Uses}
+\subsection{Uses}
 
 \begin{itemize}
     \item Access Control Module (M5): Uses identity and token validation functions to determine a user's permissions.
