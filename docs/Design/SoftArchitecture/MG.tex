@@ -503,28 +503,22 @@ to be implemented.
 
 \section{Traceability Matrix} \label{SecTM}
 
-This section shows two traceability matrices: between the modules and the
-requirements and between the modules and the anticipated changes.
+This section presents two traceability matrices: the first shows how each
+functional requirement from the SRS (F101–F116) is satisfied by one or more
+modules; the second links the anticipated changes identified in
+Section~\ref{SecChange} to the modules that would be affected.
 
-% the table should use mref, the requirements should be named, use something
-% like fref
 \begin{table}[H]
 \centering
-\begin{tabular}{p{0.2\textwidth} p{0.6\textwidth}}
+\begin{tabular}{p{0.22\textwidth} p{0.68\textwidth}}
 \toprule
-\textbf{Req.} & \textbf{Modules}\\
+\textbf{Req. ID} & \textbf{Modules Implementing Requirement}\\
 \midrule
-R1 & \mref{mHH}, \mref{mInput}, \mref{mParams}, \mref{mControl}\\
-R2 & \mref{mInput}, \mref{mParams}\\
-R3 & \mref{mVerify}\\
-R4 & \mref{mOutput}, \mref{mControl}\\
-R5 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R6 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}, \mref{mSeqDS}, \mref{mSolver}, \mref{mPlot}\\
-R7 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R8 & \mref{mOutput}, \mref{mEnergy}, \mref{mControl}, \mref{mSeqDS}, \mref{mPlot}\\
-R9 & \mref{mVerifyOut}\\
-R10 & \mref{mOutput}, \mref{mODEs}, \mref{mControl}\\
-R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
+F101--F104 & \mref{M3} (Sign-Up Module), \mref{M3.1--M3.4} (Sign-Up Submodules), \mref{M6} (Registration Rules Module)\\
+F105--F107 & \mref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
+F108--F110 & \mref{M3} (Sign-Up Module), \mref{M3.1--M3.4} (Sign-Up Submodules), \mref{M6} (Registration Rules Module)\\
+F111--F113 & \mref{M2} (RBAC/FBAC Access Control Module), \mref{M5} (Access Control Module)\\
+F114--F116 & \mref{M8} (User Authorization Module), \mref{M4--M7} (Backend Modules)\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Requirements and Modules}
@@ -533,22 +527,15 @@ R11 & \mref{mOutput}, \mref{mODEs}, \mref{mEnergy}, \mref{mControl}\\
 
 \begin{table}[H]
 \centering
-\begin{tabular}{p{0.2\textwidth} p{0.6\textwidth}}
+\begin{tabular}{p{0.28\textwidth} p{0.62\textwidth}}
 \toprule
-\textbf{AC} & \textbf{Modules}\\
+\textbf{Anticipated Change (AC)} & \textbf{Modules Affected}\\
 \midrule
-\acref{acHardware} & \mref{mHH}\\
-\acref{acInput} & \mref{mInput}\\
-\acref{acParams} & \mref{mParams}\\
-\acref{acVerify} & \mref{mVerify}\\
-\acref{acOutput} & \mref{mOutput}\\
-\acref{acVerifyOut} & \mref{mVerifyOut}\\
-\acref{acODEs} & \mref{mODEs}\\
-\acref{acEnergy} & \mref{mEnergy}\\
-\acref{acControl} & \mref{mControl}\\
-\acref{acSeqDS} & \mref{mSeqDS}\\
-\acref{acSolver} & \mref{mSolver}\\
-\acref{acPlot} & \mref{mPlot}\\
+\acref{acPaymentGateway} & \mref{M1} (Payment Processing Module), \mref{M4} (Payment Configuration Module)\\
+\acref{acSignupTypes} & \mref{M3} (Sign-Up Module), \mref{M6} (Registration Rules Module)\\
+\acref{acNotifications} & \mref{M7} (Notification Handling Module)\\
+\acref{acPolicyRules} & \mref{M6} (Registration Rules Module), \mref{M3} (Sign-Up Submodules)\\
+\acref{acAnalytics} & \mref{M5} (Access Control Module), \mref{M7} (Notification Handling Module)\\
 \bottomrule
 \end{tabular}
 \caption{Trace Between Anticipated Changes and Modules}
