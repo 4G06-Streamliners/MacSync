@@ -105,6 +105,17 @@ character & char & a single symbol or digit\\
 integer & $\mathbb{Z}$ & a number without a fractional component in (-$\infty$, $\infty$) \\
 natural number & $\mathbb{N}$ & a number without a fractional component in [1, $\infty$) \\
 real & $\mathbb{R}$ & any number in (-$\infty$, $\infty$)\\
+string & \texttt{Str} & Sequence of \texttt{char} \\
+tuple & \(\langle x_1,\ldots,x_k\rangle\) & Tuple (heterogeneous). \\
+boolean &\texttt{Bool} & Boolean value \texttt{True} or \texttt{False}. \\
+integer & \texttt{Nat} & Non-negative integer (\(0,\infty\)) when counts/TTL are permitted to be \(0\). \\
+timestamp & \texttt{Time} & Timestamp on system clock; used for TTL / expiry checks. \\
+set & \texttt{set}[T] & Finite unordered set of \(T\) (e.g., \texttt{set[Str]}). \\
+dictionary & \texttt{dict}[K \(\to\) V] & Finite map from \(K\) to \(V\) (e.g., \texttt{dict[OperationType \(\to\) URL]}). \\
+list & \texttt{list}[T] & Finite ordered list of \(T\) (e.g., \texttt{list[Str]}). \\
+object & \texttt{JSON} & JSON object as a (key \(\to\) value) mapping with JSON-serializable values. \\
+ & \texttt{URL} & Absolute/relative URI string for backend endpoints. \\
+ & \texttt{opType} & Operation discriminator used as a map key (e.g., \texttt{``create''}, \texttt{``refund''}). \\
 identifier & \texttt{SRS-FR\#} & Functional Requirement in the \textit{SRS}. \\
 identifier & \texttt{SRS-NFR\#} & Non-Functional Requirement in the \textit{SRS}. \\
 identifier & \texttt{SSR-\#} & Safety/Security Requirement from the \textit{Hazard Analysis}. \\
