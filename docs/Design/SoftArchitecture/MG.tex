@@ -608,7 +608,24 @@ arrows in the diagram typically correspond to the presence of import statement.}
 
 \section{Design of Communication Protocols}
 
-\wss{If appropriate}
+This section outlines the external services that will be used by the MacSync platform ensuring appropriate integration between the application and third-party systems.
+
+\subsection{External Services Overview}
+
+The MacSync platform will interface with 2 key external APIs to support event management functions:
+\begin{itemize}
+    \item \textbf{Stripe API} for secure online payments.
+    \item \textbf{McMaster MacID SSO} to authenticate and authorise users
+\end{itemize}
+
+\subsection{Payment Service: Stripe}
+
+Stripe will be used as the primary gateway for handling all necessary transcations for registering for events. All communication with Stripe occurs over secure HTTPS via Stripes RESTful API. All transaction records will be recorded, logged and stored within our database to maintain past records. This enables a secure way to integrate payments within our application without having to worry about the implications of building a custom payment stack.
+
+\subsection{Authentication and Authorization: McMaster MacID SSO}
+
+The MacSync platform will integrate with McMaster's identity platform to authenticate users and support \mref{M2}. After logging in via MacID their profile will be linked to key information such as unique identifier (MacID), email address, given name, and affiliation (student, employee). By using the university SSO, we ensure that only valid McMaster students are registered on the platform and reduces authentication overhead.
+
 
 \section{Timeline}
 
