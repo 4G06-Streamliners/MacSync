@@ -154,32 +154,42 @@ The following table is taken directly from the Module Guide document for this pr
 \newpage
 ~\newpage
 
-\section{MIS of \wss{Module Name}} \label{Module} \wss{Use labels for
-  cross-referencing}
-
-\wss{You can reference SRS labels, such as R\ref{R_Inputs}.}
-
-\wss{It is also possible to use \LaTeX for hypperlinks to external documents.}
+\section{MIS of RBAC/FBAC Access Control Module (M2)} 
 
 \subsection{Module}
 
-\wss{Short name for the module}
+\texttt{RBACModule}
 
 \subsection{Uses}
+
+\begin{itemize}
+    \item User Authorization Module (M8)
+    \item Access Control Service Module (M5)
+\end{itemize}
 
 
 \subsection{Syntax}
 
 \subsubsection{Exported Constants}
 
+\begin{itemize}
+    \item \texttt{DEFAULT\_ROLE}: \texttt{str}\\
+    Default user role when signing up for the platform.
+    \item \texttt{ACCESS\_POLICY\_SCHEMA: JSON}\\
+    Schema for the capability snapshot retrieved from backend M5.
+\end{itemize}
+
 \subsubsection{Exported Access Programs}
 
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\wss{accessProg} & - & - & - \\
+\texttt{getUserRole} & userID: Str & role: Str & UserNotFound \\
+\texttt{getUserCapabilities} & userID: Str & capabilities: list[Str] & UserNotFound \\
+\texttt{authorizeAction} & action: Str & authorized: bool & AuthorizationError\\
+\texttt{syncCapabilities} & userID: Str & success: bool & FetchError \\
 \hline
 \end{tabular}
 \end{center}
@@ -188,42 +198,67 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsubsection{State Variables}
 
-\wss{Not all modules will have state variables.  State variables give the module
-  a memory.}
+\begin{itemize}
+    \item \texttt{capabilitySnapshot : dict[Str, list[Str]]}\\
+    Locally cached copy of backend-authorized capabilities for the active user.
+    \item \texttt{userRole: Str}\\
+    UI-level role used for UX grouping.
+\end{itemize}
 
 \subsubsection{Environment Variables}
 
-\wss{This section is not necessary for all modules.  Its purpose is to capture
-  when the module has external interaction with the environment, such as for a
-  device driver, screen interface, keyboard, file, etc.}
+\begin{itemize}
+    \item \texttt{ACCESS\_CONTROL\_ENDPOINT : Str}\\
+    Backend API to fetch the authoritative permissions.
+\end{itemize}
 
 \subsubsection{Assumptions}
 
-\wss{Try to minimize assumptions and anticipate programmer errors via
-  exceptions, but for practical purposes assumptions are sometimes appropriate.}
+\begin{itemize}
+    \item Authorization requests are made only for defined features or actions.
+    \item M5 always provides the source-of-truth permission set.
+\end{itemize}
 
 \subsubsection{Access Routine Semantics}
 
-\noindent \wss{accessProg}():
+\noindent \texttt{getUserRole(userID: Str)}:
 \begin{itemize}
-\item transition: \wss{if appropriate} 
-\item output: \wss{if appropriate} 
-\item exception: \wss{if appropriate} 
+\item transition: None
+\item input: A unique user identifier.
+\item output: Returns the role string associated with the given user.
+\item exception: \texttt{UserNotFound} If UUID cannot be identified.
 \end{itemize}
 
-\wss{A module without environment variables or state variables is unlikely to
-  have a state transition.  In this case a state transition can only occur if
-  the module is changing the state of another module.}
+\noindent \texttt{getUserCapabilities(userID: Str)}:
+\begin{itemize}
+\item transition: None
+\item input: A unique user identifier.
+\item output: Returns list of available features/actions.
+\item exception: \texttt{UserNotFound} If UUID cannot be identified.
+\end{itemize}
 
-\wss{Modules rarely have both a transition and an output.  In most cases you
-  will have one or the other.}
+\noindent \texttt{authorizeAction(userID: Str, action: Str)}:
+\begin{itemize}
+\item transition: None
+\item input: User ID and attempted action.
+\item output: Returns \texttt{True} if the action is permitted by user's role/capabilities.
+\item exception: \texttt{AuthorizationError}  if access is denied.
+\end{itemize}
+
+\noindent \texttt{syncCapabilities(userID: Str)}:
+\begin{itemize}
+\item transition: Fetches the capability snapshot from M5 and updates internal policy schema.
+\item input: User ID
+\item output: Returns \texttt{True} on success.
+\item exception: \texttt{FetchError} if backend cannot be reached.
+\end{itemize}
+
 
 \subsubsection{Local Functions}
 
-\wss{As appropriate} \wss{These functions are for the purpose of specification.
-  They are not necessarily something that is going to be implemented
-  explicitly.  Even if they are implemented, they are not exported; they only
-  have local scope.}
+\begin{itemize}
+    \item None.
+\end{itemize}
 
 \newpage
 
