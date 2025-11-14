@@ -165,8 +165,6 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsection{Module}
 
-\wss{SignupModule}
-
 \subsection{Uses}
 \begin{itemize}
     \item A back-end or configuration service to store and retrieve confirmed signups.
@@ -189,15 +187,13 @@ The following table is taken directly from the Module Guide document for this pr
 
 \subsubsection{Exported Access Programs}
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-submitSignup & userID: Str \newline eventID: Str \newline data: JSON & success: bool & SignupError \\
-\hline
-getSignupStatus & userID: Str \newline eventID: Str & status: JSON & NotFoundError \\
-\hline
-cancelSignup & userID: Str \newline eventID: Str & success: bool & CancellationError \\
+\texttt{submitSignup} & userID: Str, eventID: Str, data: JSON & success: bool & SignupError \\
+\texttt{getSignupStatus} & userID: Str, eventID: Str & status: JSON & NotFoundError \\
+\texttt{cancelSignup} & userID: Str, eventID: Str & success: bool & CancellationError \\
 \hline
 \end{tabular}
 \end{center}
