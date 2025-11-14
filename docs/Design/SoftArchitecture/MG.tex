@@ -335,16 +335,60 @@ This module serves as the foundation for all user-based operations within the sy
 
 \section{Connection Between Requirements and Design} \label{SecConnection}
 
-The design of the system is intended to satisfy the requirements developed in
-the SRS. In this stage, the system is decomposed into modules. The connection
-between requirements and modules is listed in Table~\ref{TblRT}.
+The design of the Large Event Management System is intended to satisfy the functional
+requirements (F101–F116) and the associated non-functional requirements identified in the
+Software Requirements Specification (SRS). This section explains how these requirements
+guided the modular decomposition of the system into the components presented in
+Section~\ref{SecMH}. The connection between requirements and modules is listed in Table~\ref{TblRT}.
 
-\wss{The intention of this section is to document decisions that are made
-  ``between'' the requirements and the design.  To satisfy some requirements,
-  design decisions need to be made.  Rather than make these decisions implicit,
-  they are explicitly recorded here.  For instance, if a program has security
-  requirements, a specific design decision may be made to satisfy those
-  requirements with a password.}
+Requirements related to \textbf{event registration and ticketing} (F101–F104) are
+satisfied through the \textit{Sign-Up Module (M3)} and its submodules
+(\textit{M3.1–M3.4}). These modules handle all user registration flows including ticket
+purchasing, bus and table sign-ups, RSVPs, and refund management. They interact with the
+\textit{Registration Rules Module (M6)} to enforce deadlines, seat capacities, and
+prioritization policies, ensuring that registration logic remains consistent and adaptable
+to different event configurations.
+
+\textbf{Payment-related requirements} (F105–F107) are fulfilled by the
+\textit{Payment Processing Module (M1)} and the \textit{Payment Configuration Module
+(M4)}. Together they manage secure payment gateway integration, transaction verification,
+and storage of configuration data such as currency types, merchant keys, and payment
+methods. This modular separation supports both extensibility—allowing future integration
+with new payment providers—and maintainability by isolating external API dependencies.
+
+\textbf{Sign-up and allocation requirements} (F108–F110), including bus registration,
+table assignments, and RSVP limits, are handled by specific submodules within the
+\textit{Sign-Up Module (M3)}. Each submodule provides a tailored workflow for its
+respective function, while common logic is centralized through the \textit{Sign-Up
+Adapter (M3.1)}. This satisfies the SRS need for flexible and reusable registration
+components that can be applied across multiple event types.
+
+\textbf{Access-control requirements} (F111–F113) motivated the inclusion of both the
+\textit{RBAC/FBAC Access Control Module (M2)} and the backend
+\textit{Access Control Module (M5)}. These modules collectively enforce role-based and
+feature-based access restrictions, ensuring that users—such as administrators, volunteers,
+or attendees—only interact with features appropriate to their permissions. This design
+choice provides fine-grained authorization while remaining scalable for future event roles.
+
+\textbf{Security, privacy, and integrity requirements} (F114–F116) are addressed through
+the \textit{User Authorization Module (M8)} in conjunction with other backend modules
+(\textit{M4–M7}). The authorization module manages user authentication and secure session
+handling, while supporting encryption and data-protection mechanisms across network
+communications. These features guarantee that sensitive user and payment data comply with
+privacy regulations and institutional security standards.
+
+Finally, cross-cutting requirements for \textbf{notifications, confirmations, and user
+communication} are met by the \textit{Notification Handling Module (M7)}. This module
+delivers confirmations, reminders, and updates via email and in-app alerts, ensuring that
+both attendees and administrators receive timely feedback on their actions within the
+system.
+
+By associating each major requirement group in the SRS with a dedicated set of modules,
+the overall architecture remains flexible, maintainable, and extensible. This structured
+approach ensures that any future modifications—such as supporting new payment methods,
+adjusting registration logic, or introducing new user roles—can be achieved by updating a
+limited subset of modules. The detailed requirement–module correspondence is provided in
+Table~\ref{TblRT} in Section~\ref{SecTM}.
 
 \section{Module Decomposition} \label{SecMD}
 
