@@ -202,9 +202,9 @@ N/A
 \toprule
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \midrule
-submitPayment       & PaymentInfo & ConfirmationResponse & InvalidPaymentData, NetworkError \\
-validatePaymentData & PaymentInfo & Boolean              & InvalidPaymentData \\
-requestRefund       & RefundRequest & RefundResponse      & InvalidRefundRequest, NetworkError \\
+\texttt{submitPayment}       & PaymentInfo & ConfirmationResponse & InvalidPaymentData, NetworkError \\
+\texttt{validatePaymentData} & PaymentInfo & Boolean              & InvalidPaymentData \\
+\texttt{requestRefund}       & RefundRequest & RefundResponse      & InvalidRefundRequest, NetworkError \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -417,15 +417,15 @@ N/A
 
 \subsubsection{Exported Access Programs}
 \begin{center}
-\begin{tabular}{p{2cm} p{4cm} p{4cm} p{2cm}}
+\begin{tabular}{p{4cm} p{4cm} p{4cm} p{4cm}}
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-submitSignup & userID: Str \newline eventID: Str \newline data: JSON & success: bool & SignupError \\
+\texttt{submitSignup} & userID: Str \newline eventID: Str \newline data: JSON & success: bool & SignupError \\
 \hline
-getSignupStatus & userID: Str \newline eventID: Str & status: JSON & NotFoundError \\
+\texttt{getSignupStatus} & userID: Str \newline eventID: Str & status: JSON & NotFoundError \\
 \hline
-cancelSignup & userID: Str \newline eventID: Str & success: bool & CancellationError \\
+\texttt{cancelSignup} & userID: Str \newline eventID: Str & success: bool & CancellationError \\
 \hline
 \end{tabular}
 \end{center}
@@ -779,10 +779,10 @@ N/A
 \toprule
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \midrule
-validateCapacity     & EventInfo, UserInfo & Boolean & EventFull, InvalidEvent \\
-validateDeadline     & EventInfo, UserInfo & Boolean & DeadlinePassed, InvalidEvent \\
-validateEligibility  & EventInfo, UserInfo & Boolean & PermissionDenied \\
-getEventRules        & EventID             & EventRules & InvalidEvent \\
+\texttt{validateCapacity}     & EventInfo, UserInfo & Boolean & EventFull, InvalidEvent \\
+\texttt{validateDeadline}     & EventInfo, UserInfo & Boolean & DeadlinePassed, InvalidEvent \\
+\texttt{validateEligibility}  & EventInfo, UserInfo & Boolean & PermissionDenied \\
+\texttt{getEventRules}        & EventID             & EventRules & InvalidEvent \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -887,8 +887,8 @@ None.
 \hline
 \textbf{Name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions} \\
 \hline
-\texttt{SendNotification} & userID: Str, message: Str, notification\_type: Str & success: bool & NotificationError \\
-\texttt{getNotificationHistory} & userID: Str & Notifications: List[Str] & RetrievalError \\
+\texttt{SendNotification} & userID: Str, message: Str, notif\_type: Str & success: bool & NotificationError \\
+\texttt{getNotificationHist} & userID: Str & Notifications: List[Str] & RetrievalError \\
 \texttt{subscribeUser} & userID: Str, subscribed: bool & success: bool & SubscribingError \\
 \texttt{UnsubscribeUser} & userID: Str, subscribed: bool & success: bool & UnsubscribingError \\
 \hline
@@ -932,7 +932,7 @@ None.
 \item exception: NotificationError if API fails and message cannot be sent.
 \end{itemize}
 
-\noindent getNotificationHistory(userID):
+\noindent getNotificationHist(userID):
 \begin{itemize}
 \item transition: None.
 \item output: Returns list of previously sent out notifications.
