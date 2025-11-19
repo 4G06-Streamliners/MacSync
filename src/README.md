@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-# Project Name Source Code
-
-The folders and files for this project are as follows:
-
-...
-=======
 # CapstoneMock Source Code
 
 This project follows a modular architecture with the following structure:
@@ -29,4 +22,3 @@ src/
 - **shared/**: Common utilities, types, and shared code across components
 
 This structure supports both standalone development and integration within the larger large-event project architecture.
->>>>>>> boilerplate/main
