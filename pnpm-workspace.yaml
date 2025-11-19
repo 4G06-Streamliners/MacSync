@@ -1,0 +1,9 @@
+packages:
+  - 'src/api'
+  - 'src/api-types'
+  - 'src/database'
+  - 'src/mobile'
+  - 'src/mobile-components'
+  - 'src/web-admin'
+  - 'src/web-components'
+  - 'src/web-user'
