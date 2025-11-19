@@ -277,8 +277,6 @@ TSWLatexianTemp*
 
 # DS_Store file from Mac computers
 .DS_Store
-<<<<<<< HEAD
-=======
 
 # Other files to ignore
 node_modules/
@@ -292,4 +290,3 @@ teamd.config.*.map
 teamd.config.d.mts
 *.gen.ts
 .tanstack/
->>>>>>> boilerplate/main
