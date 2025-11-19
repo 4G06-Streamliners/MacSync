@@ -1,0 +1,19 @@
+{
+  "name": "@teamd/api-types",
+  "version": "1.0.0",
+  "description": "Team D API type definitions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "registry": "http://localhost:4873"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "promote": "node scripts/promote-types.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
