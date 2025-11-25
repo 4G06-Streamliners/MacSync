@@ -20,7 +20,9 @@
     "@teamd/database": "workspace:*",
     "drizzle-orm": "^0.30.10",
     "fastify": "^5.6.2",
-    "jsonwebtoken": "^9.0.2"
+    "fastify-raw-body": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "stripe": "^20.0.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",

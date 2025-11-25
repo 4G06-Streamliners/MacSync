@@ -3,6 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './contexts/AuthContext';
 import { RootNavigator } from './navigation/RootNavigator';
+import { StripeProvider } from '@stripe/stripe-react-native';
+
+// STRIPE_PUBLISHABLE_KEY should be set in your environment (see src/mobile/ENV.md)
+const STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
 
 /**
  * Team D Standalone Mobile App
@@ -15,10 +19,12 @@ import { RootNavigator } from './navigation/RootNavigator';
 export function App() {
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <RootNavigator />
-      </NavigationContainer>
+      <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <RootNavigator />
+        </NavigationContainer>
+      </StripeProvider>
     </AuthProvider>
   );
 }

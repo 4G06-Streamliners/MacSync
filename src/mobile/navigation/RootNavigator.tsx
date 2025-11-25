@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { TestPaymentScreen } from '../screens/TestPaymentScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
@@ -35,6 +36,7 @@ function TabNavigator() {
         component={HomeScreen}
         options={{ title: 'Team D' }}
       />
+      <Tab.Screen name="Payments" component={TestPaymentScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

@@ -6,6 +6,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import cookie from '@fastify/cookie'
+import rawBody from 'fastify-raw-body'
 import TeamDConfig from '../../../teamd.config.mjs'
 
 // Import routes
@@ -13,6 +14,7 @@ import { authRoutes } from './routes/auth.js'
 import { healthRoutes } from './routes/health.js'
 import { userRoutes } from './routes/users.js'
 import { instanceRoutes } from './routes/instances.js'
+import { paymentsRoutes } from './routes/payments.js'
 
 // Configuration from centralized config
 const PORT = parseInt(process.env.PORT || String(TeamDConfig.api.port))
@@ -48,11 +50,20 @@ await fastify.register(cookie, {
   parseOptions: {},
 })
 
+// Make raw request body available on request.rawBody for webhook verification
+await fastify.register(rawBody, {
+  field: 'rawBody',
+  global: true,
+  encoding: 'utf8',
+  runFirst: true,
+})
+
 // Register routes
 await fastify.register(healthRoutes, { prefix: '/api' })
 await fastify.register(authRoutes, { prefix: '/api' })
 await fastify.register(userRoutes, { prefix: '/api' })
 await fastify.register(instanceRoutes, { prefix: '/api' })
+await fastify.register(paymentsRoutes, { prefix: '/api' })
 
 // Root endpoint
 fastify.get('/', async (request, reply) => {
