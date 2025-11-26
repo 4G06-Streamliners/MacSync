@@ -1,51 +1,70 @@
-import type { FastifyInstance } from 'fastify'
-import Stripe from 'stripe'
-import { db } from '@large-event/database'
-import * as sharedSchema from '@large-event/database/schemas'
-import * as overlaySchema from '@teamd/database/overlays'
-import { eq } from 'drizzle-orm'
+import type { FastifyInstance } from 'fastify';
+import Stripe from 'stripe';
+import { db, sharedSchema, overlaySchema } from '@teamd/database';
+import { eq } from 'drizzle-orm';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2022-11-15' })
+// Debug schemas present at runtime
+console.log("DEBUG sharedSchema keys:", Object.keys(sharedSchema));
+console.log("DEBUG overlaySchema keys:", Object.keys(overlaySchema));
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2022-11-15',
+});
 
 export async function paymentsRoutes(fastify: FastifyInstance) {
-  // POST /api/payments/create
+
   fastify.post('/payments/create', async (request, reply) => {
-    const body = request.body as any
-    const userId = Number(body?.userId)
-    const eventId = Number(body?.eventId)
+    const body = request.body as any;
+    const userId = Number(body?.userId);
+    const eventId = Number(body?.eventId);
 
     if (!userId || !eventId) {
-      return reply.status(400).send({ success: false, error: { message: 'userId and eventId are required' } })
+      return reply.status(400).send({
+        success: false,
+        error: { message: 'userId and eventId are required' },
+      });
     }
 
-    // Validate event and user exist
-    const existingEvent = await db.select().from((sharedSchema as any).events).where(eq((sharedSchema as any).events.id, eventId)).limit(1)
-    if (existingEvent.length === 0) {
-      return reply.status(404).send({ success: false, error: { message: 'Event not found' } })
+    // Validate event exists (if team D schema contains events)
+    if ((sharedSchema as any).events) {
+      const existingEvent = await db
+        .select()
+        .from((sharedSchema as any).events)
+        .where(eq((sharedSchema as any).events.id, eventId))
+        .limit(1);
+
+      if (existingEvent.length === 0)
+        return reply.status(404).send({
+          success: false,
+          error: { message: 'Event not found' },
+        });
     }
 
-    const existingUser = await db.select().from((sharedSchema as any).users).where(eq((sharedSchema as any).users.id, userId)).limit(1)
+    // Validate user exists
+    const existingUser = await db
+      .select()
+      .from((sharedSchema as any).users)
+      .where(eq((sharedSchema as any).users.id, userId))
+      .limit(1);
+
     if (existingUser.length === 0) {
-      return reply.status(404).send({ success: false, error: { message: 'User not found' } })
+      return reply.status(404).send({
+        success: false,
+        error: { message: 'User not found' },
+      });
     }
 
     try {
-      // Create real PaymentIntent using Stripe
-      if (!process.env.STRIPE_SECRET_KEY) {
-        fastify.log.warn('STRIPE_SECRET_KEY not set, falling back to mock PaymentIntent')
-      }
-
       const pi = await stripe.paymentIntents.create({
         amount: 500,
         currency: 'cad',
-        metadata: { userId: String(userId), eventId: String(eventId) },
         payment_method_types: ['card'],
-      })
+        metadata: { userId: String(userId), eventId: String(eventId) },
+      });
 
-      const paymentIntentId = pi.id
-      const clientSecret = pi.client_secret || ''
+      const paymentIntentId = pi.id;
 
-      // Store pending payment in overlay payments table
+      // Store pending payment
       await db.insert((overlaySchema as any).payments).values({
         userId,
         eventId,
@@ -53,112 +72,202 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
         amount: 500,
         currency: 'cad',
         status: 'pending',
-      })
+      });
 
-      return { clientSecret, stripePaymentIntentId: paymentIntentId }
+      return {
+        clientSecret: pi.client_secret || '',
+        stripePaymentIntentId: paymentIntentId,
+      };
     } catch (error) {
-      fastify.log.error('Failed to create PaymentIntent or DB row', error)
-      return reply.status(500).send({ success: false, error: { message: 'Failed to create payment' } })
+      fastify.log.error('PaymentIntent creation failed', error);
+      return reply.status(500).send({
+        success: false,
+        error: { message: 'Failed to create payment' },
+      });
     }
-  })
+  });
 
-  // POST /api/payments/webhook
-  // Stripe will POST events here. We verify signature when STRIPE_WEBHOOK_SECRET is set.
+  fastify.post('/payments/create_checkout_session', async (request, reply) => {
+    const { userId, eventId } = request.body as any;
+
+    if (!userId || !eventId) {
+      return reply.status(400).send({
+        success: false,
+        error: { message: 'userId and eventId are required' },
+      });
+    }
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: process.env.STRIPE_PRICE_ID || '', // replace later
+            quantity: 1,
+          },
+        ],
+        success_url: 'http://localhost:8081/',
+        cancel_url:   'http://localhost:8081/',
+
+        metadata: { userId: String(userId), eventId: String(eventId) },
+      });
+
+      return { url: session.url };
+    } catch (err: any) {
+      fastify.log.error('CheckoutSession error:', err);
+      return reply.status(500).send({
+        success: false,
+        error: { message: err.message },
+      });
+    }
+  });
+
+
   fastify.post('/payments/webhook', async (request, reply) => {
-    const sig = request.headers['stripe-signature'] as string | undefined
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-    let event: any
+    const sig = request.headers['stripe-signature'] as string | undefined;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    let event: any;
 
     try {
       if (webhookSecret) {
-        const raw = (request as any).rawBody
-        if (!raw) throw new Error('Missing rawBody for signature verification')
-        event = stripe.webhooks.constructEvent(raw, sig || '', webhookSecret)
+        const raw = (request as any).rawBody;
+        if (!raw) throw new Error('Missing rawBody');
+
+        event = stripe.webhooks.constructEvent(raw, sig || '', webhookSecret);
       } else {
-        // No webhook secret configured — accept the parsed body but log a warning
-        fastify.log.warn('STRIPE_WEBHOOK_SECRET not set — webhook signature will not be verified')
-        event = request.body
+        fastify.log.warn('Webhook secret missing — signature not verified');
+        event = request.body;
       }
     } catch (err: any) {
-      fastify.log.error('Webhook signature verification failed:', err?.message || err)
-      return reply.status(400).send({ received: false })
+      fastify.log.error('Webhook signature failed:', err.message);
+      return reply.status(400).send({ received: false });
     }
 
-    // Store webhook payload for debugging
+    // Store webhook event for debugging
     try {
-      await db.insert((overlaySchema as any).stripeWebhooks).values({ eventId: event.id || `evt_${Date.now()}`, payload: event, processed: false })
-    } catch (err) {
-      fastify.log.warn('Failed to store webhook payload', err)
-    }
+      await db.insert((overlaySchema as any).stripeWebhooks).values({
+        eventId: event.id || `evt_${Date.now()}`,
+        payload: event,
+        processed: false,
+      });
+    } catch {}
 
-    // Handle events
+    // Handle payment success
     try {
-      if (event.type === 'payment_intent.succeeded' || (event.type && event.type === 'checkout.session.completed')) {
-        const pi = event.data.object
-        const piId = pi.id
+      const type = event.type;
 
-        const payments = await db.select().from((overlaySchema as any).payments).where(eq((overlaySchema as any).payments.stripePaymentIntentId, piId)).limit(1)
-        if (payments.length > 0) {
-          const payment = payments[0]
-          await db.update((overlaySchema as any).payments).set({ status: 'succeeded' }).where(eq((overlaySchema as any).payments.id, payment.id))
+      if (
+        type === 'payment_intent.succeeded' ||
+        type === 'checkout.session.completed'
+      ) {
+        const obj = event.data.object;
 
-          // create attendee + qr code if shared tables are present
-          try {
-            if ((sharedSchema as any).attendees) {
-              await db.insert((sharedSchema as any).attendees).values({ userId: payment.userId, eventId: payment.eventId })
-            }
-            if ((sharedSchema as any).qrCodes) {
-              await db.insert((sharedSchema as any).qrCodes).values({ eventId: payment.eventId, userId: payment.userId, code: `QR-${piId}` })
-            }
-          } catch (err) {
-            fastify.log.warn('Failed to create attendee/qr record', err)
+        const piId =
+          obj.id ||
+          obj.payment_intent || // checkout.session.completed gives payment_intent
+          null;
+
+        if (!piId) return { received: true };
+
+        const matches = await db
+          .select()
+          .from((overlaySchema as any).payments)
+          .where(eq((overlaySchema as any).payments.stripePaymentIntentId, piId))
+          .limit(1);
+
+        if (matches.length === 0) {
+          fastify.log.warn('PaymentIntent not found:', piId);
+          return { received: true };
+        }
+
+        const payment = matches[0];
+
+        await db
+          .update((overlaySchema as any).payments)
+          .set({ status: 'succeeded' })
+          .where(eq((overlaySchema as any).payments.id, payment.id));
+
+        // Create attendee + QR if schema allows
+        try {
+          if ((sharedSchema as any).attendees) {
+            await db.insert((sharedSchema as any).attendees).values({
+              eventId: payment.eventId,
+              userId: payment.userId,
+            });
           }
-        } else {
-          fastify.log.warn('Payment row not found for PaymentIntent:', piId)
+
+          if ((sharedSchema as any).qrCodes) {
+            await db.insert((sharedSchema as any).qrCodes).values({
+              eventId: payment.eventId,
+              userId: payment.userId,
+              code: `QR-${piId}`,
+            });
+          }
+        } catch (err) {
+          fastify.log.warn('Attendee/QR creation skipped', err);
         }
       }
     } catch (err) {
-      fastify.log.error('Error handling webhook event', err)
+      fastify.log.error('Webhook processing error:', err);
     }
 
-    return { received: true }
-  })
+    return { received: true };
+  });
 
-    // POST /api/payments/simulate_confirm
-    // Keep a local helper for dev/mobile POC to simulate webhook processing
-    fastify.post('/payments/simulate_confirm', async (request, reply) => {
-      const body = request.body as any
-      const piId = body?.stripePaymentIntentId
-      if (!piId) {
-        return reply.status(400).send({ success: false, error: { message: 'stripePaymentIntentId required' } })
+  fastify.post('/payments/simulate_confirm', async (request, reply) => {
+    const { stripePaymentIntentId } = request.body as any;
+
+    if (!stripePaymentIntentId) {
+      return reply.status(400).send({
+        success: false,
+        error: { message: 'stripePaymentIntentId required' },
+      });
+    }
+
+    const payments = await db
+      .select()
+      .from((overlaySchema as any).payments)
+      .where(
+        eq(
+          (overlaySchema as any).payments.stripePaymentIntentId,
+          stripePaymentIntentId,
+        ),
+      )
+      .limit(1);
+
+    if (payments.length === 0) {
+      return reply.status(404).send({
+        success: false,
+        error: { message: 'Payment not found' },
+      });
+    }
+
+    const payment = payments[0];
+
+    await db
+      .update((overlaySchema as any).payments)
+      .set({ status: 'succeeded' })
+      .where(eq((overlaySchema as any).payments.id, payment.id));
+
+    // Create attendee + QR if possible
+    try {
+      if ((sharedSchema as any).attendees) {
+        await db.insert((sharedSchema as any).attendees).values({
+          eventId: payment.eventId,
+          userId: payment.userId,
+        });
       }
-
-      // Store webhook record
-      await db.insert((overlaySchema as any).stripeWebhooks).values({ eventId: `mock_evt_${Date.now()}`, payload: body, processed: true })
-
-      // Find payment
-      const payments = await db.select().from((overlaySchema as any).payments).where(eq((overlaySchema as any).payments.stripePaymentIntentId, piId)).limit(1)
-      if (payments.length === 0) {
-        return reply.status(404).send({ success: false, error: { message: 'Payment not found' } })
+      if ((sharedSchema as any).qrCodes) {
+        await db.insert((sharedSchema as any).qrCodes).values({
+          eventId: payment.eventId,
+          userId: payment.userId,
+          code: `QR-${stripePaymentIntentId}`,
+        });
       }
+    } catch {}
 
-      const payment = payments[0]
+    return { success: true };
+  });
 
-      // Update payment status
-      await db.update((overlaySchema as any).payments).set({ status: 'succeeded' }).where(eq((overlaySchema as any).payments.id, payment.id))
-
-      // Create attendee + QR code if shared tables exist
-      try {
-        if ((sharedSchema as any).attendees) {
-          await db.insert((sharedSchema as any).attendees).values({ userId: payment.userId, eventId: payment.eventId })
-        }
-        if ((sharedSchema as any).qrCodes) {
-          await db.insert((sharedSchema as any).qrCodes).values({ eventId: payment.eventId, userId: payment.userId, code: `QR-${piId}` })
-        }
-      } catch (err) {
-        fastify.log.warn('Could not create attendee/qr record (maybe tables missing in this environment)', err)
-      }
-
-      return { success: true }
-    })
 }

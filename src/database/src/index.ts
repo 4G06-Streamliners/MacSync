@@ -1,19 +1,15 @@
-import { createDatabase, type DatabaseConfig } from '@large-event/database';
-import * as sharedSchema from '@large-event/database/schemas';
+import { createDatabase } from '@large-event/database';
+import * as sharedSchema from './schemas/alltables';
 import * as overlaySchema from './overlays';
 
-export interface TeamDDatabaseConfig extends DatabaseConfig {
-  useOverlays?: boolean;
+export function createTeamDDatabase() {
+  return createDatabase();
 }
 
-export function createTeamDDatabase(config?: TeamDDatabaseConfig) {
-  const mergedSchema = {
-    ...sharedSchema,
-    ...overlaySchema,
-  };
-
-  return createDatabase(config);
-}
+export const schema = {
+  ...sharedSchema,
+  ...overlaySchema,
+};
 
 export { sharedSchema, overlaySchema };
 

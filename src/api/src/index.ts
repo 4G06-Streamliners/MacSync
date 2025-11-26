@@ -8,7 +8,7 @@ import cors from '@fastify/cors'
 import cookie from '@fastify/cookie'
 import rawBody from 'fastify-raw-body'
 import TeamDConfig from '../../../teamd.config.mjs'
-
+import 'dotenv/config';
 // Import routes
 import { authRoutes } from './routes/auth.js'
 import { healthRoutes } from './routes/health.js'
@@ -40,7 +40,12 @@ const fastify = Fastify({
 
 // Register plugins
 await fastify.register(cors, {
-  origin: [...TeamDConfig.cors.allowedOrigins],
+    origin: [
+    ...TeamDConfig.cors.allowedOrigins,
+
+    'http://localhost:8081',
+    'http://127.0.0.1:8081',
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
