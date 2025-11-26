@@ -17,5 +17,8 @@ export type {
   AuthUser,
   InstanceResponse,
   OrganizationSummary,
-  InstanceAccessLevel
+  InstanceAccessLevel,
+  SignupSummary,
+  SignupRecord,
+  SignupStatus,
 } from './types';

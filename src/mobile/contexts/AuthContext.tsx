@@ -2,17 +2,19 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import axios from 'axios';
-import type { AuthUser, InstanceResponse } from '@teamd/mobile-components';
+import type { AuthUser, InstanceResponse, SignupSummary } from '@teamd/mobile-components';
 
 interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   instances: InstanceResponse[];
+  signups: SignupSummary | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshInstances: () => Promise<void>;
+  refreshSignups: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [instances, setInstances] = useState<InstanceResponse[]>([]);
+  const [signups, setSignups] = useState<SignupSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load token and user on mount
@@ -96,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userResponse.data);
 
       // Fetch instances
-      await refreshInstances();
+      await Promise.all([refreshInstances(), refreshSignups()]);
     } catch (error) {
       console.error('[AuthContext] Error fetching user data:', error);
       // If unauthorized or forbidden, clear auth
@@ -121,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
 
       // Fetch instances
-      await refreshInstances();
+      await Promise.all([refreshInstances(), refreshSignups()]);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -151,15 +154,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshSignups = async () => {
+    try {
+      console.log('[AuthContext] Fetching signups from:', `${API_URL}/users/me/signups`);
+      const response = await apiClient.get(`${API_URL}/users/me/signups`);
+      const summary = (response.data ?? response) as SignupSummary;
+      setSignups(summary);
+    } catch (error) {
+      console.error('[AuthContext] Error fetching signups:', error);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
     instances,
+    signups,
     isAuthenticated: !!user && !!token,
     loading,
     login,
     logout,
     refreshInstances,
+    refreshSignups,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LoginScreen } from '../screens/LoginScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { SignupScreen } from '../screens/SignupScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -20,6 +21,8 @@ function TabNavigator() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Signups') {
+            iconName = focused ? 'list' : 'list';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -34,6 +37,10 @@ function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{ title: 'Team D' }}
+      />
+      <Tab.Screen
+        name="Signups"
+        component={SignupScreen}
       />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

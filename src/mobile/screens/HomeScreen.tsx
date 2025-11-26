@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { TeamDPlaceholder } from '@teamd/mobile-components';
+//import { TeamDPlaceholder } from '@teamd/mobile-components';
 
 /**
  * Home Screen - demonstrates using Team D components
@@ -25,11 +25,11 @@ export function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <TeamDPlaceholder
+      {/* <TeamDPlaceholder
         user={user!}
         token={token!}
         instances={instances}
-      />
+      /> */}
     </View>
   );
 }

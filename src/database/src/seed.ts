@@ -32,7 +32,7 @@ async function seed() {
     // 1. Create Organizations
     // =========================================================================
     console.log('Creating organizations...');
-    const [cfes, cale, mes] = await db.insert(overlaySchema.organizations).values([
+    const [cfes, cale, mes] = await db.insert(sharedSchema.organizations).values([
       {
         name: 'Canadian Federation of Engineering Students',
         acronym: 'CFES',
@@ -61,7 +61,7 @@ async function seed() {
       graffiti,
       cale2026,
       natsurvey
-    ] = await db.insert(overlaySchema.instances).values([
+    ] = await db.insert(sharedSchema.instances).values([
       {
         name: 'MES Dashboard',
         ownerOrganizationId: mes.id,
@@ -153,7 +153,7 @@ async function seed() {
     // =========================================================================
     console.log('Creating user-organization memberships...');
 
-    await db.insert(overlaySchema.userOrganizations).values([
+    await db.insert(sharedSchema.userOrganizations).values([
       // Organization superadmins
       { userId: mesAdmin.id, organizationId: mes.id, isOrganizationAdmin: true },
       { userId: cfesAdmin.id, organizationId: cfes.id, isOrganizationAdmin: true },
@@ -187,7 +187,7 @@ async function seed() {
     // System admin gets 'both' access to all instances
     const allInstances = [mesDashboard, fireball, toga, grad, graffiti, cale2026, natsurvey];
     for (const instance of allInstances) {
-      await db.insert(overlaySchema.userInstanceAccess).values({
+      await db.insert(sharedSchema.userInstanceAccess).values({
         userId: systemAdmin.id,
         instanceId: instance.id,
         accessLevel: 'both',
@@ -199,7 +199,7 @@ async function seed() {
     // But we'll grant it explicitly for clarity in the seed data
     // MES Admin → all MES instances
     for (const instance of [mesDashboard, fireball, toga, grad, graffiti]) {
-      await db.insert(overlaySchema.userInstanceAccess).values({
+      await db.insert(sharedSchema.userInstanceAccess).values({
         userId: mesAdmin.id,
         instanceId: instance.id,
         accessLevel: 'both',
@@ -208,7 +208,7 @@ async function seed() {
     }
 
     // CFES Admin → CFES instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: cfesAdmin.id,
       instanceId: natsurvey.id,
       accessLevel: 'both',
@@ -216,7 +216,7 @@ async function seed() {
     });
 
     // CALE Admin → CALE instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: caleAdmin.id,
       instanceId: cale2026.id,
       accessLevel: 'both',
@@ -224,7 +224,7 @@ async function seed() {
     });
 
     // Event admins → their specific instances (admin portal access)
-    await db.insert(overlaySchema.userInstanceAccess).values([
+    await db.insert(sharedSchema.userInstanceAccess).values([
       { userId: fireballAdmin.id, instanceId: fireball.id, accessLevel: 'web_admin', grantedBy: mesAdmin.id },
       { userId: togaAdmin.id, instanceId: toga.id, accessLevel: 'web_admin', grantedBy: mesAdmin.id },
       { userId: gradAdmin.id, instanceId: grad.id, accessLevel: 'web_admin', grantedBy: mesAdmin.id },
@@ -236,7 +236,7 @@ async function seed() {
     // Regular users → their org's instances (user portal access)
     // MES User → all MES instances
     for (const instance of [mesDashboard, fireball, toga, grad, graffiti]) {
-      await db.insert(overlaySchema.userInstanceAccess).values({
+      await db.insert(sharedSchema.userInstanceAccess).values({
         userId: mesUser.id,
         instanceId: instance.id,
         accessLevel: 'web_user',
@@ -245,7 +245,7 @@ async function seed() {
     }
 
     // CFES User → CFES instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: cfesUser.id,
       instanceId: natsurvey.id,
       accessLevel: 'web_user',
@@ -253,7 +253,7 @@ async function seed() {
     });
 
     // CALE User → CALE instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: caleUser.id,
       instanceId: cale2026.id,
       accessLevel: 'web_user',
@@ -261,6 +261,106 @@ async function seed() {
     });
 
     console.log(`✅ Granted access for all users`);
+
+    // =========================================================================
+    // 6. Create Signup Artifacts (bus routes, tables, RSVPs)
+    // =========================================================================
+    console.log('Creating sample bus routes...');
+    const [fireballLoop, gradExpress] = await db.insert(overlaySchema.busRoutes).values([
+      {
+        instanceId: fireball.id,
+        name: 'Fireball Downtown Loop',
+        description: 'Pick-up at Hatch Centre, drop-off at Liuna Station.',
+        capacity: 50,
+        waitlistCapacity: 10,
+        departureLocation: 'Hatch Centre',
+      },
+      {
+        instanceId: grad.id,
+        name: 'Grad Express',
+        description: 'Express shuttle to the Burlington Convention Centre.',
+        capacity: 40,
+        waitlistCapacity: 5,
+        departureLocation: 'JHE Bus Loop',
+      },
+    ]).returning();
+
+    console.log('Creating sample event tables...');
+    const [fireballTableA, fireballTableB] = await db.insert(overlaySchema.eventTables).values([
+      {
+        instanceId: fireball.id,
+        label: 'Table A',
+        capacity: 10,
+        location: 'Grand Ballroom - Front Left',
+      },
+      {
+        instanceId: fireball.id,
+        label: 'Table B',
+        capacity: 10,
+        location: 'Grand Ballroom - Front Right',
+      },
+    ]).returning();
+
+    console.log('Creating sample signups...');
+    await db.insert(overlaySchema.busSignups).values([
+      {
+        instanceId: fireball.id,
+        routeId: fireballLoop.id,
+        userId: mesUser.id,
+        status: 'confirmed',
+      },
+      {
+        instanceId: fireball.id,
+        routeId: fireballLoop.id,
+        userId: cfesUser.id,
+        status: 'waitlisted',
+        waitlistPosition: 1,
+      },
+      {
+        instanceId: grad.id,
+        routeId: gradExpress.id,
+        userId: gradAdmin.id,
+        status: 'confirmed',
+      },
+    ]);
+
+    await db.insert(overlaySchema.tableSignups).values([
+      {
+        instanceId: fireball.id,
+        tableId: fireballTableA.id,
+        userId: mesUser.id,
+        groupName: 'Purple Team',
+        seatsRequested: 2,
+        status: 'confirmed',
+      },
+      {
+        instanceId: fireball.id,
+        tableId: fireballTableB.id,
+        userId: cfesUser.id,
+        groupName: 'CFES Friends',
+        seatsRequested: 4,
+        status: 'pending',
+      },
+    ]);
+
+    await db.insert(overlaySchema.eventRsvps).values([
+      {
+        instanceId: fireball.id,
+        userId: mesUser.id,
+        status: 'confirmed',
+      },
+      {
+        instanceId: fireball.id,
+        userId: cfesUser.id,
+        status: 'waitlisted',
+        waitlistPosition: 1,
+      },
+      {
+        instanceId: toga.id,
+        userId: mesAdmin.id,
+        status: 'confirmed',
+      },
+    ]);
 
     // =========================================================================
     // Summary
@@ -276,6 +376,9 @@ async function seed() {
     console.log(`     * Regular Users: user@mes.dev, user@cfes.dev, user@cale.dev`);
     console.log(`   - User-Organization Memberships: 12`);
     console.log(`   - User-Instance Access Grants: ${7 + 5 + 1 + 1 + 6 + 5 + 1 + 1} (with various access levels)`);
+    console.log(`   - Bus Routes: 2`);
+    console.log(`   - Event Tables: 2`);
+    console.log(`   - Signup Records: 8`);
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);

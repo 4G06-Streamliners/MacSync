@@ -2,5 +2,12 @@
   "version": "6",
   "dialect": "postgresql",
   "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1764187200000,
+      "tag": "20251126_120000_signup_tables",
+      "breakpoints": true
+    }
   ]
 }

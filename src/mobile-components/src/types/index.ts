@@ -37,3 +37,21 @@ export interface TeamComponentProps {
   instances: InstanceResponse[];
   onNavigateBack?: () => void;
 }
+
+export type SignupStatus = 'pending' | 'confirmed' | 'waitlisted' | 'cancelled';
+
+export interface SignupRecord {
+  id: number;
+  instanceId: number;
+  status: SignupStatus;
+  type: 'bus' | 'table' | 'rsvp';
+  routeId?: number;
+  tableId?: number;
+  seatsRequested?: number;
+}
+
+export interface SignupSummary {
+  bus: SignupRecord[];
+  tables: SignupRecord[];
+  rsvps: SignupRecord[];
+}

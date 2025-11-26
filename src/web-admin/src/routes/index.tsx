@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createAuthClient } from '@large-event/api-client';
-import type { AuthUser } from '@large-event/api-types';
+import type { AuthUser, BusRouteSummary, EventTableSummary, SignupResponse, SignupStatus } from '@teamd/api-types';
 import { useInstance } from '../lib/instance-provider';
 import type { InstanceResponse as Instance } from '@large-event/api-types';
 import { ProtectedTeamRoute, PORTAL_CONFIGS, type SeedUser } from '@large-event/web-components';
@@ -14,6 +14,201 @@ const authClient = createAuthClient({
 
 // Seed users for quick login
 const SEED_USERS: SeedUser[] = [
+async function teamdApi<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = sessionStorage.getItem('teamd-auth-token');
+  const response = await fetch(`/api${path}`, {
+    credentials: 'include',
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers ?? {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const payload = await response.json();
+  if (!payload?.success) {
+    throw new Error(payload?.error?.message ?? 'Request failed');
+  }
+  return payload.data as T;
+}
+
+type SignupTab = 'bus' | 'table' | 'rsvp';
+
+function SignupManager({ instanceId }: { instanceId: number }) {
+  const [activeTab, setActiveTab] = useState<SignupTab>('bus');
+  const [routes, setRoutes] = useState<BusRouteSummary[]>([]);
+  const [tables, setTables] = useState<EventTableSummary[]>([]);
+  const [signups, setSignups] = useState<SignupResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const filteredSignups = useMemo(
+    () => signups.filter((signup) => signup.type === activeTab),
+    [signups, activeTab]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+
+    async function load() {
+      try {
+        const [routeData, tableData, signupData] = await Promise.all([
+          teamdApi<{ routes: BusRouteSummary[] }>(`/events/${instanceId}/bus-routes`),
+          teamdApi<{ tables: EventTableSummary[] }>(`/events/${instanceId}/event-tables`),
+          teamdApi<{ signups: SignupResponse[] }>(`/events/${instanceId}/signups`),
+        ]);
+
+        if (!mounted) return;
+        setRoutes(routeData.routes);
+        setTables(tableData.tables);
+        setSignups(signupData.signups);
+      } catch (err) {
+        if (!mounted) return;
+        setError(err instanceof Error ? err.message : 'Failed to load signup data');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [instanceId]);
+
+  const handleStatusUpdate = async (signupId: number, type: SignupTab, status: SignupStatus) => {
+    try {
+      await teamdApi(`/signups/${signupId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ type, status }),
+      });
+      setSignups((prev) =>
+        prev.map((signup) =>
+          signup.id === signupId && signup.type === type
+            ? { ...signup, status }
+            : signup
+        )
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Unable to update signup');
+    }
+  };
+
+  return (
+    <section className="mt-10 bg-white border border-gray-200 rounded-lg p-6">
+      <header className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-2xl text-gray-700 mb-1">Signup Management</h3>
+          <p className="text-sm text-gray-500">
+            Review and manage bus, table, and RSVP requests for this event.
+          </p>
+        </div>
+        <nav className="flex gap-2">
+          {(['bus', 'table', 'rsvp'] as SignupTab[]).map((tab) => (
+            <button
+              key={tab}
+              className={`px-4 py-2 text-sm rounded-md ${
+                activeTab === tab ? 'bg-teamd-purple text-white' : 'bg-gray-100 text-gray-600'
+              }`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab.toUpperCase()}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {error && (
+        <div className="bg-error-light border border-error-border text-error-text p-4 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-gray-500">Loading signups...</p>
+      ) : filteredSignups.length === 0 ? (
+        <p className="text-gray-500">No signups yet for this type.</p>
+      ) : (
+        <div className="overflow-auto">
+          <table className="min-w-full border border-gray-200 rounded">
+            <thead>
+              <tr className="bg-gray-50 text-left text-sm text-gray-500">
+                <th className="p-3">Attendee</th>
+                <th className="p-3">Details</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSignups.map((signup) => (
+                <tr key={`${signup.type}-${signup.id}`} className="border-t border-gray-200">
+                  <td className="p-3">
+                    <div className="font-medium text-gray-800">
+                      {signup.userName ?? 'Unknown User'}
+                    </div>
+                    <div className="text-xs text-gray-500">{signup.userEmail}</div>
+                  </td>
+                  <td className="p-3 text-sm text-gray-600">
+                    {signup.type === 'bus' && (
+                      <span>Route #{signup.routeId}</span>
+                    )}
+                    {signup.type === 'table' && (
+                      <span>
+                        Table #{signup.tableId} • {signup.seatsRequested} seat(s)
+                      </span>
+                    )}
+                    {signup.type === 'rsvp' && <span>RSVP</span>}
+                  </td>
+                  <td className="p-3 text-sm text-gray-700 capitalize">{signup.status}</td>
+                  <td className="p-3">
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        className="px-3 py-1 text-xs rounded border border-green-400 text-green-700"
+                        onClick={() => handleStatusUpdate(signup.id, signup.type, 'confirmed')}
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        className="px-3 py-1 text-xs rounded border border-yellow-400 text-yellow-700"
+                        onClick={() => handleStatusUpdate(signup.id, signup.type, 'waitlisted')}
+                      >
+                        Waitlist
+                      </button>
+                      <button
+                        className="px-3 py-1 text-xs rounded border border-red-400 text-red-700"
+                        onClick={() => handleStatusUpdate(signup.id, signup.type, 'cancelled')}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <footer className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+        <div className="bg-gray-50 rounded p-3">
+          <div className="font-semibold text-gray-700 mb-1">Bus Capacity</div>
+          <p>{routes.length} configured routes</p>
+        </div>
+        <div className="bg-gray-50 rounded p-3">
+          <div className="font-semibold text-gray-700 mb-1">Tables</div>
+          <p>{tables.length} seating groups</p>
+        </div>
+        <div className="bg-gray-50 rounded p-3">
+          <div className="font-semibold text-gray-700 mb-1">Total Signups</div>
+          <p>{signups.length} submissions</p>
+        </div>
+      </footer>
+    </section>
+  );
+}
   { email: 'admin@system.com', label: 'System Admin', badge: 'All Access' },
   { email: 'admin@mes.dev', label: 'MES Admin', badge: 'MES Org' },
   { email: 'admin@cfes.dev', label: 'CFES Admin', badge: 'CFES Org' },
@@ -113,9 +308,12 @@ function TeamDDashboard({ user }: { user: AuthUser | null }) {
       )}
 
       {currentInstance && (
-        <div className="fixed bottom-5 right-5 bg-success text-white py-4 px-5 rounded-lg shadow-card max-w-[300px]">
-          <strong>Selected:</strong> {currentInstance.name}
-        </div>
+        <>
+          <div className="fixed bottom-5 right-5 bg-success text-white py-4 px-5 rounded-lg shadow-card max-w-[300px]">
+            <strong>Selected:</strong> {currentInstance.name}
+          </div>
+          <SignupManager instanceId={currentInstance.id} />
+        </>
       )}
     </main>
   );

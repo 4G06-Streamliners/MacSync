@@ -1,9 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ProtectedTeamRoute, PORTAL_CONFIGS, type SeedUser } from '@large-event/web-components';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useInstance } from '../lib/instance-provider';
 import { createAuthClient } from '@large-event/api-client';
-import type { AuthUser, InstanceResponse as Instance } from '@large-event/api-types';
+import type {
+  AuthUser,
+  InstanceResponse as Instance,
+  BusRouteSummary,
+  EventTableSummary,
+  SignupSummaryResponse,
+} from '@teamd/api-types';
 
 const authClient = createAuthClient({
   storagePrefix: 'teamd',
@@ -13,6 +19,238 @@ const authClient = createAuthClient({
 
 // Seed users for quick login
 const SEED_USERS: SeedUser[] = [
+async function teamdApi<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = sessionStorage.getItem('teamd-auth-token');
+  const response = await fetch(`/api${path}`, {
+    credentials: 'include',
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers ?? {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const payload = await response.json();
+  if (!payload?.success) {
+    throw new Error(payload?.error?.message ?? 'Request failed');
+  }
+  return payload.data as T;
+}
+
+function SignupActions({ instanceId }: { instanceId: number }) {
+  const [routes, setRoutes] = useState<BusRouteSummary[]>([]);
+  const [tables, setTables] = useState<EventTableSummary[]>([]);
+  const [summary, setSummary] = useState<SignupSummaryResponse | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<number | ''>('');
+  const [selectedTable, setSelectedTable] = useState<number | ''>('');
+  const [groupName, setGroupName] = useState('');
+  const [seatsRequested, setSeatsRequested] = useState(2);
+  const [notes, setNotes] = useState('');
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const [routeData, tableData, signupData] = await Promise.all([
+          teamdApi<{ routes: BusRouteSummary[] }>(`/events/${instanceId}/bus-routes`),
+          teamdApi<{ tables: EventTableSummary[] }>(`/events/${instanceId}/event-tables`),
+          teamdApi<SignupSummaryResponse>(`/users/me/signups?instanceId=${instanceId}`),
+        ]);
+        if (!mounted) return;
+        setRoutes(routeData.routes);
+        setTables(tableData.tables);
+        setSummary(signupData);
+      } catch (error) {
+        if (!mounted) return;
+        setStatusMessage(error instanceof Error ? error.message : 'Unable to load signup info');
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [instanceId]);
+
+  const handleBusSignup = async () => {
+    if (!selectedRoute) {
+      setStatusMessage('Choose a bus route first.');
+      return;
+    }
+    try {
+      setStatusMessage(null);
+      await teamdApi(`/events/${instanceId}/bus-signups`, {
+        method: 'POST',
+        body: JSON.stringify({ routeId: selectedRoute, notes }),
+      });
+      const refresh = await teamdApi<SignupSummaryResponse>(`/users/me/signups?instanceId=${instanceId}`);
+      setSummary(refresh);
+      setStatusMessage('Bus signup saved.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to save bus signup');
+    }
+  };
+
+  const handleTableSignup = async () => {
+    if (!selectedTable) {
+      setStatusMessage('Select a table first.');
+      return;
+    }
+    try {
+      setStatusMessage(null);
+      await teamdApi(`/events/${instanceId}/table-signups`, {
+        method: 'POST',
+        body: JSON.stringify({
+          tableId: selectedTable,
+          groupName,
+          seatsRequested,
+          notes,
+        }),
+      });
+      const refresh = await teamdApi<SignupSummaryResponse>(`/users/me/signups?instanceId=${instanceId}`);
+      setSummary(refresh);
+      setStatusMessage('Table signup saved.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to save table signup');
+    }
+  };
+
+  const handleRsvp = async () => {
+    try {
+      setStatusMessage(null);
+      await teamdApi(`/events/${instanceId}/rsvps`, {
+        method: 'POST',
+        body: JSON.stringify({ notes }),
+      });
+      const refresh = await teamdApi<SignupSummaryResponse>(`/users/me/signups?instanceId=${instanceId}`);
+      setSummary(refresh);
+      setStatusMessage('RSVP submitted.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to submit RSVP');
+    }
+  };
+
+  const currentBus = summary?.bus ?? [];
+  const currentTables = summary?.tables ?? [];
+  const currentRsvps = summary?.rsvps ?? [];
+
+  return (
+    <section style={{ marginTop: '40px' }}>
+      <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))' }}>
+        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px' }}>
+          <h3 style={{ margin: 0, marginBottom: '12px', fontSize: '1.1rem', color: '#111827' }}>Reserve a Bus Seat</h3>
+          <select
+            value={selectedRoute}
+            onChange={(e) => setSelectedRoute(e.target.value ? Number(e.target.value) : '')}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', marginBottom: '12px' }}
+          >
+            <option value="">Choose a bus route</option>
+            {routes.map((route) => (
+              <option key={route.id} value={route.id}>
+                {route.name} • {route.seatsRemaining} seats left
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleBusSignup}
+            style={{ width: '100%', background: '#8b5cf6', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }}
+          >
+            Save Bus Signup
+          </button>
+        </div>
+
+        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px' }}>
+          <h3 style={{ margin: 0, marginBottom: '12px', fontSize: '1.1rem', color: '#111827' }}>Table Sign-up</h3>
+          <select
+            value={selectedTable}
+            onChange={(e) => setSelectedTable(e.target.value ? Number(e.target.value) : '')}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', marginBottom: '12px' }}
+          >
+            <option value="">Select a table</option>
+            {tables.map((table) => (
+              <option key={table.id} value={table.id}>
+                {table.label} • {table.seatsRemaining} seats left
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Group name (optional)"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', marginBottom: '12px' }}
+          />
+          <input
+            type="number"
+            min={1}
+            max={10}
+            value={seatsRequested}
+            onChange={(e) => setSeatsRequested(Number(e.target.value))}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db', marginBottom: '12px' }}
+          />
+          <button
+            onClick={handleTableSignup}
+            style={{ width: '100%', background: '#8b5cf6', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }}
+          >
+            Save Table Signup
+          </button>
+        </div>
+
+        <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px' }}>
+          <h3 style={{ margin: 0, marginBottom: '12px', fontSize: '1.1rem', color: '#111827' }}>RSVP</h3>
+          <p style={{ fontSize: '0.95rem', color: '#4b5563', marginBottom: '12px' }}>
+            Let organizers know you&apos;re attending. RSVPs will promote from waitlist automatically when spots open.
+          </p>
+          <button
+            onClick={handleRsvp}
+            style={{ width: '100%', background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px' }}
+          >
+            Submit RSVP
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '30px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '20px' }}>
+        <h3 style={{ margin: 0, marginBottom: '12px', fontSize: '1.1rem', color: '#111827' }}>My Sign-ups</h3>
+        {!summary ? (
+          <p style={{ color: '#6b7280' }}>Loading your signups...</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[...currentBus, ...currentTables, ...currentRsvps].length === 0 && (
+              <p style={{ color: '#6b7280' }}>You haven&apos;t submitted any signups for this event yet.</p>
+            )}
+            {currentBus.map((signup) => (
+              <div key={`bus-${signup.id}`} style={{ border: '1px solid #f3f4f6', padding: '12px', borderRadius: '8px' }}>
+                <strong>Bus Route #{signup.routeId}</strong>
+                <p style={{ margin: '4px 0', color: '#4b5563' }}>Status: {signup.status}</p>
+              </div>
+            ))}
+            {currentTables.map((signup) => (
+              <div key={`table-${signup.id}`} style={{ border: '1px solid #f3f4f6', padding: '12px', borderRadius: '8px' }}>
+                <strong>Table #{signup.tableId}</strong>
+                <p style={{ margin: '4px 0', color: '#4b5563' }}>
+                  Seats: {signup.seatsRequested} • Status: {signup.status}
+                </p>
+              </div>
+            ))}
+            {currentRsvps.map((signup) => (
+              <div key={`rsvp-${signup.id}`} style={{ border: '1px solid #f3f4f6', padding: '12px', borderRadius: '8px' }}>
+                <strong>RSVP</strong>
+                <p style={{ margin: '4px 0', color: '#4b5563' }}>Status: {signup.status}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {statusMessage && (
+          <p style={{ marginTop: '12px', color: statusMessage.includes('saved') || statusMessage.includes('submitted') ? '#059669' : '#b91c1c' }}>
+            {statusMessage}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
   { email: 'admin@system.com', label: 'System Admin', badge: 'All Access' },
   { email: 'admin@mes.dev', label: 'MES Admin', badge: 'MES Org' },
   { email: 'admin@cfes.dev', label: 'CFES Admin', badge: 'CFES Org' },
@@ -359,6 +597,7 @@ function HomePage() {
               ))}
             </div>
           )}
+          {currentInstance && <SignupActions instanceId={currentInstance.id} />}
         </main>
 
         {/* Footer */}
