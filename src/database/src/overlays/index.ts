@@ -6,7 +6,4 @@
  * uncomment the relevant export below.
  */
 
-// export * from './team-specific-tables';
-
-// Empty export to make this a module
-export {};
+export * from './team-specific-tables';

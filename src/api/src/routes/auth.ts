@@ -7,6 +7,7 @@ import { findUserByEmail, generateToken } from '@large-event/api'
 import { db, users } from '@large-event/database'
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response.js'
 import { requireAuth } from '../middleware/auth.js'
+import { getUserRoleNames } from '../services/roles.js'
 
 export async function authRoutes(fastify: FastifyInstance) {
   /**
@@ -36,6 +37,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         return errorResponse(reply, 'Account not found. Please contact an administrator.', 404, 'USER_NOT_FOUND')
       }
 
+      // Fetch user roles
+      const roleNames = await getUserRoleNames(user.id)
+
       // Generate JWT token (user already has isSystemAdmin from database)
       const token = generateToken(user)
 
@@ -49,8 +53,14 @@ export async function authRoutes(fastify: FastifyInstance) {
         domain: process.env.NODE_ENV === 'production' ? '.large-event.com' : undefined
       })
 
+      // Include roles in user object
+      const userWithRoles = {
+        ...user,
+        roles: roleNames,
+      }
+
       return successResponse(reply, {
-        user,
+        user: userWithRoles,
         token,
       })
     } catch (error) {
@@ -90,7 +100,16 @@ export async function authRoutes(fastify: FastifyInstance) {
         return unauthorizedResponse(reply)
       }
 
-      return successResponse(reply, { user })
+      // Fetch user roles
+      const roleNames = await getUserRoleNames(user.id)
+
+      // Include roles in user object
+      const userWithRoles = {
+        ...user,
+        roles: roleNames,
+      }
+
+      return successResponse(reply, { user: userWithRoles })
     }
   )
 

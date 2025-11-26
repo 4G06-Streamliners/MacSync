@@ -8,7 +8,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as sharedSchema from '@large-event/database/schemas';
 import * as overlaySchema from './overlays';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 async function seed() {
   const connectionString = process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/large_event_db';
@@ -32,7 +32,7 @@ async function seed() {
     // 1. Create Organizations
     // =========================================================================
     console.log('Creating organizations...');
-    const [cfes, cale, mes] = await db.insert(overlaySchema.organizations).values([
+    const [cfes, cale, mes] = await db.insert(sharedSchema.organizations).values([
       {
         name: 'Canadian Federation of Engineering Students',
         acronym: 'CFES',
@@ -61,7 +61,7 @@ async function seed() {
       graffiti,
       cale2026,
       natsurvey
-    ] = await db.insert(overlaySchema.instances).values([
+    ] = await db.insert(sharedSchema.instances).values([
       {
         name: 'MES Dashboard',
         ownerOrganizationId: mes.id,
@@ -153,7 +153,7 @@ async function seed() {
     // =========================================================================
     console.log('Creating user-organization memberships...');
 
-    await db.insert(overlaySchema.userOrganizations).values([
+    await db.insert(sharedSchema.userOrganizations).values([
       // Organization superadmins
       { userId: mesAdmin.id, organizationId: mes.id, isOrganizationAdmin: true },
       { userId: cfesAdmin.id, organizationId: cfes.id, isOrganizationAdmin: true },
@@ -187,7 +187,7 @@ async function seed() {
     // System admin gets 'both' access to all instances
     const allInstances = [mesDashboard, fireball, toga, grad, graffiti, cale2026, natsurvey];
     for (const instance of allInstances) {
-      await db.insert(overlaySchema.userInstanceAccess).values({
+      await db.insert(sharedSchema.userInstanceAccess).values({
         userId: systemAdmin.id,
         instanceId: instance.id,
         accessLevel: 'both',
@@ -199,7 +199,7 @@ async function seed() {
     // But we'll grant it explicitly for clarity in the seed data
     // MES Admin → all MES instances
     for (const instance of [mesDashboard, fireball, toga, grad, graffiti]) {
-      await db.insert(overlaySchema.userInstanceAccess).values({
+      await db.insert(sharedSchema.userInstanceAccess).values({
         userId: mesAdmin.id,
         instanceId: instance.id,
         accessLevel: 'both',
@@ -208,7 +208,7 @@ async function seed() {
     }
 
     // CFES Admin → CFES instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: cfesAdmin.id,
       instanceId: natsurvey.id,
       accessLevel: 'both',
@@ -216,7 +216,7 @@ async function seed() {
     });
 
     // CALE Admin → CALE instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: caleAdmin.id,
       instanceId: cale2026.id,
       accessLevel: 'both',
@@ -236,7 +236,7 @@ async function seed() {
     // Regular users → their org's instances (user portal access)
     // MES User → all MES instances
     for (const instance of [mesDashboard, fireball, toga, grad, graffiti]) {
-      await db.insert(overlaySchema.userInstanceAccess).values({
+      await db.insert(sharedSchema.userInstanceAccess).values({
         userId: mesUser.id,
         instanceId: instance.id,
         accessLevel: 'web_user',
@@ -245,7 +245,7 @@ async function seed() {
     }
 
     // CFES User → CFES instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: cfesUser.id,
       instanceId: natsurvey.id,
       accessLevel: 'web_user',
@@ -253,7 +253,7 @@ async function seed() {
     });
 
     // CALE User → CALE instances
-    await db.insert(overlaySchema.userInstanceAccess).values({
+    await db.insert(sharedSchema.userInstanceAccess).values({
       userId: caleUser.id,
       instanceId: cale2026.id,
       accessLevel: 'web_user',
@@ -261,6 +261,89 @@ async function seed() {
     });
 
     console.log(`✅ Granted access for all users`);
+
+    // =========================================================================
+    // 6. Create Roles and Assign to Users (RBAC)
+    // =========================================================================
+    console.log('Creating roles...');
+
+    // Helper function to create or get role
+    async function createOrGetRole(name: string, description: string) {
+      const existing = await db
+        .select()
+        .from(overlaySchema.roles)
+        .where(eq(overlaySchema.roles.name, name))
+        .limit(1);
+
+      if (existing.length > 0) {
+        console.log(`  Role ${name} already exists, using existing`);
+        return existing[0];
+      }
+
+      const [role] = await db.insert(overlaySchema.roles).values({
+        name,
+        description,
+      }).returning();
+
+      return role;
+    }
+
+    // Create roles
+    const adminRole = await createOrGetRole('admin', 'Administrator role with full access to manage users and roles');
+    const studentRole = await createOrGetRole('student', 'Student role with access to student-specific features');
+
+    console.log(`✅ Created/verified 2 roles (admin, student)`);
+
+    // Assign roles to users
+    console.log('Assigning roles to users...');
+
+    // Helper function to assign role to user
+    async function assignRoleToUser(userId: number, roleId: number, assignedBy: number | null = null) {
+      // Check if role is already assigned
+      const existing = await db
+        .select()
+        .from(overlaySchema.userRoles)
+        .where(
+          and(
+            eq(overlaySchema.userRoles.userId, userId),
+            eq(overlaySchema.userRoles.roleId, roleId)
+          )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        return; // Role already assigned
+      }
+
+      await db.insert(overlaySchema.userRoles).values({
+        userId,
+        roleId,
+        assignedBy,
+      });
+    }
+
+    // System admin and org admins get 'admin' role
+    await assignRoleToUser(systemAdmin.id, adminRole.id, null);
+    await assignRoleToUser(mesAdmin.id, adminRole.id, systemAdmin.id);
+    await assignRoleToUser(cfesAdmin.id, adminRole.id, systemAdmin.id);
+    await assignRoleToUser(caleAdmin.id, adminRole.id, systemAdmin.id);
+
+    // Instance admins also get 'admin' role for demo purposes
+    await assignRoleToUser(fireballAdmin.id, adminRole.id, mesAdmin.id);
+    await assignRoleToUser(togaAdmin.id, adminRole.id, mesAdmin.id);
+    await assignRoleToUser(gradAdmin.id, adminRole.id, mesAdmin.id);
+    await assignRoleToUser(graffitiAdmin.id, adminRole.id, mesAdmin.id);
+    await assignRoleToUser(natsurveyAdmin.id, adminRole.id, cfesAdmin.id);
+    await assignRoleToUser(cale2026Admin.id, adminRole.id, caleAdmin.id);
+
+    // Regular users get 'student' role
+    await assignRoleToUser(mesUser.id, studentRole.id, mesAdmin.id);
+    await assignRoleToUser(cfesUser.id, studentRole.id, cfesAdmin.id);
+    await assignRoleToUser(caleUser.id, studentRole.id, caleAdmin.id);
+
+    console.log(`✅ Assigned roles to users`);
+    console.log(`   - Admin role: ${1 + 3 + 6} users (system admin + org admins + instance admins)`);
+    console.log(`   - Student role: 3 users (regular users)`);
 
     // =========================================================================
     // Summary
@@ -276,6 +359,8 @@ async function seed() {
     console.log(`     * Regular Users: user@mes.dev, user@cfes.dev, user@cale.dev`);
     console.log(`   - User-Organization Memberships: 12`);
     console.log(`   - User-Instance Access Grants: ${7 + 5 + 1 + 1 + 6 + 5 + 1 + 1} (with various access levels)`);
+    console.log(`   - Roles: 2 (admin, student)`);
+    console.log(`   - Role Assignments: 13 (10 admin, 3 student)`);
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);

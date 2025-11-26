@@ -8,6 +8,7 @@ import { db, users } from '@large-event/database'
 import { eq } from 'drizzle-orm'
 import { successResponse, errorResponse, notFoundResponse } from '../utils/response.js'
 import { requireAdmin, requireAuth } from '../middleware/auth.js'
+import { getUserRoleNames } from '../services/roles.js'
 
 export async function userRoutes(fastify: FastifyInstance) {
   /**
@@ -86,7 +87,16 @@ export async function userRoutes(fastify: FastifyInstance) {
           return notFoundResponse(reply, 'Profile not found')
         }
 
-        return successResponse(reply, { profile: user })
+        // Fetch user roles
+        const roleNames = await getUserRoleNames(userId)
+
+        // Include roles in profile
+        const profile = {
+          ...user,
+          roles: roleNames,
+        }
+
+        return successResponse(reply, { profile })
       } catch (error) {
         fastify.log.error('Error fetching profile:', error)
         return errorResponse(reply, 'Failed to fetch profile', 500)

@@ -13,6 +13,7 @@ import { authRoutes } from './routes/auth.js'
 import { healthRoutes } from './routes/health.js'
 import { userRoutes } from './routes/users.js'
 import { instanceRoutes } from './routes/instances.js'
+import { roleRoutes } from './routes/roles.js'
 
 // Configuration from centralized config
 const PORT = parseInt(process.env.PORT || String(TeamDConfig.api.port))
@@ -53,6 +54,7 @@ await fastify.register(healthRoutes, { prefix: '/api' })
 await fastify.register(authRoutes, { prefix: '/api' })
 await fastify.register(userRoutes, { prefix: '/api' })
 await fastify.register(instanceRoutes, { prefix: '/api' })
+await fastify.register(roleRoutes, { prefix: '/api' })
 
 // Root endpoint
 fastify.get('/', async (request, reply) => {
@@ -65,6 +67,7 @@ fastify.get('/', async (request, reply) => {
       auth: '/api/auth/*',
       users: '/api/users/*',
       instances: '/api/instances/*',
+      roles: '/api/roles/*',
     },
   }
 })
