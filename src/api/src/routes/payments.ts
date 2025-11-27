@@ -166,4 +166,30 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
 
     return { success: true, data: rows[0] || null };
   });
+  fastify.get("/users/:id/events", async (req, reply) => {
+  const userId = Number((req.params as any).id);
+
+  try {
+    const events = await db
+      .select({
+        attendeeId: sharedSchema.attendees.id,
+        eventId: sharedSchema.attendees.eventId,
+        name: sharedSchema.events.name,
+        date: sharedSchema.events.date,
+        location: sharedSchema.events.location,
+      })
+      .from(sharedSchema.attendees)
+      .innerJoin(
+        sharedSchema.events,
+        eq(sharedSchema.attendees.eventId, sharedSchema.events.id)
+      )
+      .where(eq(sharedSchema.attendees.userId, userId));
+
+    return { success: true, events };
+  } catch (err) {
+    console.error("Error loading user events:", err);
+    return reply.status(500).send({ success: false });
+  }
+});
+
 }
