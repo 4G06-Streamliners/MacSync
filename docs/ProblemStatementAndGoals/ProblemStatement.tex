@@ -34,25 +34,53 @@
 
 \subsection{Problem}
 The McMaster Engineering Society (MES) organizes large-scale events such as Fireball Formal, Graduation Formal,
- and Pub Nights, often drawing several hundred attendees. Currently, registration, ticketing, waiver collection,
- and check-in processes are fragmented across multiple platforms (Google Forms, spreadsheets, Discord, Instagram,
- etc.). This lack of centralization increases the administrative burden on student organizers and creates a
- confusing, inconsistent experience for attendees.
+ and Pub Nights, each involving several hundred students. Currently, registration, ticketing, waiver collection,
+ and check-in processes are fragmented across multiple platforms including Google Forms, spreadsheets, Discord
+ announcements, Instagram posts, and manual bookkeeping methods. This fragmentation leads to duplicated work,
+ lost information, inconsistent communication, and significant administrative overhead for student organizers,
+creaing a confusing, inconsistent experience for attendees.
 \\
-\\Students struggle to:
+\\Attendees struggle to:
 \begin{itemize}
-    \item Access clear, consolidated event information.
-    \item Register efficiently for events and related logistics (tables, buses).
-    \item Receive timely updates or reminders.
+    \item Access clear, accurate, and consolidated event information.
+    \item Register efficiently for events and related logistics (tables, buses, waivers) in a single place.
+    \item Receive timely notifications, updates, confirmations, or reminders.
 \end{itemize}
 Organizers struggle to:
 \begin{itemize}
-    \item Manage ticket sales, waitlists, and attendee data in one place.
-    \item Track accessibility/dietary requirements effectively.
+    \item Track ticket sales, waivers, waitlists, registrations, and attendee data across multiple platforms.
+    \item Manage accessibility/dietary information effectively.
     \item Minimize repetitive manual effort across multiple tools.
+    \item Avoid manual errors and overbooking.
+    \item Maintain clear audit trails for finance, risk, and reporting.
 \end{itemize}
-The absence of a centralized system reduces event memorability, increases missed opportunities, and 
-wastes volunteer time that could be spent on event quality rather than administration.
+Ultimately, the absence of a centralized and reliable platform reduces event quality, increases volunteer workload,
+and creates stress for both attendees and organizers.
+
+\subsection{Project Deliverables}
+
+This capstone project is part of a larger multi-team initiative to build a full
+MES event management platform. Three teams (A, B, and C) are jointly developing
+different components of the system. The deliverables listed in this document
+reflect the specific scope assigned to our team (Team \#12, Streamliners), and
+does not represent the entirety of the platform being built across all groups.\\
+
+\noindent Our team will focus on implementing the following core features:
+
+\begin{itemize}
+    \item \textbf{Centralized registration and ticketing workflows} for events under our team's responsibility.
+    \item \textbf{Secure payment integration using Stripe}, including checkout, verification, and confirmation mechanisms.
+    \item \textbf{Role-Based and Feature-Based Access Control (RBAC/FBAC)} specific to the administrative tools our team owns.
+    \item \textbf{Bus and table sign-up systems} with real-time capacity management and automatic holds/allocations.
+    \item \textbf{Analytics dashboards} related to registrations, capacities, and payments linked to our team's modules.
+\end{itemize}
+
+\noindent This section explicitly captures the deliverables our team is responsible
+for within the broader multi-team project. It clarifies boundaries,
+dependencies, and expectations while ensuring alignment with the overall MES
+platform architecture.
+
+
 
 \subsection{Inputs and Outputs}
 
