@@ -283,7 +283,7 @@ node_modules/
 dist/
 .env
 *.tsbuildinfo
-
+ios
 # TeamD config build artifacts
 teamd.config.mjs
 teamd.config.*.map

@@ -138,4 +138,8 @@ INSERT INTO events (id, name, date, location)
 VALUES (1, 'MacSync Test Event', NOW(), 'Test Hall')
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO users (id, email, name, is_system_admin)
+VALUES (1, 'abyanjaigirdar@hotmail.com', 'Abyan Jaigirdar', false)
+ON CONFLICT (id) DO NOTHING;
+
 COMMIT;

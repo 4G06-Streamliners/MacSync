@@ -1,17 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './contexts/AuthContext';
 import { RootNavigator } from './navigation/RootNavigator';
+import * as Linking from 'expo-linking';
 
-/**
- * Team D Standalone Mobile App
- * Web-compatible version (Stripe handled inside specific screens)
- */
 export function App() {
+
+  const linking = {
+    prefixes: ['macsync://'],
+    config: {
+      screens: {
+        PaymentSuccess: 'payment-success',
+        Cancel: 'payment-cancel',
+        Home: 'home',
+        Main: 'main',
+        Login: 'login'
+      }
+    }
+  };
+
   return (
     <AuthProvider>
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <StatusBar style="auto" />
         <RootNavigator />
       </NavigationContainer>
