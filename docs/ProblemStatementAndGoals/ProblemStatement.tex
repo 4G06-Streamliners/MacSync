@@ -62,17 +62,17 @@ and creates stress for both attendees and organizers.
 This capstone project is part of a larger multi-team initiative to build a full
 MES event management platform. Three teams (A, B, and C) are jointly developing
 different components of the system. The deliverables listed in this document
-reflect the specific scope assigned to our team (Team \#12, Streamliners), and
-does not represent the entirety of the platform being built across all groups.\\
+reflect the specific scope assigned to our team, and does not represent the
+entirety of the platform being built across all groups.\\
 
-\noindent Our team will focus on implementing the following core features:
+\noindent The main objective of our team is to deliver event functionality related to:
 
 \begin{itemize}
-    \item \textbf{Centralized registration and ticketing workflows} for events under our team's responsibility.
-    \item \textbf{Secure payment integration using Stripe}, including checkout, verification, and confirmation mechanisms.
-    \item \textbf{Role-Based and Feature-Based Access Control (RBAC/FBAC)} specific to the administrative tools our team owns.
-    \item \textbf{Bus and table sign-up systems} with real-time capacity management and automatic holds/allocations.
-    \item \textbf{Analytics dashboards} related to registrations, capacities, and payments linked to our team's modules.
+    \item registration and ticketing,
+    \item secure payment processing,
+    \item RBAC/FBAC permissions for organizers,
+    \item bus and table capacity-based sign-ups,
+    \item analytics relevant to the features we own.
 \end{itemize}
 
 \noindent This section explicitly captures the deliverables our team is responsible
@@ -80,6 +80,22 @@ for within the broader multi-team project. It clarifies boundaries,
 dependencies, and expectations while ensuring alignment with the overall MES
 platform architecture.
 
+\subsection{Additional Considerations}
+
+Because this system handles personal and financial information, security and privacy are major concerns.
+The system must ensure responsible handling of:
+\begin{itemize}
+    \item student personal details,
+    \item dietary and accessibility information,
+    \item financial transactions,
+    \item check-in data.
+\end{itemize}
+\noindent All features must meet MES expectations for confidentiality and reliability.\\
+
+\noindent The project will primarily deliver a web-based platform with a mobile-first attendee experience, though a
+standalone mobile app may be explored if time allows. Integration with other university systems (e.g., Outlook
+calendar integrations, single sign-on) is not within our team's direct scope, but the design allows for potential
+future compatibility.
 
 
 \subsection{Inputs and Outputs}
@@ -145,44 +161,43 @@ platform architecture.
 
 \paragraph{Centralized Registration \& Ticketing}
 \begin{itemize}
-    \item \textbf{Description:} The platform must consolidate ticket purchasing, registration, and RSVPs into one place.
-    \item \textbf{Justification:} This eliminates confusion caused by scattered tools and ensures students always have access to the latest event information.
+    \item To reduce administrative overhead for MES organizers by 40\% (measured through reported time spent on registration tasks) by consolidating ticketing, RSVPs, and event details into one platform, in order to eliminate confusion caused by fragmented tools.
 \end{itemize}
 
-\paragraph{Payment Integration}
+\paragraph{Secure Payment Integration}
 \begin{itemize}
-    \item \textbf{Description:} Provide secure and flexible payment options (Stripe, Square, PayPal).
-    \item \textbf{Justification:} Enables students to pay quickly with widely used systems while reducing cash-handling risks for organizers.
+    \item To enable reliable, PCI-compliant payments for MES events with a transaction failure rate below 5\% during peak sales, in order to provide safe, trusted, and audit-friendly financial workflows.
 \end{itemize}
+
 
 \paragraph{Role-Based Access Control (RBAC/FBAC)}
 \begin{itemize}
-    \item \textbf{Description:} Implement granular permissions so organizers only see\slash manage the tools relevant to their role.
-    \item \textbf{Justification:} Reduces errors, ensures security, and improves efficiency in large event teams.
+    \item To reduce organizer errors caused by misconfigured access by at least 60\% (tracked through internal issue reports) by implementing RBAC/FBAC, in order to ensure secure and efficient administrative workflows.
 \end{itemize}
 
 \paragraph{Bus \& Table Sign-ups}
 \begin{itemize}
-    \item \textbf{Description:} Allow attendees to reserve buses and tables with automatic capacity tracking.
-    \item \textbf{Justification:} Simplifies logistics and avoids overbooking, replacing spreadsheets and manual coordination.
+\item To eliminate overbooking incidents (target: 0 occurrences) and reduce logistics coordination time by 50\% by providing automated holds, allocations, and real-time capacity validation.
 \end{itemize}
 
 \paragraph{Notifications \& Reminders}
 \begin{itemize}
-    \item \textbf{Description:} Send push notifications and reminders for registrations, updates, and cancellations.
-    \item \textbf{Justification:} Improves event memorability, prevents missed opportunities, and reduces no-shows.
+    \item To decrease attendee no-shows by 20\% (measured across comparable MES events) by sending automated notifications, confirmations, and reminders.
 \end{itemize}
 
-\paragraph{Analytics \& Reporting}
+\paragraph{Analytics \& Reporting Tools}
 \begin{itemize}
-    \item \textbf{Description:} Provide organizers with real-time dashboards on sales, demographics, and waitlists.
-    \item \textbf{Justification:} Supports decision-making, improves resource allocation, and helps executives evaluate event success.
+    \item To reduce MES executive reporting time by 70\% by providing dashboards for finances, demographics, accessibility data, and ticket metrics, enabling more informed planning.
 \end{itemize}
 
-\paragraph{Attendee Experience}
+\paragraph{Attendee User Experience}
 \begin{itemize}
-    \item \textbf{Description:} Ensure the platform is mobile-first, intuitive, and accessible.
-    \item \textbf{Justification:} Reduces barriers to use, supports inclusivity, and maximizes student engagement.
+    \item To achieve an 85\% or higher satisfaction score in pilot testing by delivering a mobile-first interface that is accessible, intuitive, and easy to navigate.
+\end{itemize}
+
+\paragraph{Security and Privacy}
+\begin{itemize}
+    \item To protect student personal, accessibility, and financial information with zero security/privacy incidents during the pilot period, in order to maintain trust and meet MES and university expectations for confidentiality and responsible data handling.
 \end{itemize}
 
 \section{Stretch Goals}
