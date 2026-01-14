@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/SL-232 # TODO: Remove this after testing
     paths:
       - 'src/database/**'
       - 'src/api-types/**'
