@@ -20,6 +20,7 @@
     "build:api": "pnpm --filter @teamd/api build",
     "build:admin": "pnpm --filter @teamd/web-admin build",
     "build:user": "pnpm --filter @teamd/web-user build",
+    "test": "jest",
     "lint": "pnpm -r lint",
     "clean": "pnpm -r clean",
     "publish": "./src/publish.sh teamd all",
@@ -31,6 +32,9 @@
   },
   "devDependencies": {
     "@types/react": "~18.2.79",
-    "concurrently": "^8.2.2"
+    "@types/jest": "^29.5.12",
+    "concurrently": "^8.2.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2"
   }
 }
