@@ -223,7 +223,28 @@ N/A
 
 \subsubsection{State Variables}
 
-N/A
+\begin{itemize}
+
+    \item \textbf{PendingPayments}:  
+    Mapping of Stripe PaymentIntent IDs to pending transaction details.  
+    \[
+    \{ \text{paymentIntentID} \rightarrow (\text{userID},\ \text{eventID},\ \text{amount},\ \text{status="pending"}) \}
+    \]
+
+    \item \textbf{CompletedPayments}:  
+    List of finalized, successful Stripe payments.  
+    \[
+    \{ (\text{paymentID},\ \text{paymentIntentID},\ \text{userID},\ \text{eventID},\ \text{amount},\ \text{status="succeeded"},\ \text{timestamp}) \}
+    \]
+
+    \item \textbf{RefundRequests}:  
+    Queue of refund operations.  
+    \[
+    \{ (\text{refundID},\ \text{paymentIntentID},\ \text{reason},\ \text{status}) \}
+    \]
+
+\end{itemize}
+
 
 \subsubsection{Environment Variables}
 
