@@ -23,7 +23,7 @@
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
 2025-09-22 & All & Initial draft of development plan.\\
-... & ... & ...\\
+2025-11-18 & Prerna & Address TA feedback on deliverable\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -95,19 +95,47 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
 
 \section{Team Member Roles}
 
-\begin{enumerate}
-    \item \textbf{Leader/Researcher: Farhan} \\
-    Responsibilities: Leading team discussions with open-ended questions found through preliminary research and guiding team direction through points of discussion to achieve goals.
-    \item \textbf{Organizer: Ali} \\
-    Responsibilities: Keeping the team on track for project milestones and deadlines with task delegation and reminders, scheduling team meetings and supervisor meetings, reviewing GitHub issues and ensuring tasks are updated and closed.  \\
-    \item \textbf{Reviewer: Abyan}
-    Responsibilities: Preparing final versions of deliverables and proofreading documents to ensure consistency and accuracy as well as making sure the quality of work meets team standards by conducting reviews on final submissions. \\
-    \item \textbf{Notetaker/Meeting chair: Prerna} 
-    Responsibilities: Gathering important information from lectures and tutorials and recording meeting notes to record and summarize project progress. \\
-    \item \textbf{Troubleshooter: Mahad}
-    Responsibilities: Help resolve issues and challenges faced by the team from research to GitHub and analyze problems and criteria to figure out solutions.
-\end{enumerate}
-\noindent\textbf{*} Roles are subject to change based on evolving project needs and further assessment on each team members strengths.
+\paragraph{Farhan — Technical Lead \& Research Lead}
+\begin{itemize}
+    \item Oversees the high-level technical direction for the features assigned to our team (payments, sign-ups, RBAC).
+    \item Conducts research on Stripe integration, authentication, and architectural patterns needed for our modules.
+    \item Guides team decisions that involve deeper backend complexity, and supports others during technical design reviews.
+    \item Coordinates with other teams (A and C) to ensure compatibility of API contracts and shared architecture.
+\end{itemize}
+
+\paragraph{Ali — Project Coordinator \& Backend Developer}
+\begin{itemize}
+    \item Manages project milestones, deadlines, meeting schedules, and documentation updates.
+    \item Responsible for backend development tasks related to event creation flows, capacity management, and RBAC endpoints.
+    \item Ensures cross-team synchronization on API specifications and helps maintain the shared Postgres/Drizzle schemas.
+    \item Maintains clarity between our team’s features and features owned by other teams.
+\end{itemize}
+
+\paragraph{Abyan — Frontend Lead \& Documentation Reviewer}
+\begin{itemize}
+    \item Leads UI development for the attendee and organizer interfaces related to the features our team owns.
+    \item Designs React component structures for registration flows, dashboards, and check-in pages.
+    \item Conducts final reviews for deliverables to ensure consistent tone, formatting, clarity, and quality.
+    \item Works with Ali and Farhan to ensure frontend and backend contract alignment.
+\end{itemize}
+
+\paragraph{Prerna — Meeting Chair, Requirements Lead \& Testing Coordinator}
+\begin{itemize}
+    \item Documents stakeholder needs, requirements, and edge cases within our team’s scope.
+    \item Maintains high-quality meeting minutes and outlines weekly priorities.
+    \item Coordinates testing plans (unit + integration) for the modules our team owns.
+    \item Ensures alignment with user needs by validating that features match problem statement expectations.
+\end{itemize}
+
+\paragraph{Mahad — DevOps \& Troubleshooting Lead}
+\begin{itemize}
+    \item Responsible for GitHub Actions pipelines, CI setup, linting/formatting configuration, and deployment scripts.
+    \item Troubleshoots cross-team issues involving repositories, merging conflicts, environment configuration, and Docker.
+    \item Supports backend debugging and helps resolve environment-level blockers.
+\end{itemize}
+
+
+\noindent Roles are subject to change based on evolving project needs and further assessment on each team members strengths.
 
 
 
@@ -180,18 +208,34 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
 
 \section{Proof of Concept Demonstration Plan}
 
-The primary risks of the project are as follows.
+\subsection*{The Primary Risks Addressed by the POC are as follows:}
+
 \begin{itemize}
-    \item The ability to seamlessly integrate the system architecture components (i.e. frontend, backend, mobile app, database, APIs etc.).
-    \item The ability of end users to intuitively use all features as intended.
+    \item \textbf{Architectural Integration Risk}: The ability to seemlessly integrate frontend, backend, database, and shared APIs and interacting smoothly across teams.
+    \item \textbf{Inter-Team Merge Risk}: Conflicting implementations across teams must not break shared components
+    \item \textbf{Usability Risk}: End users must be able to use all features intuitively without confusion.
+    \item \textbf{Payment Processing Risk}: Stripe configuration, webhooks, and error handling must work reliably.
+    \item \textbf{Role-Based Access Risk}: RBAC must enforce correct permissions before more complex features depend on it.
+    \item \textbf{Capacity Management Risk}: Bus/table sign-ups must prevent overbooking in a real-time environment.
+    .
 \end{itemize}
 
-\noindent The proof-of-concept demonstration overcoming these risks will consist of.
+\subsection*{POC Demonstration overcoming these risks will consist of:}
 
+The POC will demonstrate:
 \begin{itemize}
     \item A minimal but functional demo showcasing the different architecture layers working cohesively.
+    \item A minimal working registration-to-payment workflow.
+    \item A functional RBAC setup with two sample roles (attendee and organizer).
+    \item A prototype of bus/table sign-ups controlling capacity in the shared database.
     \item A walkthrough showing a general end-user workflow (i.e. registering for events, paying for events, creating events, etc.).
+
 \end{itemize}
+
+\noindent The POC is not a feature-complete product; rather, it is a validation that the
+riskiest parts of the architecture can be implemented and merged successfully
+across teams. A failed POC signals that core architecture, dependencies, or
+integrations need revision before full implementation begins.
 
 \section{Expected Technology}
 
