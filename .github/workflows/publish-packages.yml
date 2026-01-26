@@ -34,13 +34,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@teamd'
+          cache: 'pnpm'
+      
+      - name: Configure npm for GitHub Packages
+        run: |
+          cat > .npmrc << EOF
+          @teamd:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
+          EOF
       
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Build packages
         run: pnpm -r build
@@ -48,7 +52,7 @@ jobs:
       - name: Publish @teamd/database
         working-directory: src/database
         run: |
-          npm publish --registry=https://npm.pkg.github.com
+          pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
@@ -56,7 +60,7 @@ jobs:
       - name: Publish @teamd/api-types
         working-directory: src/api-types
         run: |
-          npm publish --registry=https://npm.pkg.github.com
+          pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
@@ -64,7 +68,7 @@ jobs:
       - name: Publish @teamd/web-components
         working-directory: src/web-components
         run: |
-          npm publish --registry=https://npm.pkg.github.com
+          pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
@@ -72,7 +76,7 @@ jobs:
       - name: Publish @teamd/mobile-components
         working-directory: src/mobile-components
         run: |
-          npm publish --registry=https://npm.pkg.github.com
+          pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
