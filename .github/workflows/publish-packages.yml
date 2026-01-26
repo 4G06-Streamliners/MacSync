@@ -37,38 +37,21 @@ jobs:
           cache: 'pnpm'
       
       - name: Configure npm for GitHub Packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat > .npmrc << EOF
-          @large-event:registry=https://npm.pkg.github.com
           @teamd:registry=https://npm.pkg.github.com
-          //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
+          //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
           EOF
-      
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      
-      - name: Build packages
-        run: pnpm -r build
-      
-      - name: Publish @teamd/database
-        working-directory: src/database
-        run: |
-          pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
       
       - name: Publish @teamd/api-types
         working-directory: src/api-types
         run: |
-          pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-      
-      - name: Publish @teamd/web-components
-        working-directory: src/web-components
-        run: |
+          # Install dependencies and build
+          pnpm install --frozen-lockfile
+          pnpm build
+          # Publish to GitHub Packages
           pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,6 +60,42 @@ jobs:
       - name: Publish @teamd/mobile-components
         working-directory: src/mobile-components
         run: |
+          # Install dependencies and build
+          pnpm install --frozen-lockfile
+          pnpm build
+          # Publish to GitHub Packages
+          pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      
+      - name: Publish @teamd/database
+        working-directory: src/database
+        run: |
+          # NOTE: This package requires @large-event/database to build
+          # @large-event packages must be published to GitHub Packages first
+          # For now, this step will fail until @large-event packages are available
+          echo "Installing dependencies for @teamd/database..."
+          pnpm install --frozen-lockfile
+          echo "Building @teamd/database..."
+          pnpm build
+          echo "Publishing @teamd/database to GitHub Packages..."
+          pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+      
+      - name: Publish @teamd/web-components
+        working-directory: src/web-components
+        run: |
+          # NOTE: This package requires @large-event/api-client and @large-event/api-types to build
+          # @large-event packages must be published to GitHub Packages first
+          # For now, this step will fail until @large-event packages are available
+          echo "Installing dependencies for @teamd/web-components..."
+          pnpm install --frozen-lockfile
+          echo "Building @teamd/web-components..."
+          pnpm build
+          echo "Publishing @teamd/web-components to GitHub Packages..."
           pnpm publish --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
