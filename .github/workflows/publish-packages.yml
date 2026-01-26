@@ -39,6 +39,7 @@ jobs:
       - name: Configure npm for GitHub Packages
         run: |
           cat > .npmrc << EOF
+          @large-event:registry=https://npm.pkg.github.com
           @teamd:registry=https://npm.pkg.github.com
           //npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}
           EOF
