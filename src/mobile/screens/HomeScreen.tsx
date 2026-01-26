@@ -8,18 +8,18 @@ const MOCK_EVENTS = [
     name: "MacSync Test Event",
     price: "$10",
     image:
-      "https://images.unsplash.com/photo-1515169067865-5387ec356754?w=1200",
+      "https://images.unsplash.com/photo-1531058020387-3be344556be6?w=1200",
     date: "Nov 30, 2025",
     location: "McMaster Student Centre",
   },
   {
     id: 2,
     name: "Engineering Formal",
-    price: "$55",
+    price: "$25",
     image:
       "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200",
     date: "Dec 8, 2025",
-    location: "Cottontail Ballroom",
+    location: "David Braley Convention Centre",
   },
   {
     id: 3,

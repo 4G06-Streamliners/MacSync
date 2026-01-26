@@ -43,14 +43,14 @@ function TabNavigator() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#a855f7',
+        tabBarActiveTintColor: '#861919f6',
         tabBarInactiveTintColor: 'gray',
       })}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Team D' }}
+        options={{ title: 'Events' }}
       />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

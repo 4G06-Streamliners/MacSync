@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export function ProfileScreen() {
   const { user, instances, logout } = useAuth();
@@ -18,35 +19,37 @@ export function ProfileScreen() {
     await logout();
   };
 
-  // Fetch user’s purchased events
-  useEffect(() => {
+  const loadEvents = async () => {
     if (!user?.id) return;
 
-    const loadEvents = async () => {
-      try {
-        const resp = await fetch(
-          `http://localhost:3004/api/users/${user.id}/events`
-        );
-        const data = await resp.json();
-        setMyEvents(data.events || []);
-      } catch (err) {
-        console.log("Failed loading events", err);
-      } finally {
-        setLoadingEvents(false);
-      }
-    };
+    setLoadingEvents(true);
 
-    loadEvents();
-  }, [user]);
+    try {
+      const resp = await fetch(
+        `http://localhost:3004/api/users/${user.id}/events`
+      );
+      const data = await resp.json();
+      setMyEvents(data.events || []);
+    } catch (err) {
+      console.log("Failed loading events", err);
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
+  // This runs every time ProfileScreen becomes visible
+  useFocusEffect(
+    useCallback(() => {
+      loadEvents();
+    }, [user?.id])
+  );
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
       </View>
 
-      {/* User Info */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>User Information</Text>
 
@@ -61,7 +64,6 @@ export function ProfileScreen() {
         </View>
       </View>
 
-      {/* My Events */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>My Events</Text>
 
@@ -75,18 +77,13 @@ export function ProfileScreen() {
           myEvents.map((ev) => (
             <View key={ev.attendeeId} style={styles.eventCard}>
               <Text style={styles.eventName}>{ev.name}</Text>
-              <Text style={styles.eventInfo}>
-                {ev.location}
-              </Text>
-              <Text style={styles.eventInfo}>
-                {new Date(ev.date).toLocaleString()}
-              </Text>
+              <Text style={styles.eventInfo}>{ev.location}</Text>
+              <Text style={styles.eventInfo}>{ev.date}</Text>
             </View>
           ))
         )}
       </View>
 
-      {/* Instances */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Instances</Text>
         <Text style={styles.value}>
@@ -95,7 +92,6 @@ export function ProfileScreen() {
         </Text>
       </View>
 
-      {/* Development Mode */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Development Mode</Text>
         <Text style={styles.infoText}>
@@ -103,7 +99,6 @@ export function ProfileScreen() {
         </Text>
       </View>
 
-      {/* Logout */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>

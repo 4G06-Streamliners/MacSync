@@ -38,7 +38,7 @@ export function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Team D Mobile</Text>
+        <Text style={styles.title}>Streamliners</Text>
         <Text style={styles.subtitle}>Standalone Development Mode</Text>
 
         <View style={styles.inputContainer}>
