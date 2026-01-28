@@ -1142,13 +1142,12 @@ None.
 
 \section{Appendix} \label{Appendix}
 
-\wss{Extra information if required}
+Extra information will be placed here.
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
 
-\wss{Not required for CAS 741 projects}
 
 The information in this section will be used to evaluate the team members on the
 graduate attribute of Problem Analysis and Design.
@@ -1252,6 +1251,53 @@ graduate attribute of Problem Analysis and Design.
     We considered many design solutions for our payment gateway such as paddle or square, but we settled with Stripe with our stakeholder for its simplicty and easy integration. We also considered many types of authentication for the platform such as creating our own authentication where users sign up and register with their own email. However, we decided to use the McMaster identity platfrom since it would be the easiest to verify users and keep users to only valid McMaster students.
 
   \end{enumerate}
+
+\section*{Appendix --- Peer Module Implementation Reflection}
+
+  What did you learn by implementing another team's module? Were all the details you needed in the
+  documentation, or did you need to make assumptions, or ask the other team
+  questions?  If your team also had another team implement one of your modules,
+  what was this experience like?  Are there things in your documentation you
+  could have changed to make the process go more smoothly for when an
+  ``outsider'' completes some of the implementation? \\
+
+
+  \noindent Our team was tasked with implementing the History Manager (M8) module for Team 10
+  ("Five of a Kind"). Through this process, we learned that a well-defined Module
+  Interface Specification (MIS) significantly reduces the difficulty and effort
+  required to understand a foreign codebase. Specifically, the team included a Finite
+  State Machine diagram and explicit logic for stack management (such as clearing
+  the redoStack upon a new record change) which made the backend logic more strictly
+  defined and easier to program. However, there were some areas where we had to make
+  assumptions due to a lack of detail. For example, the MIS did not specify how many
+  levels of undo/redo should be supported, so we assumed a reasonable default of 100 levels. \\
+
+  \noindent Regarding the documentation, the MIS provided the majority of the necessary technical
+  details, including state variables like historyStack and exception handling for empty
+  histories. However, we did require clarification regarding the scope of the implementation.
+  The SRS document described the feature as allowing users to "access edit history", which
+  implied a frontend component for user interaction. Because the boundary between the
+  "Interaction Controller"  and the "History Manager" wasn't immediately clear regarding
+  UI responsibilities, we had to email the other team. They clarified that our focus
+  should be strictly on the backend logic, while they would handle the frontend interface.
+  Once this assumption was clear, no further questions were necessary.\\
+
+  \noindent For having our module implemented by another team, we assigned them the User Authorization module.
+  We selected this module because it was highly decoupled and straightforward, requiring
+  minimal context regarding the rest of our system's specific architecture. The experience was
+  pretty seamless, aside from the other team asking where the module was located within our
+  MIS, they required no further guidance and no other questions were asked. This lack of questions
+  could be used as an indicator that the module was well-documented and that our choice to assign
+  a standalone module was a good one.\\
+
+  \noindent Reflecting on both experiences, an improvement we could make to our documentation would be to explicitly
+  define the implementation scope (Frontend vs. Backend) within the module guide or MIS introduction.
+  While our logic was clear, the confusion we faced regarding Team 10's "History Manager" with
+  whether we were building the UI buttons or just the data structure made it clear that interface
+  specifications should explicitly state where the data processing ends and the user interaction begins.
+  Adding a "Scope of Implementation" note to our modules would clarify this further.\\
+
+
 
 
 \end{document}
