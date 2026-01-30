@@ -17,12 +17,12 @@
     "react-native": ">=0.70.0"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^1.23.1",
-    "axios": "^1.6.8"
+    "@react-native-async-storage/async-storage": "^1.24.0",
+    "axios": "^1.13.2"
   },
   "devDependencies": {
-    "@types/react": "~18.2.45",
-    "@types/react-native": "^0.72.0",
-    "typescript": "^5.3.3"
+    "@types/react": "~18.2.79",
+    "@types/react-native": "^0.72.8",
+    "typescript": "^5.9.3"
   }
 }

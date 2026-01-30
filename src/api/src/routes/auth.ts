@@ -3,110 +3,96 @@
  */
 
 import type { FastifyInstance } from 'fastify'
-import { findUserByEmail, generateToken } from '@large-event/api'
-import { db, users } from '@large-event/database'
+import { generateToken } from '@large-event/api'
 import { successResponse, errorResponse, unauthorizedResponse } from '../utils/response.js'
 import { requireAuth } from '../middleware/auth.js'
 
+
+import { db, schema } from '@teamd/database'
+import { eq } from 'drizzle-orm'
+
 export async function authRoutes(fastify: FastifyInstance) {
-  /**
-   * POST /auth/login
-   * User login - creates user if doesn't exist (simplified auth for MVP)
-   */
-  fastify.post<{
-    Body: { email: string; password?: string }
-  }>('/auth/login', async (request, reply) => {
-    const { email, password } = request.body
+
+  // ======================
+  // POST /auth/login
+  // ======================
+  fastify.post('/auth/login', async (request, reply) => {
+    const { email } = request.body
+
+    console.log("/auth/login called with:", email)
 
     if (!email) {
       return errorResponse(reply, 'Email is required', 400, 'VALIDATION_ERROR')
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return errorResponse(reply, 'Invalid email format', 400, 'VALIDATION_ERROR')
-    }
-
     try {
-      // Find existing user - account must be pre-created
-      const user = await findUserByEmail(email)
+      console.log("Querying TeamD.users...")
+
+
+      const user = await db.query.users.findFirst({
+        where: eq(schema.users.email, email)
+      })
+
+      console.log("Query result:", user)
 
       if (!user) {
+        console.log("No user found for:", email)
         return errorResponse(reply, 'Account not found. Please contact an administrator.', 404, 'USER_NOT_FOUND')
       }
 
-      // Generate JWT token (user already has isSystemAdmin from database)
+      console.log("Generating token for:", user.email)
       const token = generateToken(user)
 
-      // Set HTTP-only cookie (shared across main portal and team dashboards)
       reply.setCookie('auth-token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: 24 * 60 * 60, // 24 hours
-        domain: process.env.NODE_ENV === 'production' ? '.large-event.com' : undefined
+        maxAge: 24 * 60 * 60,
       })
 
-      return successResponse(reply, {
-        user,
-        token,
-      })
+      console.log("Login success for:", user.email)
+      return successResponse(reply, { user, token })
+
     } catch (error) {
-      fastify.log.error('Login error:', error)
+      console.log(" ERROR inside login:", error)
       return errorResponse(reply, 'Login failed', 500, 'LOGIN_ERROR')
     }
   })
 
-  /**
-   * POST /auth/logout
-   * Clear auth cookie
-   */
+
+  // ======================
+  // POST /auth/logout
+  // ======================
   fastify.post('/auth/logout', async (request, reply) => {
     reply.clearCookie('auth-token', {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.large-event.com' : undefined
+      sameSite: 'lax'
     })
+
     return successResponse(reply, { message: 'Logged out successfully' })
   })
 
-  /**
-   * GET /auth/me
-   * Get current authenticated user
-   */
-  fastify.get(
-    '/auth/me',
-    {
-      preHandler: [requireAuth],
-    },
-    async (request, reply) => {
-      const user = request.user
 
-      if (!user) {
-        return unauthorizedResponse(reply)
-      }
+  // ======================
+  // GET /auth/me
+  // ======================
+  fastify.get('/auth/me', { preHandler: [requireAuth] }, async (request, reply) => {
+    const user = request.user
+    if (!user) return unauthorizedResponse(reply)
+    return successResponse(reply, { user })
+  })
 
-      return successResponse(reply, { user })
-    }
-  )
 
-  /**
-   * GET /auth/token
-   * Get current JWT token (for debugging/testing)
-   */
-  fastify.get(
-    '/auth/token',
-    {
-      preHandler: [requireAuth],
-    },
-    async (request, reply) => {
-      const token = request.cookies['auth-token'] || request.headers.authorization?.substring(7)
+  // ======================
+  // GET /auth/token
+  // ======================
+  fastify.get('/auth/token', { preHandler: [requireAuth] }, async (request, reply) => {
+    const token = request.cookies['auth-token']
+      || request.headers.authorization?.substring(7)
 
-      return successResponse(reply, { token })
-    }
-  )
+    return successResponse(reply, { token })
+  })
 }

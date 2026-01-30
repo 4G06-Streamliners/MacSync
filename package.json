@@ -8,7 +8,8 @@
     "src/web-user",
     "src/api",
     "src/mobile",
-    "src/shared"
+    "src/shared",
+    "src/database"
   ],
   "packageManager": "pnpm@10.18.0",
   "scripts": {

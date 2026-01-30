@@ -2,5 +2,12 @@
   "version": "6",
   "dialect": "postgresql",
   "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1764210925756,
+      "tag": "0000_blue_morlun",
+      "breakpoints": true
+    }
   ]
 }
