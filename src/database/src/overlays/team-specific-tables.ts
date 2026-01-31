@@ -1,4 +1,0 @@
-/**
- * Team D Specific Tables
- *
- */
