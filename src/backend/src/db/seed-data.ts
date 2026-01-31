@@ -1,0 +1,230 @@
+/**
+ * Shared seed logic: used by CLI (seed.ts) and optionally by Nest on startup (RUN_SEED=true).
+ */
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type * as schema from './schema';
+import {
+  users,
+  roles,
+  userRoles,
+  events,
+  tickets,
+  tableSeats,
+  busSeats,
+} from './schema';
+import { eq } from 'drizzle-orm';
+
+export type SeedDb = NodePgDatabase<typeof schema>;
+
+export async function runSeedDb(db: SeedDb): Promise<boolean> {
+  const existingRoles = await db.select().from(roles).limit(1);
+  if (existingRoles.length > 0) {
+    return false; // already seeded
+  }
+
+  const [roleAdmin, roleMember, roleGuest] = await db
+    .insert(roles)
+    .values([{ name: 'Admin' }, { name: 'Member' }, { name: 'Guest' }])
+    .returning();
+
+  const [user1, user2, user3] = await db
+    .insert(users)
+    .values([
+      {
+        email: 'admin@example.com',
+        name: 'Admin User',
+        phoneNumber: '+15551234567',
+        program: 'CS',
+        isSystemAdmin: true,
+      },
+      {
+        email: 'alice@example.com',
+        name: 'Alice Smith',
+        phoneNumber: '+15559876543',
+        program: 'Engineering',
+      },
+      {
+        email: 'bob@example.com',
+        name: 'Bob Jones',
+        phoneNumber: '+15555555555',
+        program: null,
+      },
+    ])
+    .returning();
+  if (!user1 || !user2 || !user3) throw new Error('User insert failed');
+
+  await db.insert(userRoles).values([
+    { userId: user1.id, roleId: roleAdmin!.id },
+    { userId: user2.id, roleId: roleMember!.id },
+    { userId: user3.id, roleId: roleGuest!.id },
+  ]);
+
+  const [event1, event2] = await db
+    .insert(events)
+    .values([
+      {
+        name: 'Annual Gala 2026',
+        description: 'Dinner and awards night',
+        date: new Date('2026-03-15T19:00:00'),
+        location: 'Grand Ballroom',
+        capacity: 100,
+        price: 5000,
+        requiresTableSignup: true,
+        requiresBusSignup: true,
+        tableCount: 5,
+        seatsPerTable: 8,
+        busCount: 2,
+        busCapacity: 25,
+      },
+      {
+        name: 'Tech Meetup',
+        description: 'Monthly tech talk',
+        date: new Date('2026-02-10T18:00:00'),
+        location: 'Conference Room A',
+        capacity: 30,
+        price: 0,
+        requiresTableSignup: true,
+        requiresBusSignup: false,
+        tableCount: 3,
+        seatsPerTable: 4,
+        busCount: 0,
+        busCapacity: 0,
+      },
+    ])
+    .returning();
+  if (!event1 || !event2) throw new Error('Event insert failed');
+
+  const tableSeatRows: Array<{
+    eventId: number;
+    tableNumber: number;
+    seatNumber: number;
+  }> = [];
+  for (const ev of [event1, event2]) {
+    const tableCount = ev.tableCount ?? 0;
+    const seatsPerTable = ev.seatsPerTable ?? 0;
+    for (let t = 1; t <= tableCount; t++) {
+      for (let s = 1; s <= seatsPerTable; s++) {
+        tableSeatRows.push({
+          eventId: ev.id,
+          tableNumber: t,
+          seatNumber: s,
+        });
+      }
+    }
+  }
+  if (tableSeatRows.length > 0) await db.insert(tableSeats).values(tableSeatRows);
+
+  const busSeatRows: Array<{
+    eventId: number;
+    busNumber: number;
+    seatNumber: number;
+  }> = [];
+  for (const ev of [event1]) {
+    const busCount = ev.busCount ?? 0;
+    const busCapacity = ev.busCapacity ?? 0;
+    for (let b = 1; b <= busCount; b++) {
+      for (let s = 1; s <= busCapacity; s++) {
+        busSeatRows.push({
+          eventId: ev.id,
+          busNumber: b,
+          seatNumber: s,
+        });
+      }
+    }
+  }
+  if (busSeatRows.length > 0) await db.insert(busSeats).values(busSeatRows);
+
+  const [ticket1, ticket2, ticket3] = await db
+    .insert(tickets)
+    .values([
+      { userId: user1.id, eventId: event1.id },
+      { userId: user2.id, eventId: event1.id },
+      { userId: user3.id, eventId: event2.id },
+    ])
+    .returning();
+  if (!ticket1 || !ticket2 || !ticket3) throw new Error('Ticket insert failed');
+
+  const tableSeatToAssign = await db
+    .select()
+    .from(tableSeats)
+    .where(eq(tableSeats.eventId, event1.id))
+    .limit(1);
+  if (tableSeatToAssign[0]) {
+    await db
+      .update(tableSeats)
+      .set({ ticketId: ticket1.id, updatedAt: new Date() })
+      .where(eq(tableSeats.id, tableSeatToAssign[0].id));
+    await db
+      .update(tickets)
+      .set({
+        tableSeat: `Table ${tableSeatToAssign[0].tableNumber}, Seat ${tableSeatToAssign[0].seatNumber}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(tickets.id, ticket1.id));
+  }
+
+  const firstBusSeat = await db
+    .select()
+    .from(busSeats)
+    .where(eq(busSeats.eventId, event1.id))
+    .limit(1);
+  if (firstBusSeat[0]) {
+    await db
+      .update(busSeats)
+      .set({ ticketId: ticket2.id, updatedAt: new Date() })
+      .where(eq(busSeats.id, firstBusSeat[0].id));
+    await db
+      .update(tickets)
+      .set({
+        busSeat: `Bus ${firstBusSeat[0].busNumber} - Seat ${firstBusSeat[0].seatNumber}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(tickets.id, ticket2.id));
+  }
+
+  return true;
+}
+
+/**
+ * Call after creating an event with tableCount + seatsPerTable to create all table seat rows.
+ */
+export async function createTableSeatsForEvent(
+  db: SeedDb,
+  eventId: number,
+  tableCount: number,
+  seatsPerTable: number,
+): Promise<void> {
+  const rows: Array<{
+    eventId: number;
+    tableNumber: number;
+    seatNumber: number;
+  }> = [];
+  for (let t = 1; t <= tableCount; t++) {
+    for (let s = 1; s <= seatsPerTable; s++) {
+      rows.push({ eventId, tableNumber: t, seatNumber: s });
+    }
+  }
+  if (rows.length > 0) await db.insert(tableSeats).values(rows);
+}
+
+/**
+ * Call after creating an event with busCount + busCapacity to create all bus seat rows (auto-assign later).
+ */
+export async function createBusSeatsForEvent(
+  db: SeedDb,
+  eventId: number,
+  busCount: number,
+  busCapacity: number,
+): Promise<void> {
+  const rows: Array<{
+    eventId: number;
+    busNumber: number;
+    seatNumber: number;
+  }> = [];
+  for (let b = 1; b <= busCount; b++) {
+    for (let s = 1; s <= busCapacity; s++) {
+      rows.push({ eventId, busNumber: b, seatNumber: s });
+    }
+  }
+  if (rows.length > 0) await db.insert(busSeats).values(rows);
+}
