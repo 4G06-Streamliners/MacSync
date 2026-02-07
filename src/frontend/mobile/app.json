@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "backgroundColor": "#ffffff",
       "resizeMode": "contain"
@@ -22,7 +23,7 @@
       "package": "com.macsync.mobile"
     },
     "web": {
-      "bundler": "metro",
+      "bundler": "metro"
     }
   }
 }
