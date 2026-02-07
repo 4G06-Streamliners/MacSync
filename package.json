@@ -9,6 +9,12 @@
     "src/frontend/mobile"
   ],
   "packageManager": "pnpm@10.18.0",
+  "pnpm": {
+    "overrides": {
+      "react": "18.3.1",
+      "react-dom": "18.3.1"
+    }
+  },
   "scripts": {
     "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter web-admin dev\"",
     "dev:backend": "pnpm --filter backend dev",
