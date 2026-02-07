@@ -4,26 +4,22 @@
   "description": "Team D CapstoneMock project",
   "private": true,
   "workspaces": [
-    "src/web-admin",
-    "src/web-user",
-    "src/api",
-    "src/mobile",
-    "src/shared"
+    "src/backend",
+    "src/frontend/web-admin",
+    "src/frontend/mobile"
   ],
   "packageManager": "pnpm@10.18.0",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter @teamd/api dev\" \"pnpm --filter @teamd/web-admin dev\" \"pnpm --filter @teamd/web-user dev\"",
-    "dev:api": "pnpm --filter @teamd/api dev",
-    "dev:admin": "pnpm --filter @teamd/web-admin dev",
-    "dev:user": "pnpm --filter @teamd/web-user dev",
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter web-admin dev\"",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:admin": "pnpm --filter web-admin dev",
+    "dev:mobile": "pnpm --filter mobile start",
     "build": "pnpm -r build",
-    "build:api": "pnpm --filter @teamd/api build",
-    "build:admin": "pnpm --filter @teamd/web-admin build",
-    "build:user": "pnpm --filter @teamd/web-user build",
-    "lint": "pnpm -r lint",
-    "clean": "pnpm -r clean",
-    "publish": "./src/publish.sh teamd all",
-    "republish": "./src/publish.sh teamd all --unpublish"
+    "build:backend": "pnpm --filter backend build",
+    "build:admin": "pnpm --filter web-admin build",
+    "build:mobile": "pnpm --filter mobile build",
+    "lint": "pnpm -r run lint",
+    "clean": "pnpm -r run clean"
   },
   "dependencies": {
     "react": "18.2.0",

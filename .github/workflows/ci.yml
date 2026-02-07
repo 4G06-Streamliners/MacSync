@@ -23,11 +23,17 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Build backend
-        run: |
-          cd src/backend
-          pnpm install
-          pnpm run build
+        run: pnpm run build:backend
+
+      - name: Build frontend (web-admin)
+        run: pnpm run build:admin
+
+      - name: Build frontend (mobile)
+        run: pnpm run build:mobile
 
       - name: Run tests in test folder
         run: |
@@ -36,9 +42,3 @@ jobs:
           else
             echo "No *.test.js files in test/; skipping."
           fi
-
-      - name: Build frontend (web-admin)
-        run: |
-          cd src/frontend/web-admin
-          pnpm install
-          pnpm run build
