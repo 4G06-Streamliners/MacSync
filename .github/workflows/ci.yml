@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Build backend
+        run: |
+          cd src/backend
+          npm ci
+          npm run build
+
+      - name: Run tests in test folder
+        run: |
+          if find test -name "*.test.js" -print0 | grep -q .; then
+            find test -name "*.test.js" -exec node --test {} +
+          else
+            echo "No *.test.js files in test/; skipping."
+          fi
+
+      - name: Build frontend (web-admin)
+        run: |
+          cd src/frontend/web-admin
+          npm ci
+          npm run build
