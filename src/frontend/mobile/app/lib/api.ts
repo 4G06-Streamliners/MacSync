@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { getAuthToken } from './auth';
 
 // Android emulator uses 10.0.2.2, iOS simulator/web uses localhost
 const getBaseUrl = () => {
@@ -9,14 +10,55 @@ const getBaseUrl = () => {
 const API_BASE = getBaseUrl();
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = await getAuthToken();
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options?.headers,
+    },
     ...options,
   });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
   return res.json();
+}
+
+// ---------- Auth ----------
+export interface VerifyCodeResponse {
+  token: string;
+  needsRegistration: boolean;
+  user: User | null;
+}
+
+export function requestVerificationCode(email: string) {
+  return apiFetch('/auth/request-code', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function verifyCode(email: string, code: string): Promise<VerifyCodeResponse> {
+  return apiFetch('/auth/verify-code', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+export function registerProfile(data: {
+  name: string;
+  phone: string;
+  program: string;
+}) {
+  return apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getMe(): Promise<User> {
+  return apiFetch('/auth/me');
 }
 
 // ---------- Users ----------
@@ -124,20 +166,16 @@ export function getUserTickets(userId: number): Promise<Ticket[]> {
 
 export function signupForEvent(
   eventId: number,
-  userId: number,
 ): Promise<{ ticket?: any; error?: string }> {
   return apiFetch(`/events/${eventId}/signup`, {
     method: 'POST',
-    body: JSON.stringify({ userId }),
   });
 }
 
 export function cancelSignup(
   eventId: number,
-  userId: number,
 ): Promise<{ cancelled?: boolean; error?: string }> {
   return apiFetch(`/events/${eventId}/cancel`, {
     method: 'POST',
-    body: JSON.stringify({ userId }),
   });
 }

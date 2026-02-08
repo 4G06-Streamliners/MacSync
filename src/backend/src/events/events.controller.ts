@@ -6,12 +6,16 @@ import {
   Delete,
   Body,
   Param,
-  Query,
+  Req,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import type { NewEvent } from '../db/schema';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('events')
+@UseGuards(JwtAuthGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
@@ -41,17 +45,20 @@ export class EventsController {
   }
 
   @Post(':id/signup')
-  signup(@Param('id') id: string, @Body('userId') userId: number) {
-    return this.eventsService.signup(+id, userId);
+  signup(@Param('id') id: string, @Req() req: any) {
+    return this.eventsService.signup(+id, req.user.sub);
   }
 
   @Post(':id/cancel')
-  cancelSignup(@Param('id') id: string, @Body('userId') userId: number) {
-    return this.eventsService.cancelSignup(+id, userId);
+  cancelSignup(@Param('id') id: string, @Req() req: any) {
+    return this.eventsService.cancelSignup(+id, req.user.sub);
   }
 
   @Get('user/:userId/tickets')
-  getUserTickets(@Param('userId') userId: string) {
+  getUserTickets(@Param('userId') userId: string, @Req() req: any) {
+    if (req.user?.sub !== +userId) {
+      throw new ForbiddenException('Access denied.');
+    }
     return this.eventsService.getTicketsForUser(+userId);
   }
 }

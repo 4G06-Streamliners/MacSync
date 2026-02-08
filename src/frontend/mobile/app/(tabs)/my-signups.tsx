@@ -10,18 +10,18 @@ import {
   RefreshControl,
 } from "react-native";
 import { getUserTickets, cancelSignup, type Ticket } from "../lib/api";
-import { useUser } from "../context/UserContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function MySignUpsScreen() {
-  const { currentUser, loading: userLoading } = useUser();
+  const { user, status } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadTickets = async () => {
-    if (!currentUser) return;
+    if (!user) return;
     try {
-      const data = await getUserTickets(currentUser.id);
+      const data = await getUserTickets(user.id);
       setTickets(data);
     } catch (err) {
       console.error("Failed to load tickets:", err);
@@ -31,11 +31,11 @@ export default function MySignUpsScreen() {
   };
 
   useEffect(() => {
-    if (currentUser) {
+    if (user) {
       setLoading(true);
       loadTickets();
     }
-  }, [currentUser]);
+  }, [user]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -44,7 +44,7 @@ export default function MySignUpsScreen() {
   };
 
   const handleCancel = async (eventId: number) => {
-    if (!currentUser) return;
+    if (!user) return;
     Alert.alert(
       "Cancel Sign-Up",
       "Are you sure you want to cancel this sign-up?",
@@ -55,7 +55,7 @@ export default function MySignUpsScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              const result = await cancelSignup(eventId, currentUser.id);
+              const result = await cancelSignup(eventId);
               if (result.error) {
                 Alert.alert("Error", result.error);
                 return;
@@ -84,7 +84,7 @@ export default function MySignUpsScreen() {
     return `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  if (userLoading || loading) {
+  if (status === "loading" || loading) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7]">
         <ActivityIndicator size="large" color="#7A1F3E" />
@@ -92,11 +92,11 @@ export default function MySignUpsScreen() {
     );
   }
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7] px-6">
         <Text className="text-gray-500 text-base text-center">
-          Please select a user to view sign-ups.
+          Please sign in to view your sign-ups.
         </Text>
       </View>
     );

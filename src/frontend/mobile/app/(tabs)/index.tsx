@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import {
   getUserTickets,
   type EventItem,
 } from "../lib/api";
-import { useUser } from "../context/UserContext";
+import { useAuth } from "../context/AuthContext";
 
 function EventCard({
   event,
@@ -150,7 +150,7 @@ function EventCard({
 }
 
 export default function EventsScreen() {
-  const { currentUser, isAdmin, loading: userLoading } = useUser();
+  const { user, isAdmin, status } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -176,9 +176,9 @@ export default function EventsScreen() {
   };
 
   const loadUserTickets = async () => {
-    if (!currentUser) return;
+    if (!user) return;
     try {
-      const tickets = await getUserTickets(currentUser.id);
+      const tickets = await getUserTickets(user.id);
       setSignedUpEventIds(new Set(tickets.map((t) => t.eventId)));
     } catch (err) {
       console.error("Failed to load tickets:", err);
@@ -190,7 +190,7 @@ export default function EventsScreen() {
     useCallback(() => {
       loadEvents();
       loadUserTickets();
-    }, [currentUser])
+    }, [user])
   );
 
   const onRefresh = async () => {
@@ -212,14 +212,32 @@ export default function EventsScreen() {
   }, [events, search]);
 
   const handleSignUp = async (eventId: number) => {
-    // TODO: implement sign up flow
+    try {
+      const result = await signupForEvent(eventId);
+      if (result.error) {
+        Alert.alert("Unable to sign up", result.error);
+        return;
+      }
+      await loadUserTickets();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to sign up.");
+    }
   };
 
   const handleCancel = async (eventId: number) => {
-    // TODO: implement cancel flow
+    try {
+      const result = await cancelSignup(eventId);
+      if (result.error) {
+        Alert.alert("Unable to cancel", result.error);
+        return;
+      }
+      await loadUserTickets();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to cancel sign-up.");
+    }
   };
 
-  if (userLoading || loading) {
+  if (status === "loading" || loading) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7]">
         <ActivityIndicator size="large" color="#7A1F3E" />

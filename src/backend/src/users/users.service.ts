@@ -40,6 +40,20 @@ export class UsersService {
     };
   }
 
+  async findByEmail(email: string) {
+    const result = await this.dbService.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    return result[0] ?? null;
+  }
+
+  async findByEmailWithRoles(email: string) {
+    const user = await this.findByEmail(email);
+    if (!user) return null;
+    return this.findOneWithRoles(user.id);
+  }
+
   async create(user: NewUser) {
     const result = await this.dbService.db.insert(users).values(user).returning();
     return result[0];

@@ -9,10 +9,10 @@ import {
   Alert,
 } from "react-native";
 import { updateUser } from "../lib/api";
-import { useUser } from "../context/UserContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProfileScreen() {
-  const { currentUser, isAdmin, loading, switchUser } = useUser();
+  const { user, isAdmin, status, refreshUser } = useAuth();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -23,30 +23,30 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    if (currentUser) {
+    if (user) {
       setForm({
-        name: currentUser.name,
-        email: currentUser.email,
-        phoneNumber: currentUser.phoneNumber,
-        program: currentUser.program || "",
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        program: user.program || "",
       });
       setEditing(false);
     }
-  }, [currentUser]);
+  }, [user]);
 
   const handleSave = async () => {
-    if (!currentUser) return;
+    if (!user) return;
     setSaving(true);
 
     try {
-      await updateUser(currentUser.id, {
+      await updateUser(user.id, {
         name: form.name,
         phoneNumber: form.phoneNumber,
         program: form.program || null,
       } as any);
       Alert.alert("Success", "Profile updated successfully.");
       setEditing(false);
-      switchUser(currentUser.id);
+      await refreshUser();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to update profile");
     } finally {
@@ -54,7 +54,7 @@ export default function ProfileScreen() {
     }
   };
 
-  if (loading) {
+  if (status === "loading") {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7]">
         <ActivityIndicator size="large" color="#7A1F3E" />
@@ -62,11 +62,11 @@ export default function ProfileScreen() {
     );
   }
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7] px-6">
         <Text className="text-gray-500 text-base text-center">
-          Please select a user to view profile.
+          Please sign in to view your profile.
         </Text>
       </View>
     );
@@ -91,12 +91,12 @@ export default function ProfileScreen() {
           <View className="p-5 border-b border-gray-100 flex-row items-center gap-4">
             <View className="w-16 h-16 bg-maroon rounded-full items-center justify-center">
               <Text className="text-2xl font-bold text-white">
-                {currentUser.name.charAt(0)}
+                {user.name.charAt(0)}
               </Text>
             </View>
             <View className="flex-1">
               <Text className="text-lg font-bold text-gray-900">
-                {currentUser.name}
+                {user.name}
               </Text>
               <View className="flex-row items-center gap-2 mt-1.5 flex-wrap">
                 {isAdmin && (
@@ -107,7 +107,7 @@ export default function ProfileScreen() {
                     </Text>
                   </View>
                 )}
-                {currentUser.roles?.map((role) => (
+                {user.roles?.map((role) => (
                   <View
                     key={role}
                     className="px-2.5 py-1 bg-gray-100 rounded-full"
@@ -202,10 +202,10 @@ export default function ProfileScreen() {
                     onPress={() => {
                       setEditing(false);
                       setForm({
-                        name: currentUser.name,
-                        email: currentUser.email,
-                        phoneNumber: currentUser.phoneNumber,
-                        program: currentUser.program || "",
+                        name: user.name,
+                        email: user.email,
+                        phoneNumber: user.phoneNumber,
+                        program: user.program || "",
                       });
                     }}
                     className="flex-1 py-3 border border-gray-300 rounded-xl active:bg-gray-50"
