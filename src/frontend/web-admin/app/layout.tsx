@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { UserProvider } from "./context/UserContext";
+import Header from "./components/Header";
 
 export const metadata: Metadata = {
-  title: "Web Admin",
-  description: "Admin dashboard",
+  title: "Events - Student Portal",
+  description: "Discover and register for events",
 };
 
 export default function RootLayout({
@@ -13,8 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-gray-50">
-        {children}
+      <body className="antialiased min-h-screen bg-[#F5F5F7]">
+        <UserProvider>
+          <Header />
+          {children}
+        </UserProvider>
       </body>
     </html>
   );

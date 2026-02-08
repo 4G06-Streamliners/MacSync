@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { users } from '../db/schema';
+import { users, userRoles, roles } from '../db/schema';
 import type { NewUser } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
@@ -18,6 +18,26 @@ export class UsersService {
       .from(users)
       .where(eq(users.id, id));
     return result[0];
+  }
+
+  async findOneWithRoles(id: number) {
+    const user = await this.dbService.db
+      .select()
+      .from(users)
+      .where(eq(users.id, id));
+
+    if (!user[0]) return null;
+
+    const userRoleRows = await this.dbService.db
+      .select({ roleName: roles.name })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, id));
+
+    return {
+      ...user[0],
+      roles: userRoleRows.map((r) => r.roleName),
+    };
   }
 
   async create(user: NewUser) {
