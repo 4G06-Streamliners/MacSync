@@ -55,6 +55,7 @@ export default function VerifyScreen() {
           keyboardType="number-pad"
           placeholder="123456"
           maxLength={6}
+          placeholderTextColor="#C7CBD1"
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm tracking-widest text-center"
         />
 

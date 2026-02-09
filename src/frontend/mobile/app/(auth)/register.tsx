@@ -22,6 +22,13 @@ const PROGRAM_OPTIONS = [
   'Other',
 ];
 
+const formatPhoneInput = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+};
+
 export default function RegisterScreen() {
   const router = useRouter();
   const { status, pendingEmail, completeRegistration } = useAuth();
@@ -30,6 +37,12 @@ export default function RegisterScreen() {
   const [program, setProgram] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showPrograms, setShowPrograms] = useState(false);
+
+  const formattedPhone = formatPhoneInput(phone);
+  const isNameValid = /^[A-Za-z-]+$/.test(name.trim());
+  const phoneDigits = phone.replace(/\D/g, '');
+  const isPhoneValid = /^\+?\d{10,15}$/.test(phoneDigits.length >= 10 ? phoneDigits : '');
+  const isProgramValid = program.trim().length > 0;
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -45,7 +58,7 @@ export default function RegisterScreen() {
       Alert.alert('Invalid name', 'Use letters and hyphens only.');
       return;
     }
-    const normalizedPhone = phone.trim().replace(/[\s()-]/g, '');
+    const normalizedPhone = phoneDigits;
     if (!/^\+?\d{10,15}$/.test(normalizedPhone)) {
       Alert.alert(
         'Invalid phone number',
@@ -93,28 +106,30 @@ export default function RegisterScreen() {
         />
 
         <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-          Name
+          Name {isNameValid && name.trim() ? '✅' : ''}
         </Text>
         <TextInput
           value={name}
           onChangeText={setName}
           placeholder="Jane-Doe"
+          placeholderTextColor="#C7CBD1"
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
         />
 
         <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-          Phone number
+          Phone number {isPhoneValid && phoneDigits ? '✅' : ''}
         </Text>
         <TextInput
-          value={phone}
-          onChangeText={setPhone}
+          value={formattedPhone}
+          onChangeText={(value) => setPhone(value)}
           placeholder="(905) 555-1234"
           keyboardType="phone-pad"
+          placeholderTextColor="#C7CBD1"
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
         />
 
         <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-          Program
+          Program {isProgramValid ? '✅' : ''}
         </Text>
         <Pressable
           onPress={() => setShowPrograms(true)}

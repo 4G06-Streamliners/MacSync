@@ -1,10 +1,11 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 
 function HeaderRight() {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   return (
     <View className="flex-row items-center mr-4">
@@ -17,7 +18,10 @@ function HeaderRight() {
         {user?.name || "Account"}
       </Text>
       <Pressable
-        onPress={logout}
+        onPress={async () => {
+          await logout();
+          router.replace("/(auth)/login");
+        }}
         className="ml-3 px-3 py-1.5 rounded-full bg-gray-100"
       >
         <Text className="text-xs font-semibold text-gray-600">Logout</Text>

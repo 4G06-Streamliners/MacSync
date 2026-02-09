@@ -4,7 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import jwt from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import type { OnboardingJwtPayload } from './auth.types';
 
 @Injectable()
@@ -21,16 +21,24 @@ export class OnboardingGuard implements CanActivate {
     }
 
     try {
-      const payload = jwt.verify(
+      const decoded = verify(
         token,
         process.env.JWT_SECRET || 'dev-secret',
-      ) as OnboardingJwtPayload;
+      );
 
-      if (!payload?.onboarding || !payload.email) {
+      if (typeof decoded !== 'object' || decoded === null) {
         throw new UnauthorizedException('Invalid onboarding token.');
       }
 
-      request.onboardingEmail = payload.email;
+      const { onboarding, email } = decoded as {
+        onboarding?: unknown;
+        email?: unknown;
+      };
+      if (onboarding !== true || typeof email !== 'string') {
+        throw new UnauthorizedException('Invalid onboarding token.');
+      }
+
+      request.onboardingEmail = email;
       return true;
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired onboarding token.');

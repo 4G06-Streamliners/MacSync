@@ -44,6 +44,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="name@mcmaster.ca"
+          placeholderTextColor="#C7CBD1"
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
         />
 

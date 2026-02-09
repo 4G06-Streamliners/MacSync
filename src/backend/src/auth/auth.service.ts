@@ -4,9 +4,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash, randomInt } from 'crypto';
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
-import jwt from 'jsonwebtoken';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const nodemailer = require('nodemailer');
+type Transporter = { sendMail: (options: any) => Promise<any> };
+import { sign, type SignOptions } from 'jsonwebtoken';
 import { and, desc, eq, gt, isNull } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
 import { verificationTokens } from '../db/schema';
@@ -16,7 +17,7 @@ import type { JwtPayload, OnboardingJwtPayload } from './auth.types';
 
 const EMAIL_DOMAIN = 'mcmaster.ca';
 const DEFAULT_CODE_EXPIRY_MIN = 10;
-const DEFAULT_JWT_EXPIRES_IN = '60m';
+const DEFAULT_JWT_EXPIRES_IN_SECONDS = 60 * 60;
 
 @Injectable()
 export class AuthService {
@@ -98,8 +99,15 @@ export class AuthService {
     return Number.isFinite(parsed) ? parsed : DEFAULT_CODE_EXPIRY_MIN;
   }
 
-  private getJwtExpiry() {
-    return process.env.JWT_EXPIRES_IN || DEFAULT_JWT_EXPIRES_IN;
+  private getJwtExpiry(): SignOptions['expiresIn'] {
+    const value = process.env.JWT_EXPIRES_IN?.trim();
+    if (!value) {
+      return DEFAULT_JWT_EXPIRES_IN_SECONDS;
+    }
+    if (/^\d+$/.test(value)) {
+      return Number(value);
+    }
+    return value as SignOptions['expiresIn'];
   }
 
   private isProfileComplete(user: User) {
@@ -111,9 +119,8 @@ export class AuthService {
   }
 
   private issueJwt(payload: JwtPayload | OnboardingJwtPayload) {
-    return jwt.sign(payload, this.jwtSecret, {
-      expiresIn: this.getJwtExpiry(),
-    });
+    const options: SignOptions = { expiresIn: this.getJwtExpiry() };
+    return sign(payload, this.jwtSecret, options);
   }
 
   async requestVerificationCode(rawEmail: string) {
