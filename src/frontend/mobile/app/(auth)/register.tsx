@@ -26,7 +26,13 @@ const formatPhoneInput = (value: string) => {
   const digits = value.replace(/\D/g, '');
   if (digits.length <= 3) return digits;
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  if (digits.length <= 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return `+${digits.slice(0, 1)} (${digits.slice(1, 4)}) ${digits.slice(
+    4,
+    7,
+  )}-${digits.slice(7, 11)}`;
 };
 
 export default function RegisterScreen() {
@@ -41,7 +47,7 @@ export default function RegisterScreen() {
   const formattedPhone = formatPhoneInput(phone);
   const isNameValid = /^[A-Za-z-]+$/.test(name.trim());
   const phoneDigits = phone.replace(/\D/g, '');
-  const isPhoneValid = /^\+?\d{10,15}$/.test(phoneDigits.length >= 10 ? phoneDigits : '');
+  const isPhoneValid = /^\d{10,15}$/.test(phoneDigits);
   const isProgramValid = program.trim().length > 0;
 
   useEffect(() => {
@@ -59,7 +65,7 @@ export default function RegisterScreen() {
       return;
     }
     const normalizedPhone = phoneDigits;
-    if (!/^\+?\d{10,15}$/.test(normalizedPhone)) {
+    if (!/^\d{10,15}$/.test(normalizedPhone)) {
       Alert.alert(
         'Invalid phone number',
         'Use 10 digits or include a valid country code.',

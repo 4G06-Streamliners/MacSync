@@ -283,7 +283,7 @@ export default function EventsScreen() {
             <Text className="text-base mr-2">🔍</Text>
             <TextInput
               placeholder="Search events by name..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#C7CBD1"
               value={search}
               onChangeText={setSearch}
               className="flex-1 text-sm text-gray-900"

@@ -185,7 +185,7 @@ export default function ProfileScreen() {
                 onChangeText={(v) => setForm((p) => ({ ...p, program: v }))}
                 editable={editing}
                 placeholder={editing ? "e.g. Computer Science" : "—"}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#C7CBD1"
                 className={`w-full px-4 py-3 border rounded-xl text-sm ${
                   editing
                     ? "border-gray-300 bg-white text-gray-900"
