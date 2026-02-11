@@ -13,7 +13,7 @@ import {
   Modal,
   Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   getEvents,
@@ -21,8 +21,8 @@ import {
   cancelSignup,
   getUserTickets,
   type EventItem,
-} from "../lib/api";
-import { useUser } from "../context/UserContext";
+} from "../_lib/api";
+import { useUser } from "../_context/UserContext";
 
 function EventCard({
   event,
@@ -35,7 +35,28 @@ function EventCard({
   onSignUp: (id: number) => void;
   onCancel: (id: number) => void;
 }) {
-  const isFull = event.registeredCount >= event.capacity;
+  let effectiveCapacity = event.capacity;
+  if (
+    event.requiresTableSignup &&
+    event.tableCount != null &&
+    event.seatsPerTable != null
+  ) {
+    effectiveCapacity = Math.min(
+      effectiveCapacity,
+      event.tableCount * event.seatsPerTable
+    );
+  }
+  if (
+    event.requiresBusSignup &&
+    event.busCount != null &&
+    event.busCapacity != null
+  ) {
+    effectiveCapacity = Math.min(
+      effectiveCapacity,
+      event.busCount * event.busCapacity
+    );
+  }
+  const isFull = event.registeredCount >= effectiveCapacity;
   const isPast = new Date(event.date) < new Date();
   const isOpen = !isFull && !isPast;
 
@@ -163,10 +184,24 @@ export default function EventsScreen() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [eventToCancel, setEventToCancel] = useState<number | null>(null);
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const stripeSessionIdRaw = params.stripeSessionId;
+  const stripeSessionId =
+    typeof stripeSessionIdRaw === "string" ? stripeSessionIdRaw : null;
   const { width } = useWindowDimensions();
 
   // Responsive: 1 col on small, 2 on medium, 3 on large
   const numColumns = width >= 1024 ? 3 : width >= 640 ? 2 : 1;
+
+  // Safety net: if Stripe ever redirects to "/" with ?stripeSessionId=...,
+  // forward to /payment-cancel so we can release the reservation immediately.
+  useEffect(() => {
+    if (!stripeSessionId) return;
+    router.replace({
+      pathname: "/payment-cancel",
+      params: { stripeSessionId },
+    });
+  }, [stripeSessionId]);
 
   const loadEvents = async () => {
     try {

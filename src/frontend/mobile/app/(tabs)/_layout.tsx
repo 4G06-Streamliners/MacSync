@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import { View, Text, Pressable, Modal, FlatList, Platform } from "react-native";
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useUser } from "../context/UserContext";
+import { useUser } from "../_context/UserContext";
 
 function HeaderRight() {
   const { currentUser, allUsers, switchUser } = useUser();
