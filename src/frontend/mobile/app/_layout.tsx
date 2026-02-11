@@ -37,6 +37,8 @@ function RootNavigator() {
       </Stack>
       {status === "authenticated" ? (
         <Redirect href="/(tabs)" />
+      ) : status === "needsRegistration" ? (
+        <Redirect href="/(auth)/register" />
       ) : (
         <Redirect href="/(auth)/login" />
       )}
