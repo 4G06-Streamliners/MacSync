@@ -9,6 +9,7 @@ export default function VerifyScreen() {
   const { confirmCode } = useAuth();
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (!email) {
@@ -19,20 +20,25 @@ export default function VerifyScreen() {
   const handleSubmit = async () => {
     if (!email) return;
     if (code.trim().length !== 6) {
-      Alert.alert('Invalid code', 'Enter the 6-digit verification code.');
+      const message = 'Enter the 6-digit verification code.';
+      setErrorMessage(message);
+      Alert.alert('Invalid code', message);
       return;
     }
 
     setSubmitting(true);
     try {
       const result = await confirmCode(String(email), code.trim());
+      setErrorMessage('');
       if (result === 'needsRegistration') {
         router.replace('/(auth)/register');
       } else {
         router.replace('/(tabs)');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to verify code.');
+      const message = error.message || 'Failed to verify code.';
+      setErrorMessage(message);
+      Alert.alert('Error', message);
     } finally {
       setSubmitting(false);
     }
@@ -51,13 +57,22 @@ export default function VerifyScreen() {
         <Text className="text-sm font-medium text-gray-700 mb-2">Verification code</Text>
         <TextInput
           value={code}
-          onChangeText={setCode}
+          onChangeText={(value) => {
+            setCode(value);
+            if (errorMessage) setErrorMessage('');
+          }}
           keyboardType="number-pad"
           placeholder="123456"
           maxLength={6}
           placeholderTextColor="#C7CBD1"
+          returnKeyType="send"
+          blurOnSubmit
+          onSubmitEditing={handleSubmit}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm tracking-widest text-center"
         />
+        {!!errorMessage && (
+          <Text className="text-xs text-red-600 mt-2">{errorMessage}</Text>
+        )}
 
         <Pressable
           onPress={handleSubmit}
