@@ -5,7 +5,10 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { getUsers, getUser, type User } from '../lib/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUsers, getUser, type User } from '../_lib/api';
+
+const STORAGE_KEY_USER_ID = '@macsync_current_user_id';
 
 interface UserContextType {
   currentUser: User | null;
@@ -33,9 +36,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
       try {
         const users = await getUsers();
         setAllUsers(users);
-        if (users[0]) {
-          const user = await getUser(users[0].id);
+        const storedId = await AsyncStorage.getItem(STORAGE_KEY_USER_ID);
+        const userId = storedId ? parseInt(storedId, 10) : null;
+        const preferred =
+          userId != null && !Number.isNaN(userId)
+            ? users.find((u) => u.id === userId)
+            : null;
+        const targetUser = preferred ?? users[0];
+        if (targetUser) {
+          const user = await getUser(targetUser.id);
           setCurrentUser(user);
+          await AsyncStorage.setItem(STORAGE_KEY_USER_ID, String(user.id));
         }
       } catch (err) {
         console.error('Failed to load users:', err);
@@ -50,6 +61,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       const user = await getUser(id);
       setCurrentUser(user);
+      await AsyncStorage.setItem(STORAGE_KEY_USER_ID, String(user.id));
     } catch (err) {
       console.error('Failed to switch user:', err);
     }

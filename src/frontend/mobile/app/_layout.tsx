@@ -1,7 +1,7 @@
 import "../global.css";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { UserProvider } from "./context/UserContext";
+import { UserProvider } from "./_context/UserContext";
 
 export default function RootLayout() {
   return (
@@ -25,6 +25,20 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="event-created"
+            options={{
+              headerShown: false,
+              gestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="payment-success"
+            options={{
+              headerShown: false,
+              gestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="payment-cancel"
             options={{
               headerShown: false,
               gestureEnabled: false,

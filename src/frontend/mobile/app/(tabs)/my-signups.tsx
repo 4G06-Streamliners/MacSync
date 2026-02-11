@@ -12,8 +12,8 @@ import {
   Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { getUserTickets, cancelSignup, type Ticket } from "../lib/api";
-import { useUser } from "../context/UserContext";
+import { getUserTickets, cancelSignup, type Ticket } from "../_lib/api";
+import { useUser } from "../_context/UserContext";
 
 export default function MySignUpsScreen() {
   const { currentUser, loading: userLoading } = useUser();
