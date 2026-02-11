@@ -69,6 +69,8 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
         location: 'Grand Ballroom',
         capacity: 100,
         price: 5000,
+        stripePriceId: 'price_1SzRO1AOwjDlyX8ctKxSG200',
+        stripeProductId: 'prod_TxM6pjhnD6u04y',
         requiresTableSignup: true,
         requiresBusSignup: true,
         tableCount: 5,

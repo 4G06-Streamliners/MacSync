@@ -62,6 +62,7 @@ export const events = pgTable('events', {
   imageUrl: varchar('image_url', { length: 500 }),
   price: integer('price').notNull(), // in cents
   stripePriceId: varchar('stripe_price_id', { length: 255 }),
+  stripeProductId: varchar('stripe_product_id', { length: 255 }),
   requiresTableSignup: boolean('requires_table_signup').default(false),
   requiresBusSignup: boolean('requires_bus_signup').default(false),
   // For table seats: number of tables, seats per table (e.g. 10 tables × 8 seats)
@@ -95,6 +96,33 @@ export const tickets = pgTable('tickets', {
 
 export type Ticket = typeof tickets.$inferSelect;
 export type NewTicket = typeof tickets.$inferInsert;
+
+// ------------------- PAYMENTS -------------------
+export const payments = pgTable('payments', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  eventId: integer('event_id')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  ticketId: integer('ticket_id').references(() => tickets.id, {
+    onDelete: 'set null',
+  }),
+  stripeSessionId: varchar('stripe_session_id', { length: 255 }).notNull(),
+  stripePaymentIntentId: varchar('stripe_payment_intent_id', { length: 255 }),
+  stripeChargeId: varchar('stripe_charge_id', { length: 255 }),
+  amountPaid: integer('amount_paid').notNull(), // in cents
+  currency: varchar('currency', { length: 3 }).default('usd'),
+  status: varchar('status', { length: 50 }).notNull(), // 'succeeded', 'refunded', 'partially_refunded'
+  refundedAmount: integer('refunded_amount').default(0), // in cents
+  paymentDate: timestamp('payment_date').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export type Payment = typeof payments.$inferSelect;
+export type NewPayment = typeof payments.$inferInsert;
 
 // ------------------- TABLE SEATS (one row per physical seat per event; user picks table + seat) -------------------
 export const tableSeats = pgTable(
@@ -141,3 +169,26 @@ export const busSeats = pgTable('bus_seats', {
 
 export type BusSeat = typeof busSeats.$inferSelect;
 export type NewBusSeat = typeof busSeats.$inferInsert;
+
+// ------------------- SEAT RESERVATIONS (hold seat during Stripe checkout; expire after 5 min or on payment/cancel) -------------------
+export const seatReservations = pgTable('seat_reservations', {
+  id: serial('id').primaryKey(),
+  stripeSessionId: varchar('stripe_session_id', { length: 255 }).notNull().unique(),
+  eventId: integer('event_id')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  tableSeatId: integer('table_seat_id').references(() => tableSeats.id, {
+    onDelete: 'cascade',
+  }),
+  busSeatId: integer('bus_seat_id').references(() => busSeats.id, {
+    onDelete: 'cascade',
+  }),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type SeatReservation = typeof seatReservations.$inferSelect;
+export type NewSeatReservation = typeof seatReservations.$inferInsert;
