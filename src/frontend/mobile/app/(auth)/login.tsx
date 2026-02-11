@@ -8,11 +8,14 @@ export default function LoginScreen() {
   const { requestCode } = useAuth();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async () => {
     const normalized = email.trim().toLowerCase();
     if (!normalized.endsWith('@mcmaster.ca')) {
-      Alert.alert('Invalid email', 'Please use your @mcmaster.ca email.');
+      const message = 'Please use your @mcmaster.ca email.';
+      setErrorMessage(message);
+      Alert.alert('Invalid email', message);
       return;
     }
 
@@ -20,8 +23,11 @@ export default function LoginScreen() {
     try {
       await requestCode(normalized);
       router.push({ pathname: '/(auth)/verify', params: { email: normalized } });
+      setErrorMessage('');
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to send verification code.');
+      const message = error.message || 'Failed to send verification code.';
+      setErrorMessage(message);
+      Alert.alert('Error', message);
     } finally {
       setSubmitting(false);
     }
@@ -40,13 +46,22 @@ export default function LoginScreen() {
         <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
         <TextInput
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (errorMessage) setErrorMessage('');
+          }}
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="name@mcmaster.ca"
           placeholderTextColor="#C7CBD1"
+          returnKeyType="send"
+          blurOnSubmit
+          onSubmitEditing={handleSubmit}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
         />
+        {!!errorMessage && (
+          <Text className="text-xs text-red-600 mt-2">{errorMessage}</Text>
+        )}
 
         <Pressable
           onPress={handleSubmit}
