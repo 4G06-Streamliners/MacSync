@@ -17,6 +17,13 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="event-signup"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
             name="event-created"
             options={{
               headerShown: false,

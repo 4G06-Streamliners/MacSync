@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 // Android emulator uses 10.0.2.2, iOS simulator/web uses localhost
+// For physical device, replace localhost with your computer's IP (e.g., 'http://192.168.1.100:3000')
 const getBaseUrl = () => {
   if (Platform.OS === 'android') return 'http://10.0.2.2:3000';
   return 'http://localhost:3000';

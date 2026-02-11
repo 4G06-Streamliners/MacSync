@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Modal,
+  Platform,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { getUserTickets, cancelSignup, type Ticket } from "../lib/api";
 import { useUser } from "../context/UserContext";
 
@@ -17,6 +20,8 @@ export default function MySignUpsScreen() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [eventToCancel, setEventToCancel] = useState<number | null>(null);
 
   const loadTickets = async () => {
     if (!currentUser) return;
@@ -30,12 +35,15 @@ export default function MySignUpsScreen() {
     }
   };
 
-  useEffect(() => {
-    if (currentUser) {
-      setLoading(true);
-      loadTickets();
-    }
-  }, [currentUser]);
+  // Reload tickets every time this screen gets focus
+  useFocusEffect(
+    useCallback(() => {
+      if (currentUser) {
+        setLoading(true);
+        loadTickets();
+      }
+    }, [currentUser])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -45,29 +53,42 @@ export default function MySignUpsScreen() {
 
   const handleCancel = async (eventId: number) => {
     if (!currentUser) return;
-    Alert.alert(
-      "Cancel Sign-Up",
-      "Are you sure you want to cancel this sign-up?",
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes, Cancel",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const result = await cancelSignup(eventId, currentUser.id);
-              if (result.error) {
-                Alert.alert("Error", result.error);
-                return;
-              }
-              await loadTickets();
-            } catch (err: any) {
-              Alert.alert("Error", err.message || "Failed to cancel");
-            }
-          },
-        },
-      ]
-    );
+    console.log("Cancel clicked for event:", eventId);
+    setEventToCancel(eventId);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!currentUser || !eventToCancel) return;
+    console.log("Cancelling signup...");
+    setShowCancelModal(false);
+    try {
+      const result = await cancelSignup(eventToCancel, currentUser.id);
+      console.log("Cancel result:", result);
+      if (result.error) {
+        if (Platform.OS === 'web') {
+          alert(result.error);
+        } else {
+          Alert.alert("Error", result.error);
+        }
+        return;
+      }
+      await loadTickets();
+      if (Platform.OS === 'web') {
+        alert("Sign-up cancelled successfully.");
+      } else {
+        Alert.alert("Success", "Sign-up cancelled successfully.");
+      }
+    } catch (err: any) {
+      console.error("Cancel error:", err);
+      if (Platform.OS === 'web') {
+        alert(err.message || "Failed to cancel");
+      } else {
+        Alert.alert("Error", err.message || "Failed to cancel");
+      }
+    } finally {
+      setEventToCancel(null);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -81,7 +102,7 @@ export default function MySignUpsScreen() {
 
   const formatPrice = (price: number) => {
     if (price === 0) return "Free";
-    return `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${(price / 100).toFixed(2)}`;
   };
 
   if (userLoading || loading) {
@@ -221,6 +242,43 @@ export default function MySignUpsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-bold text-gray-900 mb-2">
+              Cancel Sign-Up
+            </Text>
+            <Text className="text-sm text-gray-600 mb-6">
+              Are you sure you want to cancel this sign-up?
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setShowCancelModal(false)}
+                className="flex-1 py-3 border border-gray-300 rounded-xl active:bg-gray-50"
+              >
+                <Text className="text-center text-sm font-medium text-gray-700">
+                  No
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmCancel}
+                className="flex-1 py-3 bg-red-500 rounded-xl active:bg-red-600"
+              >
+                <Text className="text-center text-sm font-semibold text-white">
+                  Yes, Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
