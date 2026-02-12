@@ -9,11 +9,22 @@ const getBaseUrl = (): string => {
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl();
   const url = `${base}${path}`;
+
+  // Dynamically import to avoid server-side issues with document access
+  const { getToken } = await import("./auth");
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((options?.headers as Record<string, string>) ?? {}),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   
   try {
     const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...options?.headers },
       ...options,
+      headers,
     });
     
     if (!res.ok) {
@@ -68,11 +79,21 @@ export function getUser(id: number): Promise<User> {
 
 export function updateUser(
   id: number,
-  data: Partial<User>,
+  data: Partial<User> & { password?: string },
 ): Promise<User> {
   return apiFetch(`/users/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
+  });
+}
+
+export function updateUserRoles(
+  id: number,
+  roles: string[],
+): Promise<User> {
+  return apiFetch(`/users/${id}/roles`, {
+    method: "PUT",
+    body: JSON.stringify({ roles }),
   });
 }
 
@@ -143,4 +164,21 @@ export interface Ticket {
 
 export function getUserTickets(userId: number): Promise<Ticket[]> {
   return apiFetch(`/events/user/${userId}/tickets`);
+}
+
+// ---------- Auth ----------
+export interface LoginResponse {
+  token: string;
+  user: User;
+}
+
+export function login(email: string, password: string): Promise<LoginResponse> {
+  return apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function getMe(): Promise<User> {
+  return apiFetch("/auth/me");
 }

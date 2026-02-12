@@ -17,19 +17,17 @@ export class JwtAuthGuard implements CanActivate {
     // M8: validateToken(token) -> verify JWT before protected routes.
     const request = context.switchToHttp().getRequest<RequestWithHeaders>();
     const header = request.headers?.authorization ?? '';
-    const token = typeof header === 'string' && header.startsWith('Bearer ')
-      ? header.slice(7).trim()
-      : null;
+    const token =
+      typeof header === 'string' && header.startsWith('Bearer ')
+        ? header.slice(7).trim()
+        : null;
 
     if (!token) {
       throw new UnauthorizedException('Missing authorization token.');
     }
 
     try {
-      const decoded = verify(
-        token,
-        process.env.JWT_SECRET || 'dev-secret',
-      );
+      const decoded = verify(token, process.env.JWT_SECRET || 'dev-secret');
 
       if (typeof decoded !== 'object' || decoded === null) {
         throw new UnauthorizedException('Invalid token payload.');

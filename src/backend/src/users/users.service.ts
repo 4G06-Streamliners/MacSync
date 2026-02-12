@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
 import { users, userRoles, roles } from '../db/schema';
 import type { NewUser } from '../db/schema';
@@ -12,7 +13,7 @@ export class UsersService {
     // Avoid leaking password hashes to clients.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...rest } = user;
-    return rest as Omit<T, 'passwordHash'>;
+    return rest;
   }
 
   async findAll() {
@@ -56,6 +57,18 @@ export class UsersService {
     return result[0] ?? null;
   }
 
+  /** Verify password for the current user. Used for sensitive operations like role changes. */
+  async verifyUserPassword(userId: number, password: string): Promise<boolean> {
+    if (!password || typeof password !== 'string') return false;
+    const result = await this.dbService.db
+      .select({ passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.id, userId));
+    const row = result[0];
+    if (!row?.passwordHash) return false;
+    return bcrypt.compare(password, row.passwordHash);
+  }
+
   async findByEmailWithRoles(email: string) {
     const user = await this.findByEmail(email);
     if (!user) return null;
@@ -77,6 +90,46 @@ export class UsersService {
       .where(eq(users.id, id))
       .returning();
     return result[0];
+  }
+
+  /**
+   * Replace all non-admin roles for a user with the provided role names.
+   * This is used by the admin panel to assign a primary role (currently Member only).
+   */
+  async replaceRoles(id: number, roleNames: string[]) {
+    const db = this.dbService.db;
+
+    // Resolve role names to IDs.
+    const allRoles = await db.select().from(roles);
+    const targetRoleIds = allRoles
+      .filter((r) => roleNames.includes(r.name))
+      .map((r) => r.id);
+
+    // Validate that all requested roles exist.
+    const existingRoleNames = new Set(allRoles.map((r) => r.name));
+    const missingRoles = roleNames.filter(
+      (name) => !existingRoleNames.has(name),
+    );
+    if (missingRoles.length > 0) {
+      throw new BadRequestException(
+        `Role(s) not found: ${missingRoles.join(', ')}. Available roles: ${Array.from(existingRoleNames).join(', ')}`,
+      );
+    }
+
+    // Remove all existing role mappings for this user.
+    await db.delete(userRoles).where(eq(userRoles.userId, id));
+
+    // Insert the new mappings.
+    if (targetRoleIds.length > 0) {
+      await db.insert(userRoles).values(
+        targetRoleIds.map((roleId) => ({
+          userId: id,
+          roleId,
+        })),
+      );
+    }
+
+    return this.findOneWithRoles(id);
   }
 
   async delete(id: number) {

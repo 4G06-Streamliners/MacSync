@@ -1,19 +1,21 @@
 import {
+  Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
+  Param,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
   Query,
   Req,
   UseGuards,
-  ForbiddenException,
 } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
 import { EventsService } from './events.service';
 import type { NewEvent } from '../db/schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
 
 interface RequestWithUser extends Request {
   user: { sub: number; email: string };
@@ -22,7 +24,10 @@ interface RequestWithUser extends Request {
 @Controller('events')
 @UseGuards(JwtAuthGuard)
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get()
   findAll() {
@@ -36,27 +41,38 @@ export class EventsController {
   }
 
   @Post()
+  @Roles('Admin')
   create(@Body() event: NewEvent) {
     return this.eventsService.create(event);
   }
 
   @Put(':id')
+  @Roles('Admin')
   update(@Param('id') id: string, @Body() event: Partial<NewEvent>) {
     return this.eventsService.update(+id, event);
   }
 
   @Delete(':id')
+  @Roles('Admin')
   delete(@Param('id') id: string) {
     return this.eventsService.delete(+id);
   }
 
   @Post(':id/signup')
-  signup(
+  async signup(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
     @Body('selectedTable') selectedTable?: number,
   ) {
-    return this.eventsService.signup(+id, req.user.sub, selectedTable);
+    try {
+      return await this.eventsService.signup(+id, req.user.sub, selectedTable);
+    } catch (err) {
+      console.error('[signup] Error:', err);
+      if (err instanceof Error) {
+        console.error('[signup] Stack:', err.stack);
+      }
+      throw err;
+    }
   }
 
   @Post(':id/checkout-session')
@@ -118,9 +134,20 @@ export class EventsController {
   }
 
   @Get('user/:userId/tickets')
-  getUserTickets(@Param('userId') userId: string, @Req() req: RequestWithUser) {
-    if (req.user.sub !== +userId) {
-      throw new ForbiddenException('Access denied.');
+  async getUserTickets(
+    @Param('userId') userId: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const currentUserId = req.user.sub;
+    // Allow: self-access (user fetching own tickets) OR admin
+    if (currentUserId !== +userId) {
+      const dbUser = await this.usersService.findOneWithRoles(currentUserId);
+      const isAdmin =
+        (dbUser as { isSystemAdmin?: boolean })?.isSystemAdmin ||
+        (dbUser?.roles ?? []).includes('Admin');
+      if (!isAdmin) {
+        throw new ForbiddenException('Access denied.');
+      }
     }
     return this.eventsService.getTicketsForUser(+userId);
   }

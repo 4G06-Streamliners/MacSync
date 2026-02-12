@@ -10,7 +10,7 @@ import {
   seatReservations,
 } from '../db/schema';
 import type { NewEvent } from '../db/schema';
-import { eq, sql, and } from 'drizzle-orm';
+import { eq, sql, and, asc } from 'drizzle-orm';
 import type { SeedDb } from '../db/seed-data';
 import {
   createTableSeatsForEvent,
@@ -417,6 +417,9 @@ export class EventsService {
       .values({ userId, eventId })
       .returning();
     const ticket = result[0];
+    if (!ticket) {
+      return { error: 'Failed to create ticket. Please try again.' };
+    }
 
     // Generate and update QR code data
     const qrCodeData = this.generateQRCodeData(ticket.id, userId, eventId);
@@ -574,6 +577,9 @@ export class EventsService {
       .values({ userId, eventId })
       .returning();
     const ticket = result[0];
+    if (!ticket) {
+      return { error: 'Failed to create ticket. Please try again.' };
+    }
 
     // Generate and update QR code data
     const qrCodeData = this.generateQRCodeData(ticket.id, userId, eventId);
@@ -598,7 +604,7 @@ export class EventsService {
         .select()
         .from(tableSeats)
         .where(conditions)
-        .orderBy(tableSeats.tableNumber, tableSeats.seatNumber)
+        .orderBy(asc(tableSeats.tableNumber), asc(tableSeats.seatNumber))
         .limit(1);
 
       if (availableTableSeat[0]) {
@@ -617,7 +623,7 @@ export class EventsService {
         .where(
           sql`${busSeats.eventId} = ${eventId} AND ${busSeats.ticketId} IS NULL`,
         )
-        .orderBy(busSeats.busNumber, busSeats.seatNumber)
+        .orderBy(asc(busSeats.busNumber), asc(busSeats.seatNumber))
         .limit(1);
       if (availableBusSeat[0]) {
         await this.dbService.db

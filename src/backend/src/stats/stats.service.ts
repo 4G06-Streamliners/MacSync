@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { count, sum, sql, gte, inArray, eq } from 'drizzle-orm';
+import { count, sum, sql, gte, eq } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
-import { users, events, tickets, payments } from '../db/schema';
+import { users, events, tickets } from '../db/schema';
 
 export interface DashboardStats {
   userCount: number;
