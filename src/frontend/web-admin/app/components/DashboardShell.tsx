@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/", label: "Dashboard" },
   { href: "/events", label: "Events" },
-  { href: "/manage-roles", label: "Manage roles" },
+  { href: "/users", label: "Users" },
 ];
 
 export default function DashboardShell({
@@ -66,7 +66,7 @@ export default function DashboardShell({
           <div />
           <div className="flex items-center gap-4">
             <Link
-              href="/events"
+              href="/events/create"
               className="px-4 py-2 bg-maroon hover:bg-maroon-dark text-white text-sm font-semibold rounded-xl transition-colors"
             >
               Create event

@@ -66,6 +66,16 @@ export function getUser(id: number): Promise<User> {
   return apiFetch(`/users/${id}`);
 }
 
+export function updateUser(
+  id: number,
+  data: Partial<User>,
+): Promise<User> {
+  return apiFetch(`/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 // ---------- Events ----------
 export interface EventItem {
   id: number;
@@ -90,4 +100,47 @@ export interface EventItem {
 
 export function getEvents(): Promise<EventItem[]> {
   return apiFetch("/events");
+}
+
+export interface CreateEventPayload {
+  name: string;
+  description?: string;
+  date: string;
+  location?: string;
+  capacity: number;
+  imageUrl?: string;
+  price: number;
+  stripePriceId?: string;
+  requiresTableSignup?: boolean;
+  requiresBusSignup?: boolean;
+  tableCount?: number;
+  seatsPerTable?: number;
+  busCount?: number;
+  busCapacity?: number;
+}
+
+export function createEvent(data: CreateEventPayload): Promise<EventItem> {
+  return apiFetch("/events", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ---------- Tickets ----------
+export interface Ticket {
+  ticketId: number;
+  eventId: number;
+  checkedIn: boolean;
+  busSeat: string | null;
+  tableSeat: string | null;
+  createdAt: string;
+  eventName: string;
+  eventDate: string;
+  eventLocation: string | null;
+  eventPrice: number;
+  eventImageUrl: string | null;
+}
+
+export function getUserTickets(userId: number): Promise<Ticket[]> {
+  return apiFetch(`/events/user/${userId}/tickets`);
 }
