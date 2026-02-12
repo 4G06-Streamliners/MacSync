@@ -22,32 +22,46 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
     return false; // already seeded
   }
 
-  const [roleAdmin, roleMember, roleGuest] = await db
+  const [roleAdmin, roleMember] = await db
     .insert(roles)
-    .values([{ name: 'Admin' }, { name: 'Member' }, { name: 'Guest' }])
+    .values([
+      { name: 'Admin' },
+      { name: 'Member' },
+    ])
     .returning();
 
   const [user1, user2, user3] = await db
     .insert(users)
     .values([
       {
-        email: 'admin@example.com',
+        email: 'admin@mcmaster.ca',
         name: 'Admin User',
+        firstName: 'Admin',
+        lastName: 'User',
         phoneNumber: '+15551234567',
         program: 'CS',
         isSystemAdmin: true,
+        passwordHash: '$2b$10$gNGCkz3TUVsAJOaBK1ttW..Vjx6AQJkqw0l34eiAFf.rKsqqYF7o6', // e.g. for Password123
       },
       {
-        email: 'alice@example.com',
+        email: 'alice@mcmaster.ca',
         name: 'Alice Smith',
+        firstName: 'Alice',
+        lastName: 'Smith',
         phoneNumber: '+15559876543',
         program: 'Engineering',
+        // Same dev password as admin (Password123).
+        passwordHash: '$2b$10$gNGCkz3TUVsAJOaBK1ttW..Vjx6AQJkqw0l34eiAFf.rKsqqYF7o6',
       },
       {
-        email: 'bob@example.com',
+        email: 'bob@mcmaster.ca',
         name: 'Bob Jones',
+        firstName: 'Bob',
+        lastName: 'Jones',
         phoneNumber: '+15555555555',
-        program: null,
+        program: 'Science',
+        // Same dev password as admin (Password123).
+        passwordHash: '$2b$10$gNGCkz3TUVsAJOaBK1ttW..Vjx6AQJkqw0l34eiAFf.rKsqqYF7o6',
       },
     ])
     .returning();
@@ -56,7 +70,7 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
   await db.insert(userRoles).values([
     { userId: user1.id, roleId: roleAdmin.id },
     { userId: user2.id, roleId: roleMember.id },
-    { userId: user3.id, roleId: roleGuest.id },
+    { userId: user3.id, roleId: roleMember.id },
   ]);
 
   const [event1, event2] = await db

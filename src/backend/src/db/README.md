@@ -3,7 +3,7 @@
 ## Tables
 
 - **users** – Profile (email, name, phoneNumber, program, isSystemAdmin)
-- **roles** – Role names (Admin, Member, Guest)
+- **roles** – Role names (Admin, Member)
 - **user_roles** – Many-to-many user ↔ role
 - **events** – Events with optional table/bus config:
   - `tableCount`, `seatsPerTable` → table seats (user picks table + seat)

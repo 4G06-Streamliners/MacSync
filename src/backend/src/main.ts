@@ -41,10 +41,11 @@ async function bootstrap() {
     },
   );
 
-  // Enable CORS for all origins
+  // Enable CORS for all origins, including non-GET methods used by the admin panel
   await app.register(cors, {
-    origin: true, // Allow all origins
+    origin: true, // Allow all origins (dev)
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   });
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');

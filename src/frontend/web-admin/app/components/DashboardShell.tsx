@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { clearToken } from "../_lib/auth";
 
 const navItems = [
   { href: "/", label: "Dashboard" },
@@ -15,6 +16,17 @@ export default function DashboardShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Don't render the shell on the login page
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  function handleLogout() {
+    clearToken();
+    router.push("/login");
+  }
 
   return (
     <div className="min-h-screen flex bg-app-gray">
@@ -55,7 +67,27 @@ export default function DashboardShell({
           })}
         </nav>
         <div className="p-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500 px-3">Admin portal</p>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Sign out
+          </button>
         </div>
       </aside>
 

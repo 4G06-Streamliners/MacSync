@@ -3,11 +3,13 @@ import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
 import { DatabaseModule } from '../database/database.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { UsersModule } from '../users/users.module';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Module({
-  imports: [DatabaseModule, PaymentsModule],
+  imports: [DatabaseModule, PaymentsModule, UsersModule],
   controllers: [EventsController],
-  providers: [EventsService],
+  providers: [EventsService, RolesGuard],
   exports: [EventsService],
 })
 export class EventsModule {}
