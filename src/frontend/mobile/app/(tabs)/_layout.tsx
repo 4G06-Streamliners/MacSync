@@ -1,7 +1,7 @@
 import { Tabs, useRouter } from "expo-router";
 import { View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../_context/AuthContext";
 
 function HeaderRight() {
   const { user, logout } = useAuth();

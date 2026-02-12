@@ -54,9 +54,9 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
   if (!user1 || !user2 || !user3) throw new Error('User insert failed');
 
   await db.insert(userRoles).values([
-    { userId: user1.id, roleId: roleAdmin!.id },
-    { userId: user2.id, roleId: roleMember!.id },
-    { userId: user3.id, roleId: roleGuest!.id },
+    { userId: user1.id, roleId: roleAdmin.id },
+    { userId: user2.id, roleId: roleMember.id },
+    { userId: user3.id, roleId: roleGuest.id },
   ]);
 
   const [event1, event2] = await db
@@ -69,6 +69,8 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
         location: 'Grand Ballroom',
         capacity: 100,
         price: 5000,
+        stripePriceId: 'price_1SzRO1AOwjDlyX8ctKxSG200',
+        stripeProductId: 'prod_TxM6pjhnD6u04y',
         requiresTableSignup: true,
         requiresBusSignup: true,
         tableCount: 5,
@@ -112,7 +114,8 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
       }
     }
   }
-  if (tableSeatRows.length > 0) await db.insert(tableSeats).values(tableSeatRows);
+  if (tableSeatRows.length > 0)
+    await db.insert(tableSeats).values(tableSeatRows);
 
   const busSeatRows: Array<{
     eventId: number;

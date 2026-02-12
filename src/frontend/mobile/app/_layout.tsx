@@ -2,7 +2,7 @@ import "../global.css";
 import { Stack, Redirect } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator } from "react-native";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./_context/AuthContext";
 
 function RootNavigator() {
   const { status } = useAuth();
@@ -28,7 +28,28 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="event-signup"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="event-created"
+          options={{
+            headerShown: false,
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="payment-success"
+          options={{
+            headerShown: false,
+            gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="payment-cancel"
           options={{
             headerShown: false,
             gestureEnabled: false,

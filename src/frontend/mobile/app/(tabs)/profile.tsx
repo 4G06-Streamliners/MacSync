@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { updateUser } from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+import { updateUser } from "../_lib/api";
+import { useAuth } from "../_context/AuthContext";
 
 export default function ProfileScreen() {
   const { user, isAdmin, status, refreshUser } = useAuth();

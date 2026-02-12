@@ -1,8 +1,11 @@
 import { Platform } from 'react-native';
 import { getAuthToken } from './auth';
 
-// Android emulator uses 10.0.2.2, iOS simulator/web uses localhost
-const getBaseUrl = () => {
+// Set EXPO_PUBLIC_API_URL in .env for physical device (e.g. http://192.168.1.100:3000)
+// Otherwise: Android emulator -> 10.0.2.2:3000, iOS simulator -> localhost:3000
+const getBaseUrl = (): string => {
+  const env = typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_URL;
+  if (env && typeof env === 'string' && env.trim()) return env.replace(/\/$/, '');
   if (Platform.OS === 'android') return 'http://10.0.2.2:3000';
   return 'http://localhost:3000';
 };
@@ -120,6 +123,7 @@ export interface EventItem {
   capacity: number;
   imageUrl: string | null;
   price: number; // cents
+  stripePriceId: string | null;
   requiresTableSignup: boolean;
   requiresBusSignup: boolean;
   tableCount: number | null;
@@ -127,6 +131,7 @@ export interface EventItem {
   busCount: number | null;
   busCapacity: number | null;
   registeredCount: number;
+  userTicket?: { tableSeat: string | null; busSeat: string | null } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -135,8 +140,13 @@ export function getEvents(): Promise<EventItem[]> {
   return apiFetch('/events');
 }
 
-export function getEvent(id: number): Promise<EventItem> {
-  return apiFetch(`/events/${id}`);
+export function getEvent(
+  id: number,
+  userId?: number,
+): Promise<EventItem> {
+  const url =
+    userId != null ? `/events/${id}?userId=${encodeURIComponent(userId)}` : `/events/${id}`;
+  return apiFetch(url);
 }
 
 export interface CreateEventPayload {
@@ -147,6 +157,7 @@ export interface CreateEventPayload {
   capacity: number;
   imageUrl?: string;
   price: number;
+  stripePriceId?: string;
   requiresTableSignup?: boolean;
   requiresBusSignup?: boolean;
   tableCount?: number;
@@ -187,9 +198,41 @@ export function getUserTickets(userId: number): Promise<Ticket[]> {
 
 export function signupForEvent(
   eventId: number,
+  selectedTable?: number,
 ): Promise<{ ticket?: any; error?: string }> {
   return apiFetch(`/events/${eventId}/signup`, {
     method: 'POST',
+    body: JSON.stringify({ selectedTable }),
+  });
+}
+
+export function createCheckoutSession(
+  eventId: number,
+  options: {
+    successUrl?: string;
+    cancelUrl?: string;
+    selectedTable?: number;
+  },
+): Promise<{ url?: string; error?: string }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  return apiFetch<{ url?: string; error?: string }>(`/events/${eventId}/checkout-session`, {
+    method: 'POST',
+    signal: controller.signal,
+    body: JSON.stringify({
+      successUrl: options.successUrl,
+      cancelUrl: options.cancelUrl,
+      selectedTable: options.selectedTable,
+    }),
+  }).finally(() => clearTimeout(timeoutId));
+}
+
+export function releaseCheckoutReservation(
+  stripeSessionId: string,
+): Promise<{ released?: boolean; error?: string }> {
+  return apiFetch(`/events/checkout-session/${encodeURIComponent(stripeSessionId)}/release`, {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 

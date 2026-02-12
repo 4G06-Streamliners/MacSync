@@ -55,7 +55,10 @@ export class UsersService {
   }
 
   async create(user: NewUser) {
-    const result = await this.dbService.db.insert(users).values(user).returning();
+    const result = await this.dbService.db
+      .insert(users)
+      .values(user)
+      .returning();
     return result[0];
   }
 

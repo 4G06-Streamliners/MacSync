@@ -5,8 +5,8 @@ import {
   verifyCode,
   registerProfile,
   type User,
-} from '../lib/api';
-import { getAuthToken, setAuthToken } from '../lib/auth';
+} from '../_lib/api';
+import { getAuthToken, setAuthToken } from '../_lib/auth';
 
 type AuthStatus = 'loading' | 'unauthenticated' | 'needsRegistration' | 'authenticated';
 

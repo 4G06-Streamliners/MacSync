@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Req,
   UseGuards,
   ForbiddenException,
@@ -25,8 +26,9 @@ export class EventsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(+id);
+  findOne(@Param('id') id: string, @Query('userId') userId?: string) {
+    const uid = userId != null && userId !== '' ? +userId : undefined;
+    return this.eventsService.findOne(+id, uid);
   }
 
   @Post()
@@ -45,8 +47,65 @@ export class EventsController {
   }
 
   @Post(':id/signup')
-  signup(@Param('id') id: string, @Req() req: any) {
-    return this.eventsService.signup(+id, req.user.sub);
+  signup(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body('selectedTable') selectedTable?: number,
+  ) {
+    return this.eventsService.signup(+id, req.user.sub, selectedTable);
+  }
+
+  @Post(':id/checkout-session')
+  createCheckoutSession(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body()
+    body: {
+      successUrl?: string;
+      cancelUrl?: string;
+      selectedTable?: number;
+    },
+  ) {
+    // Accept http(s) and deep-link schemes (e.g. exp:// for Expo Go) so mobile redirects open the app
+    const isValidRedirectUrl = (s: string) =>
+      typeof s === 'string' &&
+      s.length > 0 &&
+      (s.startsWith('http://') ||
+        s.startsWith('https://') ||
+        s.startsWith('exp://') ||
+        s.startsWith('expo://'));
+    const successUrl =
+      (body.successUrl?.trim() && isValidRedirectUrl(body.successUrl.trim())
+        ? body.successUrl.trim()
+        : null) ||
+      process.env.STRIPE_SUCCESS_URL ||
+      'http://localhost:8081/payment-success';
+    const cancelUrl =
+      (body.cancelUrl?.trim() && isValidRedirectUrl(body.cancelUrl.trim())
+        ? body.cancelUrl.trim()
+        : null) ||
+      process.env.STRIPE_CANCEL_URL ||
+      'http://localhost:8081/payment-cancel';
+    return this.eventsService.createCheckoutSession(
+      +id,
+      req.user.sub,
+      successUrl,
+      cancelUrl,
+      body.selectedTable, // Guaranteed table assignment, not just a preference
+    );
+  }
+
+  // Called by the client when Stripe redirects to cancel_url.
+  // Releases the held seat immediately so the user can retry without waiting for expiry.
+  @Post('checkout-session/:sessionId/release')
+  async releaseCheckoutReservation(@Param('sessionId') sessionId: string) {
+    console.log(
+      '[releaseCheckoutReservation] Releasing reservation for session:',
+      sessionId,
+    );
+    await this.eventsService.releaseReservation(sessionId);
+    console.log('[releaseCheckoutReservation] Released successfully');
+    return { released: true };
   }
 
   @Post(':id/cancel')

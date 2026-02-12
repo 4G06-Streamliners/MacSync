@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: macsync_db
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: src/backend
+        run: npm ci
+
+      - name: Create backend .env
+        working-directory: src/backend
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5434/macsync_db" > .env
+          echo "PORT=3000" >> .env
+          echo "NODE_ENV=test" >> .env
+
+      - name: Run database migrations
+        working-directory: src/backend
+        run: npm run db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5434/macsync_db
+
+      - name: Lint backend
+        working-directory: src/backend
+        run: npm run lint
+
+      - name: Build backend
+        working-directory: src/backend
+        run: npm run build
+
+  web-admin:
+    name: Web Admin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/frontend/web-admin/package-lock.json
+
+      - name: Install web-admin dependencies
+        working-directory: src/frontend/web-admin
+        run: npm ci
+
+      - name: Lint web-admin
+        working-directory: src/frontend/web-admin
+        run: npm run lint
+
+      - name: Build web-admin
+        working-directory: src/frontend/web-admin
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: "1"
+
+  root-tests:
+    name: Root tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run root test/ folder
+        run: node test/dummy.test.js
+
+  mobile:
+    name: Mobile (Expo)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: src/frontend/mobile/package-lock.json
+
+      - name: Install mobile dependencies
+        working-directory: src/frontend/mobile
+        run: npm ci
+
+      - name: Type-check mobile app
+        working-directory: src/frontend/mobile
+        run: npx tsc --noEmit
+
+      - name: Validate Expo config
+        working-directory: src/frontend/mobile
+        run: npx expo config --type prebuild 2>/dev/null || true

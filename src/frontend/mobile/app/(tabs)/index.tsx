@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,8 +10,10 @@ import {
   Alert,
   useWindowDimensions,
   RefreshControl,
+  Modal,
+  Platform,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import {
   getEvents,
@@ -19,8 +21,8 @@ import {
   cancelSignup,
   getUserTickets,
   type EventItem,
-} from "../lib/api";
-import { useAuth } from "../context/AuthContext";
+} from "../_lib/api";
+import { useAuth } from "../_context/AuthContext";
 
 function EventCard({
   event,
@@ -33,7 +35,28 @@ function EventCard({
   onSignUp: (id: number) => void;
   onCancel: (id: number) => void;
 }) {
-  const isFull = event.registeredCount >= event.capacity;
+  let effectiveCapacity = event.capacity;
+  if (
+    event.requiresTableSignup &&
+    event.tableCount != null &&
+    event.seatsPerTable != null
+  ) {
+    effectiveCapacity = Math.min(
+      effectiveCapacity,
+      event.tableCount * event.seatsPerTable
+    );
+  }
+  if (
+    event.requiresBusSignup &&
+    event.busCount != null &&
+    event.busCapacity != null
+  ) {
+    effectiveCapacity = Math.min(
+      effectiveCapacity,
+      event.busCount * event.busCapacity
+    );
+  }
+  const isFull = event.registeredCount >= effectiveCapacity;
   const isPast = new Date(event.date) < new Date();
   const isOpen = !isFull && !isPast;
 
@@ -48,7 +71,7 @@ function EventCard({
 
   const formatPrice = (price: number) => {
     if (price === 0) return "Free";
-    return `$${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${(price / 100).toFixed(2)}`;
   };
 
   return (
@@ -158,11 +181,27 @@ export default function EventsScreen() {
   const [signedUpEventIds, setSignedUpEventIds] = useState<Set<number>>(
     new Set()
   );
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [eventToCancel, setEventToCancel] = useState<number | null>(null);
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const stripeSessionIdRaw = params.stripeSessionId;
+  const stripeSessionId =
+    typeof stripeSessionIdRaw === "string" ? stripeSessionIdRaw : null;
   const { width } = useWindowDimensions();
 
   // Responsive: 1 col on small, 2 on medium, 3 on large
   const numColumns = width >= 1024 ? 3 : width >= 640 ? 2 : 1;
+
+  // Safety net: if Stripe ever redirects to "/" with ?stripeSessionId=...,
+  // forward to /payment-cancel so we can release the reservation immediately.
+  useEffect(() => {
+    if (!stripeSessionId) return;
+    router.replace({
+      pathname: "/payment-cancel",
+      params: { stripeSessionId },
+    });
+  }, [stripeSessionId]);
 
   const loadEvents = async () => {
     try {
@@ -212,28 +251,48 @@ export default function EventsScreen() {
   }, [events, search]);
 
   const handleSignUp = async (eventId: number) => {
-    try {
-      const result = await signupForEvent(eventId);
-      if (result.error) {
-        Alert.alert("Unable to sign up", result.error);
-        return;
-      }
-      await loadUserTickets();
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to sign up.");
-    }
+    if (!user) return;
+    router.push(`/event-signup?eventId=${eventId}`);
   };
 
   const handleCancel = async (eventId: number) => {
+    if (!user) return;
+    console.log("Cancel clicked for event:", eventId);
+    setEventToCancel(eventId);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancel = async () => {
+    if (!user || !eventToCancel) return;
+    console.log("Cancelling signup...");
+    setShowCancelModal(false);
     try {
-      const result = await cancelSignup(eventId);
+      const result = await cancelSignup(eventToCancel);
+      console.log("Cancel result:", result);
       if (result.error) {
-        Alert.alert("Unable to cancel", result.error);
+        if (Platform.OS === 'web') {
+          alert(result.error);
+        } else {
+          Alert.alert("Error", result.error);
+        }
         return;
       }
+      await loadEvents();
       await loadUserTickets();
+      if (Platform.OS === 'web') {
+        alert("Sign-up cancelled successfully.");
+      } else {
+        Alert.alert("Success", "Sign-up cancelled successfully.");
+      }
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to cancel sign-up.");
+      console.error("Cancel error:", err);
+      if (Platform.OS === 'web') {
+        alert(err.message || "Failed to cancel");
+      } else {
+        Alert.alert("Error", err.message || "Failed to cancel");
+      }
+    } finally {
+      setEventToCancel(null);
     }
   };
 
@@ -324,6 +383,43 @@ export default function EventsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-bold text-gray-900 mb-2">
+              Cancel Sign-Up
+            </Text>
+            <Text className="text-sm text-gray-600 mb-6">
+              Are you sure you want to cancel this sign-up?
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setShowCancelModal(false)}
+                className="flex-1 py-3 border border-gray-300 rounded-xl active:bg-gray-50"
+              >
+                <Text className="text-center text-sm font-medium text-gray-700">
+                  No
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={confirmCancel}
+                className="flex-1 py-3 bg-red-500 rounded-xl active:bg-red-600"
+              >
+                <Text className="text-center text-sm font-semibold text-white">
+                  Yes, Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

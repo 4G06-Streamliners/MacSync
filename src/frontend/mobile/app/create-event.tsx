@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { createEvent, type CreateEventPayload } from "./lib/api";
+import { createEvent, type CreateEventPayload } from "./_lib/api";
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -48,13 +48,14 @@ export default function CreateEventScreen() {
       }
 
       const dateStr = `${form.date}T${form.time}:00`;
+      const priceDollars = form.price ? parseFloat(form.price) : 0;
       const payload: CreateEventPayload = {
         name: form.name,
         description: form.description || undefined,
         date: new Date(dateStr).toISOString(),
         location: form.location || undefined,
         capacity: parseInt(form.capacity),
-        price: form.price ? Math.round(parseFloat(form.price)) : 0,
+        price: Math.round(priceDollars * 100), // store in cents (Stripe price created automatically)
         imageUrl: form.imageUrl || undefined,
         requiresTableSignup: form.requiresTableSignup,
         requiresBusSignup: form.requiresBusSignup,
