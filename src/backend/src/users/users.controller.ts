@@ -55,9 +55,14 @@ export class UsersController {
     const user = { ...body };
     if (user.isSystemAdmin !== undefined) {
       if (!user.password || typeof user.password !== 'string') {
-        throw new BadRequestException('Password is required to change admin role.');
+        throw new BadRequestException(
+          'Password is required to change admin role.',
+        );
       }
-      const valid = await this.usersService.verifyUserPassword(req.user.sub, user.password);
+      const valid = await this.usersService.verifyUserPassword(
+        req.user.sub,
+        user.password,
+      );
       if (!valid) {
         throw new UnauthorizedException('Invalid password.');
       }
@@ -71,10 +76,7 @@ export class UsersController {
 
   @Put(':id/roles')
   @Roles('Admin')
-  updateRoles(
-    @Param('id') id: string,
-    @Body() body: { roles?: string[] },
-  ) {
+  updateRoles(@Param('id') id: string, @Body() body: { roles?: string[] }) {
     const roles = Array.isArray(body.roles) ? body.roles : [];
     return this.usersService.replaceRoles(+id, roles);
   }

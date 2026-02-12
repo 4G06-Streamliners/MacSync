@@ -37,7 +37,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).send({
       statusCode: status,
       error: status >= 500 ? 'Internal Server Error' : 'Bad Request',
-      message: typeof message === 'object' ? (message as { message?: string }).message ?? message : message,
+      message:
+        typeof message === 'object'
+          ? ((message as { message?: string }).message ?? message)
+          : message,
     });
   }
 }

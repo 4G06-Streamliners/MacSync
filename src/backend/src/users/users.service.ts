@@ -13,7 +13,7 @@ export class UsersService {
     // Avoid leaking password hashes to clients.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...rest } = user;
-    return rest as Omit<T, 'passwordHash'>;
+    return rest;
   }
 
   async findAll() {
@@ -107,7 +107,9 @@ export class UsersService {
 
     // Validate that all requested roles exist.
     const existingRoleNames = new Set(allRoles.map((r) => r.name));
-    const missingRoles = roleNames.filter((name) => !existingRoleNames.has(name));
+    const missingRoles = roleNames.filter(
+      (name) => !existingRoleNames.has(name),
+    );
     if (missingRoles.length > 0) {
       throw new BadRequestException(
         `Role(s) not found: ${missingRoles.join(', ')}. Available roles: ${Array.from(existingRoleNames).join(', ')}`,

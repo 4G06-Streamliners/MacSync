@@ -121,9 +121,9 @@ export class AuthService {
       (user.firstName?.trim() && user.lastName?.trim()) || user.name?.trim();
     return Boolean(
       hasName &&
-        user.phoneNumber?.trim() &&
-        user.program?.trim() &&
-        user.passwordHash?.trim(),
+      user.phoneNumber?.trim() &&
+      user.program?.trim() &&
+      user.passwordHash?.trim(),
     );
   }
 

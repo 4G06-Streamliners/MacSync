@@ -16,19 +16,20 @@ export class RolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const requiredRoles =
-      this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-        context.getHandler(),
-        context.getClass(),
-      ]);
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     // If no roles metadata is present, allow the request (JwtAuthGuard still applies).
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as { sub?: number } | undefined;
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user?: { sub?: number } }>();
+    const user = request.user;
     if (!user?.sub) {
       throw new ForbiddenException('Access denied.');
     }
@@ -45,9 +46,13 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Access denied.');
     }
 
-    const userRoles = new Set(dbUser.roles ?? []);
+    const userWithRoles = dbUser as {
+      roles?: string[];
+      isSystemAdmin?: boolean;
+    };
+    const userRoles = new Set(userWithRoles.roles ?? []);
     // Treat isSystemAdmin as implicit 'Admin' role for RBAC checks.
-    if ((dbUser as any).isSystemAdmin) {
+    if (userWithRoles.isSystemAdmin) {
       userRoles.add('Admin');
     }
 
@@ -59,4 +64,3 @@ export class RolesGuard implements CanActivate {
     return true;
   }
 }
-
