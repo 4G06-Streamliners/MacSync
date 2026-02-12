@@ -26,8 +26,14 @@ export default function EventsListPage() {
 
   useEffect(() => {
     getEvents()
-      .then(setEvents)
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load"))
+      .then((events) => {
+        console.log("Events loaded:", events.length);
+        setEvents(events);
+      })
+      .catch((e) => {
+        console.error("Events load error:", e);
+        setError(e instanceof Error ? e.message : "Failed to load");
+      })
       .finally(() => setLoading(false));
   }, []);
 
