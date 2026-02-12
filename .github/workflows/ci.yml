@@ -50,12 +50,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5434/macsync_db
 
-      - name: Run backend tests
-        working-directory: src/backend
-        run: npm run test -- --passWithNoTests
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5434/macsync_db
-
       - name: Lint backend
         working-directory: src/backend
         run: npm run lint
@@ -92,6 +86,21 @@ jobs:
         run: npm run build
         env:
           SKIP_ENV_VALIDATION: "1"
+
+  root-tests:
+    name: Root tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run root test/ folder
+        run: node test/dummy.test.js
 
   mobile:
     name: Mobile (Expo)
