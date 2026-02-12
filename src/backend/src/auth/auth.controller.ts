@@ -10,6 +10,14 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { OnboardingGuard } from './onboarding.guard';
 
+interface RequestWithUser extends Request {
+  user: { sub: number; email: string };
+}
+
+interface RequestWithOnboarding extends Request {
+  onboardingEmail: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -56,14 +64,14 @@ export class AuthController {
       password: string;
       confirmPassword?: string;
     },
-    @Req() req: any,
+    @Req() req: RequestWithOnboarding,
   ) {
     return this.authService.registerUser(req.onboardingEmail, body);
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me(@Req() req: any) {
+  me(@Req() req: RequestWithUser) {
     return this.authService.getUserInfo(req.user.sub);
   }
 

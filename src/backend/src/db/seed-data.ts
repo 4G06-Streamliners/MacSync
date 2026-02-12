@@ -11,6 +11,9 @@ import {
   tickets,
   tableSeats,
   busSeats,
+  type Ticket,
+  type TableSeat,
+  type BusSeat,
 } from './schema';
 import { eq } from 'drizzle-orm';
 
@@ -139,11 +142,13 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
 
   // Check if tickets already exist
   const existingTickets = await db.select().from(tickets).limit(1);
-  let ticket1, ticket2, ticket3;
+  let ticket1: Ticket | undefined;
+  let ticket2: Ticket | undefined;
+  let ticket3: Ticket | undefined;
   
   if (existingTickets.length > 0) {
     // Update existing tickets with QR codes
-    const allTickets = await db.select().from(tickets);
+    const allTickets: Ticket[] = await db.select().from(tickets);
     for (const ticket of allTickets) {
       const qrData = `TICKET:${ticket.userId}:${ticket.eventId}:${ticket.id}:${Date.now()}`;
       await db
@@ -152,7 +157,9 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
         .where(eq(tickets.id, ticket.id));
     }
     // Get first 3 for seat assignment
-    [ticket1, ticket2, ticket3] = allTickets.slice(0, 3);
+    ticket1 = allTickets[0];
+    ticket2 = allTickets[1];
+    ticket3 = allTickets[2];
   } else {
     // Create new tickets with QR codes
     const timestamp = Date.now();
@@ -204,42 +211,46 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
   
   if (!ticket1 || !ticket2 || !ticket3) throw new Error('Ticket insert failed');
 
-  const tableSeatToAssign = await db
-    .select()
-    .from(tableSeats)
-    .where(eq(tableSeats.eventId, event1.id))
-    .limit(1);
-  if (tableSeatToAssign[0]) {
-    await db
-      .update(tableSeats)
-      .set({ ticketId: ticket1.id, updatedAt: new Date() })
-      .where(eq(tableSeats.id, tableSeatToAssign[0].id));
-    await db
-      .update(tickets)
-      .set({
-        tableSeat: `Table ${tableSeatToAssign[0].tableNumber}, Seat ${tableSeatToAssign[0].seatNumber}`,
-        updatedAt: new Date(),
-      })
-      .where(eq(tickets.id, ticket1.id));
-  }
+  if (ticket1 && ticket2) {
+    const tableSeatResults: TableSeat[] = await db
+      .select()
+      .from(tableSeats)
+      .where(eq(tableSeats.eventId, event1.id))
+      .limit(1);
+    const tableSeat: TableSeat | undefined = tableSeatResults[0];
+    if (tableSeat) {
+      await db
+        .update(tableSeats)
+        .set({ ticketId: ticket1.id, updatedAt: new Date() })
+        .where(eq(tableSeats.id, tableSeat.id));
+      await db
+        .update(tickets)
+        .set({
+          tableSeat: `Table ${tableSeat.tableNumber}, Seat ${tableSeat.seatNumber}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tickets.id, ticket1.id));
+    }
 
-  const firstBusSeat = await db
-    .select()
-    .from(busSeats)
-    .where(eq(busSeats.eventId, event1.id))
-    .limit(1);
-  if (firstBusSeat[0]) {
-    await db
-      .update(busSeats)
-      .set({ ticketId: ticket2.id, updatedAt: new Date() })
-      .where(eq(busSeats.id, firstBusSeat[0].id));
-    await db
-      .update(tickets)
-      .set({
-        busSeat: `Bus ${firstBusSeat[0].busNumber} - Seat ${firstBusSeat[0].seatNumber}`,
-        updatedAt: new Date(),
-      })
-      .where(eq(tickets.id, ticket2.id));
+    const busSeatResults: BusSeat[] = await db
+      .select()
+      .from(busSeats)
+      .where(eq(busSeats.eventId, event1.id))
+      .limit(1);
+    const busSeat: BusSeat | undefined = busSeatResults[0];
+    if (busSeat) {
+      await db
+        .update(busSeats)
+        .set({ ticketId: ticket2.id, updatedAt: new Date() })
+        .where(eq(busSeats.id, busSeat.id));
+      await db
+        .update(tickets)
+        .set({
+          busSeat: `Bus ${busSeat.busNumber} - Seat ${busSeat.seatNumber}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tickets.id, ticket2.id));
+    }
   }
 
   return true;

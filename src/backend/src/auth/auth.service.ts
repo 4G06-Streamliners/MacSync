@@ -5,9 +5,8 @@ import {
 } from '@nestjs/common';
 import { createHash, randomInt } from 'crypto';
 import bcrypt from 'bcryptjs';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const nodemailer = require('nodemailer');
-type Transporter = { sendMail: (options: any) => Promise<any> };
+import * as nodemailer from 'nodemailer';
+type Transporter = ReturnType<typeof nodemailer.createTransport>;
 import { sign, type SignOptions } from 'jsonwebtoken';
 import { and, desc, eq, gt, isNull } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
