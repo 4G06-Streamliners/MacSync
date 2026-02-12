@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { count, sum, sql, gte, inArray } from 'drizzle-orm';
+import { count, sum, sql, gte, inArray, eq } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
 import { users, events, tickets, payments } from '../db/schema';
 
@@ -36,12 +36,13 @@ export class StatsService {
       db.select({ value: count() }).from(events).where(gte(events.date, today)),
       db.select({ value: count() }).from(tickets),
       db.select({ value: sum(events.capacity) }).from(events),
+      // Calculate revenue from tickets × event price (covers tickets without payment records)
       db
         .select({
-          value: sql<number>`COALESCE(SUM(${payments.amountPaid} - COALESCE(${payments.refundedAmount}, 0)), 0)::int`,
+          value: sql<number>`COALESCE(SUM(${events.price}), 0)::int`,
         })
-        .from(payments)
-        .where(inArray(payments.status, ['succeeded', 'partially_refunded'])),
+        .from(tickets)
+        .innerJoin(events, eq(tickets.eventId, events.id)),
     ]);
 
     const userCount = Number(userCountResult[0]?.value ?? 0);

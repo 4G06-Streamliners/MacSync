@@ -38,13 +38,16 @@ export default function DashboardHome() {
     async function load() {
       try {
         setError(null);
+        console.log("Loading dashboard data...");
         const [statsRes, eventsRes] = await Promise.all([
           getDashboardStats(),
           getEvents(),
         ]);
+        console.log("Dashboard data loaded:", { stats: statsRes, eventsCount: eventsRes.length });
         setStats(statsRes);
         setEvents(eventsRes);
       } catch (e) {
+        console.error("Dashboard load error:", e);
         setError(e instanceof Error ? e.message : "Failed to load dashboard");
       } finally {
         setLoading(false);

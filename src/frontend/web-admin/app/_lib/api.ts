@@ -1,22 +1,33 @@
 const getBaseUrl = (): string => {
-  if (typeof window !== "undefined") {
-    const url = process.env.NEXT_PUBLIC_API_URL;
-    if (url && typeof url === "string" && url.trim()) return url.replace(/\/$/, "");
+  const url = process.env.NEXT_PUBLIC_API_URL;
+  if (url && typeof url === "string" && url.trim()) {
+    return url.replace(/\/$/, "");
   }
-  return process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+  return "http://localhost:3000";
 };
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl();
-  const res = await fetch(`${base}${path}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    ...options,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `API error: ${res.status} ${res.statusText}`);
+  const url = `${base}${path}`;
+  
+  try {
+    const res = await fetch(url, {
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      ...options,
+    });
+    
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `API error: ${res.status} ${res.statusText}`);
+    }
+    
+    return res.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes("fetch")) {
+      throw new Error(`Failed to connect to backend at ${url}. Is the backend running?`);
+    }
+    throw error;
   }
-  return res.json();
 }
 
 // ---------- Dashboard stats ----------
