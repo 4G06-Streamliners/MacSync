@@ -7,6 +7,7 @@ import {
 } from '@nestjs/platform-fastify';
 import cors from '@fastify/cors';
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './common/http-exception.filter';
 
 interface RequestWithUrlAndRawBody {
   url?: string;
@@ -18,6 +19,8 @@ async function bootstrap() {
     AppModule,
     new FastifyAdapter(),
   );
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const fastifyInstance = app.getHttpAdapter().getInstance();
 

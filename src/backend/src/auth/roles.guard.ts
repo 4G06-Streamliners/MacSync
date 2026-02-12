@@ -33,7 +33,14 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Access denied.');
     }
 
-    const dbUser = await this.usersService.findOneWithRoles(user.sub);
+    let dbUser;
+    try {
+      dbUser = await this.usersService.findOneWithRoles(user.sub);
+    } catch (err) {
+      console.error('[RolesGuard] findOneWithRoles error:', err);
+      throw new ForbiddenException('Access denied.');
+    }
+
     if (!dbUser) {
       throw new ForbiddenException('Access denied.');
     }

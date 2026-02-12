@@ -30,13 +30,11 @@ export class EventsController {
   ) {}
 
   @Get()
-  @Roles('Admin', 'Member')
   findAll() {
     return this.eventsService.findAll();
   }
 
   @Get(':id')
-  @Roles('Admin', 'Member')
   findOne(@Param('id') id: string, @Query('userId') userId?: string) {
     const uid = userId != null && userId !== '' ? +userId : undefined;
     return this.eventsService.findOne(+id, uid);
@@ -61,17 +59,23 @@ export class EventsController {
   }
 
   @Post(':id/signup')
-  @Roles('Member', 'Admin')
-  signup(
+  async signup(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
     @Body('selectedTable') selectedTable?: number,
   ) {
-    return this.eventsService.signup(+id, req.user.sub, selectedTable);
+    try {
+      return await this.eventsService.signup(+id, req.user.sub, selectedTable);
+    } catch (err) {
+      console.error('[signup] Error:', err);
+      if (err instanceof Error) {
+        console.error('[signup] Stack:', err.stack);
+      }
+      throw err;
+    }
   }
 
   @Post(':id/checkout-session')
-  @Roles('Member', 'Admin')
   createCheckoutSession(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
@@ -114,7 +118,6 @@ export class EventsController {
   // Called by the client when Stripe redirects to cancel_url.
   // Releases the held seat immediately so the user can retry without waiting for expiry.
   @Post('checkout-session/:sessionId/release')
-  @Roles('Member', 'Admin')
   async releaseCheckoutReservation(@Param('sessionId') sessionId: string) {
     console.log(
       '[releaseCheckoutReservation] Releasing reservation for session:',
@@ -126,13 +129,11 @@ export class EventsController {
   }
 
   @Post(':id/cancel')
-  @Roles('Member', 'Admin')
   cancelSignup(@Param('id') id: string, @Req() req: RequestWithUser) {
     return this.eventsService.cancelSignup(+id, req.user.sub);
   }
 
   @Get('user/:userId/tickets')
-  @Roles('Admin', 'Member')
   async getUserTickets(
     @Param('userId') userId: string,
     @Req() req: RequestWithUser,

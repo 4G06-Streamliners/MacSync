@@ -329,6 +329,8 @@ export class AuthService {
       });
     }
 
+    // Ensure new/onboarding users get Member role so they can sign up for events
+    await this.usersService.replaceRoles(user.id, ['Member']);
     const userWithRoles = await this.usersService.findOneWithRoles(user.id);
     const token = this.issueJwt({ sub: user.id, email: user.email });
 
