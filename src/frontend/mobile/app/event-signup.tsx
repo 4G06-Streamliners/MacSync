@@ -18,7 +18,7 @@ import {
   createCheckoutSession,
   type EventItem,
 } from "./_lib/api";
-import { useUser } from "./_context/UserContext";
+import { useAuth } from "./_context/AuthContext";
 
 type NotificationType = "success" | "error" | "info";
 
@@ -33,7 +33,7 @@ interface NotificationState {
 export default function EventSignupScreen() {
   const router = useRouter();
   const { eventId } = useLocalSearchParams();
-  const { currentUser } = useUser();
+  const { user } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [event, setEvent] = useState<EventItem | null>(null);
@@ -63,13 +63,13 @@ export default function EventSignupScreen() {
 
   useEffect(() => {
     loadEvent();
-  }, [eventId, currentUser?.id]);
+  }, [eventId, user?.id]);
 
   const loadEvent = async () => {
     try {
       const data = await getEvent(
         Number(eventId),
-        currentUser?.id,
+        user?.id,
       );
       setEvent(data);
       if (data.userTicket) {
@@ -127,7 +127,7 @@ export default function EventSignupScreen() {
   };
 
   const handleProceedToPayment = async () => {
-    if (!currentUser || !event) return;
+    if (!user || !event) return;
     if (event.requiresTableSignup && selectedTable === null) {
       showNotification("error", "Error", "Please select a table");
       return;
@@ -142,7 +142,7 @@ export default function EventSignupScreen() {
       const cancelUrlWithEvent = `${cancelUrl}${
         cancelUrl.includes("?") ? "&" : "?"
       }eventId=${encodeURIComponent(event.id)}`;
-      const result = await createCheckoutSession(event.id, currentUser.id, {
+      const result = await createCheckoutSession(event.id, {
         successUrl: successUrlWithEvent,
         cancelUrl: cancelUrlWithEvent,
         selectedTable: selectedTable ?? undefined,
@@ -188,7 +188,7 @@ export default function EventSignupScreen() {
 
   const handleCompleteSignup = async () => {
     if (!event) return;
-    if (!currentUser) {
+    if (!user) {
       showNotification(
         "error",
         "Sign in required",
@@ -203,11 +203,7 @@ export default function EventSignupScreen() {
 
     setSubmitting(true);
     try {
-      const result = await signupForEvent(
-        event.id,
-        currentUser.id,
-        selectedTable ?? undefined
-      );
+      const result = await signupForEvent(event.id, selectedTable ?? undefined);
       if (result.error) {
         showNotification(
           "error",
@@ -217,7 +213,7 @@ export default function EventSignupScreen() {
         return;
       }
       // Refetch event so UI shows "You're signed up" even if notification doesn't appear
-      const updated = await getEvent(event.id, currentUser.id);
+      const updated = await getEvent(event.id, user.id);
       setEvent(updated);
 
       const seatParts: string[] = [];

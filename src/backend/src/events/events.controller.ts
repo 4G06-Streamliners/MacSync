@@ -7,11 +7,16 @@ import {
   Body,
   Param,
   Query,
+  Req,
+  UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { EventsService } from './events.service';
 import type { NewEvent } from '../db/schema';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('events')
+@UseGuards(JwtAuthGuard)
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
@@ -44,18 +49,18 @@ export class EventsController {
   @Post(':id/signup')
   signup(
     @Param('id') id: string,
-    @Body('userId') userId: number,
+    @Req() req: any,
     @Body('selectedTable') selectedTable?: number,
   ) {
-    return this.eventsService.signup(+id, userId, selectedTable);
+    return this.eventsService.signup(+id, req.user.sub, selectedTable);
   }
 
   @Post(':id/checkout-session')
   createCheckoutSession(
     @Param('id') id: string,
+    @Req() req: any,
     @Body()
     body: {
-      userId: number;
       successUrl?: string;
       cancelUrl?: string;
       selectedTable?: number;
@@ -83,7 +88,7 @@ export class EventsController {
       'http://localhost:8081/payment-cancel';
     return this.eventsService.createCheckoutSession(
       +id,
-      body.userId,
+      req.user.sub,
       successUrl,
       cancelUrl,
       body.selectedTable, // Guaranteed table assignment, not just a preference
@@ -104,12 +109,15 @@ export class EventsController {
   }
 
   @Post(':id/cancel')
-  cancelSignup(@Param('id') id: string, @Body('userId') userId: number) {
-    return this.eventsService.cancelSignup(+id, userId);
+  cancelSignup(@Param('id') id: string, @Req() req: any) {
+    return this.eventsService.cancelSignup(+id, req.user.sub);
   }
 
   @Get('user/:userId/tickets')
-  getUserTickets(@Param('userId') userId: string) {
+  getUserTickets(@Param('userId') userId: string, @Req() req: any) {
+    if (req.user?.sub !== +userId) {
+      throw new ForbiddenException('Access denied.');
+    }
     return this.eventsService.getTicketsForUser(+userId);
   }
 }

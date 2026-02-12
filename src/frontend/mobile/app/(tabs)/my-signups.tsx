@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { getUserTickets, cancelSignup, type Ticket } from "../_lib/api";
-import { useUser } from "../_context/UserContext";
+import { useAuth } from "../_context/AuthContext";
 
 export default function MySignUpsScreen() {
-  const { currentUser, loading: userLoading } = useUser();
+  const { user, status } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -24,9 +24,9 @@ export default function MySignUpsScreen() {
   const [eventToCancel, setEventToCancel] = useState<number | null>(null);
 
   const loadTickets = async () => {
-    if (!currentUser) return;
+    if (!user) return;
     try {
-      const data = await getUserTickets(currentUser.id);
+      const data = await getUserTickets(user.id);
       setTickets(data);
     } catch (err) {
       console.error("Failed to load tickets:", err);
@@ -38,11 +38,11 @@ export default function MySignUpsScreen() {
   // Reload tickets every time this screen gets focus
   useFocusEffect(
     useCallback(() => {
-      if (currentUser) {
+      if (user) {
         setLoading(true);
         loadTickets();
       }
-    }, [currentUser])
+    }, [user])
   );
 
   const onRefresh = async () => {
@@ -52,18 +52,18 @@ export default function MySignUpsScreen() {
   };
 
   const handleCancel = async (eventId: number) => {
-    if (!currentUser) return;
+    if (!user) return;
     console.log("Cancel clicked for event:", eventId);
     setEventToCancel(eventId);
     setShowCancelModal(true);
   };
 
   const confirmCancel = async () => {
-    if (!currentUser || !eventToCancel) return;
+    if (!user || !eventToCancel) return;
     console.log("Cancelling signup...");
     setShowCancelModal(false);
     try {
-      const result = await cancelSignup(eventToCancel, currentUser.id);
+      const result = await cancelSignup(eventToCancel);
       console.log("Cancel result:", result);
       if (result.error) {
         if (Platform.OS === 'web') {
@@ -105,7 +105,7 @@ export default function MySignUpsScreen() {
     return `$${(price / 100).toFixed(2)}`;
   };
 
-  if (userLoading || loading) {
+  if (status === "loading" || loading) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7]">
         <ActivityIndicator size="large" color="#7A1F3E" />
@@ -113,11 +113,11 @@ export default function MySignUpsScreen() {
     );
   }
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7] px-6">
         <Text className="text-gray-500 text-base text-center">
-          Please select a user to view sign-ups.
+          Please sign in to view your sign-ups.
         </Text>
       </View>
     );

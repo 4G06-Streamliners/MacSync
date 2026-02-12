@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import {
   getUserTickets,
   type EventItem,
 } from "../_lib/api";
-import { useUser } from "../_context/UserContext";
+import { useAuth } from "../_context/AuthContext";
 
 function EventCard({
   event,
@@ -173,7 +173,7 @@ function EventCard({
 }
 
 export default function EventsScreen() {
-  const { currentUser, isAdmin, loading: userLoading } = useUser();
+  const { user, isAdmin, status } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -215,9 +215,9 @@ export default function EventsScreen() {
   };
 
   const loadUserTickets = async () => {
-    if (!currentUser) return;
+    if (!user) return;
     try {
-      const tickets = await getUserTickets(currentUser.id);
+      const tickets = await getUserTickets(user.id);
       setSignedUpEventIds(new Set(tickets.map((t) => t.eventId)));
     } catch (err) {
       console.error("Failed to load tickets:", err);
@@ -229,7 +229,7 @@ export default function EventsScreen() {
     useCallback(() => {
       loadEvents();
       loadUserTickets();
-    }, [currentUser])
+    }, [user])
   );
 
   const onRefresh = async () => {
@@ -251,23 +251,23 @@ export default function EventsScreen() {
   }, [events, search]);
 
   const handleSignUp = async (eventId: number) => {
-    if (!currentUser) return;
+    if (!user) return;
     router.push(`/event-signup?eventId=${eventId}`);
   };
 
   const handleCancel = async (eventId: number) => {
-    if (!currentUser) return;
+    if (!user) return;
     console.log("Cancel clicked for event:", eventId);
     setEventToCancel(eventId);
     setShowCancelModal(true);
   };
 
   const confirmCancel = async () => {
-    if (!currentUser || !eventToCancel) return;
+    if (!user || !eventToCancel) return;
     console.log("Cancelling signup...");
     setShowCancelModal(false);
     try {
-      const result = await cancelSignup(eventToCancel, currentUser.id);
+      const result = await cancelSignup(eventToCancel);
       console.log("Cancel result:", result);
       if (result.error) {
         if (Platform.OS === 'web') {
@@ -296,7 +296,7 @@ export default function EventsScreen() {
     }
   };
 
-  if (userLoading || loading) {
+  if (status === "loading" || loading) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7]">
         <ActivityIndicator size="large" color="#7A1F3E" />
@@ -342,7 +342,7 @@ export default function EventsScreen() {
             <Text className="text-base mr-2">🔍</Text>
             <TextInput
               placeholder="Search events by name..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#C7CBD1"
               value={search}
               onChangeText={setSearch}
               className="flex-1 text-sm text-gray-900"

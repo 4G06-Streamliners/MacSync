@@ -15,6 +15,9 @@ export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   name: varchar('name', { length: 255 }).notNull(),
+  firstName: varchar('first_name', { length: 255 }),
+  lastName: varchar('last_name', { length: 255 }),
+  passwordHash: varchar('password_hash', { length: 255 }),
   phoneNumber: varchar('phone_number', { length: 255 }).notNull(),
   program: varchar('program', { length: 255 }),
   isSystemAdmin: boolean('is_system_admin').default(false),
@@ -24,6 +27,19 @@ export const users = pgTable('users', {
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+// ------------------- EMAIL VERIFICATION TOKENS -------------------
+export const verificationTokens = pgTable('verification_tokens', {
+  id: serial('id').primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  codeHash: varchar('code_hash', { length: 255 }).notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type NewVerificationToken = typeof verificationTokens.$inferInsert;
 
 // ------------------- ROLES -------------------
 export const roles = pgTable('roles', {
