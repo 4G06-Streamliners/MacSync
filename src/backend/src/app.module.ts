@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { EventsModule } from './events/events.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { PaymentsModule } from './payments/payments.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PaymentsModule } from './payments/payments.module';
     EventsModule,
     WebhooksModule,
     PaymentsModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
