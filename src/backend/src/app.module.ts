@@ -7,6 +7,7 @@ import { EventsModule } from './events/events.module';
 import { AuthModule } from './auth/auth.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { PaymentsModule } from './payments/payments.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PaymentsModule } from './payments/payments.module';
     WebhooksModule,
     PaymentsModule,
     AuthModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
