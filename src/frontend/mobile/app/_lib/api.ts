@@ -274,5 +274,6 @@ export function cancelSignup(
 ): Promise<{ cancelled?: boolean; error?: string }> {
   return apiFetch(`/events/${eventId}/cancel`, {
     method: 'POST',
+    body: JSON.stringify({}),
   });
 }
