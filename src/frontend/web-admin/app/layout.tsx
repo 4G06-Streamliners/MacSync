@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import DashboardShell from "./components/DashboardShell";
 
 export const metadata: Metadata = {
   title: "Web Admin",
@@ -13,8 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen bg-gray-50">
-        {children}
+      <body className="antialiased min-h-screen">
+        <DashboardShell>{children}</DashboardShell>
       </body>
     </html>
   );

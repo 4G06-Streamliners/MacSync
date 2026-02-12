@@ -7,7 +7,18 @@ export default {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        maroon: {
+          DEFAULT: "#7A1F3E",
+          dark: "#621832",
+        },
+        gold: {
+          DEFAULT: "#D4A843",
+        },
+        "app-gray": "#F5F5F7",
+      },
+    },
   },
   plugins: [],
 } satisfies Config;
