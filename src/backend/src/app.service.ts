@@ -69,16 +69,23 @@ export class AppService {
    */
   async getAllTables() {
     const db = this.dbService.db;
-    const [usersRows, rolesRows, userRolesRows, eventsRows, ticketsRows, tableSeatsRows, busSeatsRows] =
-      await Promise.all([
-        db.select().from(users),
-        db.select().from(roles),
-        db.select().from(userRoles),
-        db.select().from(events),
-        db.select().from(tickets),
-        db.select().from(tableSeats),
-        db.select().from(busSeats),
-      ]);
+    const [
+      usersRows,
+      rolesRows,
+      userRolesRows,
+      eventsRows,
+      ticketsRows,
+      tableSeatsRows,
+      busSeatsRows,
+    ] = await Promise.all([
+      db.select().from(users),
+      db.select().from(roles),
+      db.select().from(userRoles),
+      db.select().from(events),
+      db.select().from(tickets),
+      db.select().from(tableSeats),
+      db.select().from(busSeats),
+    ]);
     return {
       users: usersRows,
       roles: rolesRows,
@@ -95,7 +102,7 @@ export class AppService {
     try {
       await this.dbService.db.execute('SELECT 1');
       dbStatus = 'connected';
-    } catch (error) {
+    } catch {
       dbStatus = 'error';
     }
 
