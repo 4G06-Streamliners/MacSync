@@ -11,6 +11,9 @@ import {
   tickets,
   tableSeats,
   busSeats,
+  type Ticket,
+  type TableSeat,
+  type BusSeat,
 } from './schema';
 import { eq } from 'drizzle-orm';
 
@@ -151,52 +154,117 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
   }
   if (busSeatRows.length > 0) await db.insert(busSeats).values(busSeatRows);
 
-  const [ticket1, ticket2, ticket3] = await db
-    .insert(tickets)
-    .values([
-      { userId: user1.id, eventId: event1.id },
-      { userId: user2.id, eventId: event1.id },
-      { userId: user3.id, eventId: event2.id },
-    ])
-    .returning();
+  // Check if tickets already exist
+  const existingTickets = await db.select().from(tickets).limit(1);
+  let ticket1: Ticket | undefined;
+  let ticket2: Ticket | undefined;
+  let ticket3: Ticket | undefined;
+  
+  if (existingTickets.length > 0) {
+    // Update existing tickets with QR codes
+    const allTickets: Ticket[] = await db.select().from(tickets);
+    for (const ticket of allTickets) {
+      const qrData = `TICKET:${ticket.userId}:${ticket.eventId}:${ticket.id}:${Date.now()}`;
+      await db
+        .update(tickets)
+        .set({ qrCodeData: qrData, updatedAt: new Date() })
+        .where(eq(tickets.id, ticket.id));
+    }
+    // Get first 3 for seat assignment
+    ticket1 = allTickets[0];
+    ticket2 = allTickets[1];
+    ticket3 = allTickets[2];
+  } else {
+    // Create new tickets with QR codes
+    const timestamp = Date.now();
+    const [t1, t2, t3] = await db
+      .insert(tickets)
+      .values([
+        { 
+          userId: user1.id, 
+          eventId: event1.id,
+          qrCodeData: `TICKET:${user1.id}:${event1.id}:temp1:${timestamp}`
+        },
+        { 
+          userId: user2.id, 
+          eventId: event1.id,
+          qrCodeData: `TICKET:${user2.id}:${event1.id}:temp2:${timestamp}`
+        },
+        { 
+          userId: user3.id, 
+          eventId: event2.id,
+          qrCodeData: `TICKET:${user3.id}:${event2.id}:temp3:${timestamp}`
+        },
+      ])
+      .returning();
+    
+    // Update with actual ticket IDs
+    if (t1) {
+      await db
+        .update(tickets)
+        .set({ qrCodeData: `TICKET:${user1.id}:${event1.id}:${t1.id}:${timestamp}`, updatedAt: new Date() })
+        .where(eq(tickets.id, t1.id));
+    }
+    if (t2) {
+      await db
+        .update(tickets)
+        .set({ qrCodeData: `TICKET:${user2.id}:${event1.id}:${t2.id}:${timestamp}`, updatedAt: new Date() })
+        .where(eq(tickets.id, t2.id));
+    }
+    if (t3) {
+      await db
+        .update(tickets)
+        .set({ qrCodeData: `TICKET:${user3.id}:${event2.id}:${t3.id}:${timestamp}`, updatedAt: new Date() })
+        .where(eq(tickets.id, t3.id));
+    }
+    
+    ticket1 = t1;
+    ticket2 = t2;
+    ticket3 = t3;
+  }
+  
   if (!ticket1 || !ticket2 || !ticket3) throw new Error('Ticket insert failed');
 
-  const tableSeatToAssign = await db
-    .select()
-    .from(tableSeats)
-    .where(eq(tableSeats.eventId, event1.id))
-    .limit(1);
-  if (tableSeatToAssign[0]) {
-    await db
-      .update(tableSeats)
-      .set({ ticketId: ticket1.id, updatedAt: new Date() })
-      .where(eq(tableSeats.id, tableSeatToAssign[0].id));
-    await db
-      .update(tickets)
-      .set({
-        tableSeat: `Table ${tableSeatToAssign[0].tableNumber}, Seat ${tableSeatToAssign[0].seatNumber}`,
-        updatedAt: new Date(),
-      })
-      .where(eq(tickets.id, ticket1.id));
-  }
+  if (ticket1 && ticket2) {
+    const tableSeatResults: TableSeat[] = await db
+      .select()
+      .from(tableSeats)
+      .where(eq(tableSeats.eventId, event1.id))
+      .limit(1);
+    const tableSeat: TableSeat | undefined = tableSeatResults[0];
+    if (tableSeat) {
+      await db
+        .update(tableSeats)
+        .set({ ticketId: ticket1.id, updatedAt: new Date() })
+        .where(eq(tableSeats.id, tableSeat.id));
+      await db
+        .update(tickets)
+        .set({
+          tableSeat: `Table ${tableSeat.tableNumber}, Seat ${tableSeat.seatNumber}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tickets.id, ticket1.id));
+    }
 
-  const firstBusSeat = await db
-    .select()
-    .from(busSeats)
-    .where(eq(busSeats.eventId, event1.id))
-    .limit(1);
-  if (firstBusSeat[0]) {
-    await db
-      .update(busSeats)
-      .set({ ticketId: ticket2.id, updatedAt: new Date() })
-      .where(eq(busSeats.id, firstBusSeat[0].id));
-    await db
-      .update(tickets)
-      .set({
-        busSeat: `Bus ${firstBusSeat[0].busNumber} - Seat ${firstBusSeat[0].seatNumber}`,
-        updatedAt: new Date(),
-      })
-      .where(eq(tickets.id, ticket2.id));
+    const busSeatResults: BusSeat[] = await db
+      .select()
+      .from(busSeats)
+      .where(eq(busSeats.eventId, event1.id))
+      .limit(1);
+    const busSeat: BusSeat | undefined = busSeatResults[0];
+    if (busSeat) {
+      await db
+        .update(busSeats)
+        .set({ ticketId: ticket2.id, updatedAt: new Date() })
+        .where(eq(busSeats.id, busSeat.id));
+      await db
+        .update(tickets)
+        .set({
+          busSeat: `Bus ${busSeat.busNumber} - Seat ${busSeat.seatNumber}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tickets.id, ticket2.id));
+    }
   }
 
   return true;

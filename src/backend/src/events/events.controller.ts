@@ -17,6 +17,10 @@ import type { NewEvent } from '../db/schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 
+interface RequestWithUser extends Request {
+  user: { sub: number; email: string };
+}
+
 @Controller('events')
 @UseGuards(JwtAuthGuard)
 export class EventsController {
@@ -60,7 +64,7 @@ export class EventsController {
   @Roles('Member', 'Admin')
   signup(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Body('selectedTable') selectedTable?: number,
   ) {
     return this.eventsService.signup(+id, req.user.sub, selectedTable);
@@ -70,7 +74,7 @@ export class EventsController {
   @Roles('Member', 'Admin')
   createCheckoutSession(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Body()
     body: {
       successUrl?: string;
@@ -123,7 +127,7 @@ export class EventsController {
 
   @Post(':id/cancel')
   @Roles('Member', 'Admin')
-  cancelSignup(@Param('id') id: string, @Req() req: any) {
+  cancelSignup(@Param('id') id: string, @Req() req: RequestWithUser) {
     return this.eventsService.cancelSignup(+id, req.user.sub);
   }
 
@@ -131,12 +135,9 @@ export class EventsController {
   @Roles('Admin', 'Member')
   async getUserTickets(
     @Param('userId') userId: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ) {
-    const currentUserId = req.user?.sub;
-    if (!currentUserId) {
-      throw new ForbiddenException('Access denied.');
-    }
+    const currentUserId = req.user.sub;
     // Allow: self-access (user fetching own tickets) OR admin
     if (currentUserId !== +userId) {
       const dbUser = await this.usersService.findOneWithRoles(currentUserId);

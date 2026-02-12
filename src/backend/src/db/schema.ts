@@ -106,6 +106,7 @@ export const tickets = pgTable('tickets', {
   checkedIn: boolean('checked_in').default(false),
   busSeat: varchar('bus_seat', { length: 50 }), // e.g. "Bus 1 - Seat 5" (display)
   tableSeat: varchar('table_seat', { length: 50 }), // e.g. "Table 5, Seat 4" (display)
+  qrCodeData: varchar('qr_code_data', { length: 255 }), // QR code data for ticket verification
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

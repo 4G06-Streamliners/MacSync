@@ -18,6 +18,10 @@ import { Roles } from '../auth/roles.decorator';
 
 type UpdateUserBody = Partial<NewUser> & { password?: string };
 
+interface RequestWithUser extends Request {
+  user: { sub: number; email: string };
+}
+
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
@@ -32,8 +36,6 @@ export class UsersController {
   @Get(':id')
   @Roles('Admin')
   findOne(@Param('id') id: string) {
-    // Admin panel: any authenticated admin can view user profiles.
-    // Fine-grained per-user access control will be added later if needed.
     return this.usersService.findOneWithRoles(+id);
   }
 
@@ -48,18 +50,14 @@ export class UsersController {
   async update(
     @Param('id') id: string,
     @Body() body: UpdateUserBody,
-    @Req() req: { user?: { sub?: number } },
+    @Req() req: RequestWithUser,
   ) {
     const user = { ...body };
     if (user.isSystemAdmin !== undefined) {
       if (!user.password || typeof user.password !== 'string') {
         throw new BadRequestException('Password is required to change admin role.');
       }
-      const currentUserId = req.user?.sub;
-      if (!currentUserId) {
-        throw new UnauthorizedException('Not authenticated.');
-      }
-      const valid = await this.usersService.verifyUserPassword(currentUserId, user.password);
+      const valid = await this.usersService.verifyUserPassword(req.user.sub, user.password);
       if (!valid) {
         throw new UnauthorizedException('Invalid password.');
       }
@@ -84,8 +82,6 @@ export class UsersController {
   @Delete(':id')
   @Roles('Admin')
   delete(@Param('id') id: string) {
-    // Admin panel: any authenticated admin can delete user profiles.
-    // Fine-grained per-user access control will be added later if needed.
     return this.usersService.delete(+id);
   }
 }

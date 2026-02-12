@@ -86,9 +86,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="my-signups"
+        name="my-tickets"
         options={{
-          title: "My Sign-Ups",
+          title: "My Tickets",
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>🎟️</Text>
           ),

@@ -35,6 +35,13 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="ticket-detail"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="event-created"
           options={{
             headerShown: false,
