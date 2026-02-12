@@ -15,6 +15,10 @@ import { EventsService } from './events.service';
 import type { NewEvent } from '../db/schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+interface RequestWithUser extends Request {
+  user: { sub: number; email: string };
+}
+
 @Controller('events')
 @UseGuards(JwtAuthGuard)
 export class EventsController {
@@ -49,7 +53,7 @@ export class EventsController {
   @Post(':id/signup')
   signup(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Body('selectedTable') selectedTable?: number,
   ) {
     return this.eventsService.signup(+id, req.user.sub, selectedTable);
@@ -58,7 +62,7 @@ export class EventsController {
   @Post(':id/checkout-session')
   createCheckoutSession(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
     @Body()
     body: {
       successUrl?: string;
@@ -109,13 +113,13 @@ export class EventsController {
   }
 
   @Post(':id/cancel')
-  cancelSignup(@Param('id') id: string, @Req() req: any) {
+  cancelSignup(@Param('id') id: string, @Req() req: RequestWithUser) {
     return this.eventsService.cancelSignup(+id, req.user.sub);
   }
 
   @Get('user/:userId/tickets')
-  getUserTickets(@Param('userId') userId: string, @Req() req: any) {
-    if (req.user?.sub !== +userId) {
+  getUserTickets(@Param('userId') userId: string, @Req() req: RequestWithUser) {
+    if (req.user.sub !== +userId) {
       throw new ForbiddenException('Access denied.');
     }
     return this.eventsService.getTicketsForUser(+userId);

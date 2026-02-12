@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PaymentsService } from '../payments/payments.service';
 import {
@@ -22,6 +23,24 @@ export class EventsService {
     private readonly dbService: DatabaseService,
     private readonly paymentsService: PaymentsService,
   ) {}
+
+  /**
+   * Generate secure QR code data for a ticket
+   */
+  private generateQRCodeData(
+    ticketId: number,
+    userId: number,
+    eventId: number,
+  ): string {
+    const data = `${ticketId}:${userId}:${eventId}`;
+    const secret =
+      process.env.QR_SECRET || 'default-secret-change-in-production';
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(data)
+      .digest('hex');
+    return `${data}:${signature}`;
+  }
 
   async findAll() {
     const rows = await this.dbService.db
@@ -71,7 +90,7 @@ export class EventsService {
         busCapacity: events.busCapacity,
         createdAt: events.createdAt,
         updatedAt: events.updatedAt,
-        registeredCount: sql<number>`(SELECT COUNT(*) FROM tickets WHERE tickets.event_id = ${events.id})::int`,
+        registeredCount: sql<number>`(SELECT COUNT(*)::int FROM tickets WHERE tickets.event_id = events.id)`,
       })
       .from(events)
       .where(eq(events.id, id));
@@ -206,6 +225,7 @@ export class EventsService {
         checkedIn: tickets.checkedIn,
         busSeat: tickets.busSeat,
         tableSeat: tickets.tableSeat,
+        qrCodeData: tickets.qrCodeData,
         createdAt: tickets.createdAt,
         eventName: events.name,
         eventDate: events.date,
@@ -398,6 +418,13 @@ export class EventsService {
       .returning();
     const ticket = result[0];
 
+    // Generate and update QR code data
+    const qrCodeData = this.generateQRCodeData(ticket.id, userId, eventId);
+    await this.dbService.db
+      .update(tickets)
+      .set({ qrCodeData, updatedAt: new Date() })
+      .where(eq(tickets.id, ticket.id));
+
     let assignedTableSeat: string | null = null;
     let assignedBusSeat: string | null = null;
 
@@ -547,6 +574,13 @@ export class EventsService {
       .values({ userId, eventId })
       .returning();
     const ticket = result[0];
+
+    // Generate and update QR code data
+    const qrCodeData = this.generateQRCodeData(ticket.id, userId, eventId);
+    await this.dbService.db
+      .update(tickets)
+      .set({ qrCodeData, updatedAt: new Date() })
+      .where(eq(tickets.id, ticket.id));
 
     let assignedTableSeat: string | null = null;
     let assignedBusSeat: string | null = null;

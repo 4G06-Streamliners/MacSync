@@ -142,14 +142,31 @@ function EventCard({
 
         {/* Action button */}
         {isSignedUp ? (
-          <Pressable
-            onPress={() => onCancel(event.id)}
-            className="w-full py-3 rounded-xl border border-red-200 bg-red-50 active:bg-red-100"
-          >
-            <Text className="text-center text-sm font-semibold text-red-600">
-              Cancel Sign-Up
-            </Text>
-          </Pressable>
+          event.price === 0 ? (
+            <Pressable
+              onPress={() => onCancel(event.id)}
+              className="w-full py-3 rounded-xl border border-red-200 bg-red-50 active:bg-red-100"
+            >
+              <Text className="text-center text-sm font-semibold text-red-600">
+                Cancel Sign-Up
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => {
+                if (Platform.OS === 'web') {
+                  alert('Refund request feature coming soon');
+                } else {
+                  Alert.alert('Coming Soon', 'Refund request feature will be available soon');
+                }
+              }}
+              className="w-full py-3 rounded-xl border border-yellow-200 bg-yellow-50 active:bg-yellow-100"
+            >
+              <Text className="text-center text-sm font-semibold text-yellow-700">
+                Request Refund
+              </Text>
+            </Pressable>
+          )
         ) : (
           <Pressable
             onPress={() => onSignUp(event.id)}
@@ -280,9 +297,9 @@ export default function EventsScreen() {
       await loadEvents();
       await loadUserTickets();
       if (Platform.OS === 'web') {
-        alert("Sign-up cancelled successfully.");
+        alert("Ticket cancelled successfully.");
       } else {
-        Alert.alert("Success", "Sign-up cancelled successfully.");
+        Alert.alert("Success", "Ticket cancelled successfully.");
       }
     } catch (err: any) {
       console.error("Cancel error:", err);
@@ -394,10 +411,10 @@ export default function EventsScreen() {
         <View className="flex-1 justify-center items-center bg-black/50 px-6">
           <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
             <Text className="text-xl font-bold text-gray-900 mb-2">
-              Cancel Sign-Up
+              Cancel Ticket
             </Text>
             <Text className="text-sm text-gray-600 mb-6">
-              Are you sure you want to cancel this sign-up?
+              Are you sure you want to cancel this ticket?
             </Text>
             <View className="flex-row gap-3">
               <Pressable

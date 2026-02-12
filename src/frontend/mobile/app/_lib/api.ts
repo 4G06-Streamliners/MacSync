@@ -105,7 +105,7 @@ export function registerProfile(data: {
   program: string;
   password: string;
   confirmPassword?: string;
-}) {
+}): Promise<{ token: string; user: User }> {
   return apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -217,6 +217,7 @@ export interface Ticket {
   checkedIn: boolean;
   busSeat: string | null;
   tableSeat: string | null;
+  qrCodeData: string | null;
   createdAt: string;
   eventName: string;
   eventDate: string;
@@ -274,5 +275,6 @@ export function cancelSignup(
 ): Promise<{ cancelled?: boolean; error?: string }> {
   return apiFetch(`/events/${eventId}/cancel`, {
     method: 'POST',
+    body: JSON.stringify({}),
   });
 }

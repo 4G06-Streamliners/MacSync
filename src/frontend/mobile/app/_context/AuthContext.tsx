@@ -23,7 +23,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   requestCode: (email: string) => Promise<void>;
   requestOtp: (email: string) => Promise<void>;
-  confirmCode: (email: string, code: string) => Promise<'needsRegistration'>;
+  confirmCode: (email: string, code: string) => Promise<'needsRegistration' | 'authenticated'>;
   completeRegistration: (data: {
     firstName: string;
     lastName: string;
@@ -114,8 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await verifyOtp(email, code);
     await setAuthToken(result.token);
     setPendingEmail(email);
-    setStatus('needsRegistration');
-    return 'needsRegistration';
+    if (result.needsRegistration) {
+      setUser(result.user ?? null);
+      setStatus('needsRegistration');
+      return 'needsRegistration';
+    }
+    setUser(result.user ?? null);
+    setStatus('authenticated');
+    return 'authenticated';
   };
 
   const completeRegistration = async (data: {

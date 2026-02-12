@@ -5,12 +5,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { verify } from 'jsonwebtoken';
-import type { OnboardingJwtPayload } from './auth.types';
+
+interface RequestWithHeaders {
+  headers?: { authorization?: string };
+  onboardingEmail?: string;
+}
 
 @Injectable()
 export class OnboardingGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithHeaders>();
     const header = request.headers?.authorization ?? '';
     const token = typeof header === 'string' && header.startsWith('Bearer ')
       ? header.slice(7).trim()
@@ -40,7 +44,7 @@ export class OnboardingGuard implements CanActivate {
 
       request.onboardingEmail = email;
       return true;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid or expired onboarding token.');
     }
   }

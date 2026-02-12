@@ -290,3 +290,5 @@ teamd.config.*.map
 teamd.config.d.mts
 *.gen.ts
 .tanstack/
+src/mobile/ios/Pods/hermes-engine/destroot/Library/Frameworks/macosx/hermes.framework/Versions/Current
+src/mobile/ios/Pods/hermes-engine/destroot/Library/Frameworks/universal/hermes.xcframework/ios-arm64_x86_64-maccatalyst/hermes.framework/Versions/Current
