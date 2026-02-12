@@ -185,9 +185,9 @@ export default function MyTickets() {
                     {ticket.eventImageUrl ? (
                       <Image
                         source={{ uri: ticket.eventImageUrl }}
-                        className="w-full h-full"
+                        className="w-full h-48"
                         resizeMode="cover"
-                        style={{ minHeight: 120 }}
+                        style={{ minHeight: 190 }}
                       />
                     ) : (
                       <View
