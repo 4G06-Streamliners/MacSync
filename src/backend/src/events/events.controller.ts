@@ -21,10 +21,7 @@ export class EventsController {
   }
 
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-    @Query('userId') userId?: string,
-  ) {
+  findOne(@Param('id') id: string, @Query('userId') userId?: string) {
     const uid = userId != null && userId !== '' ? +userId : undefined;
     return this.eventsService.findOne(+id, uid);
   }

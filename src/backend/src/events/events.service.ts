@@ -10,6 +10,7 @@ import {
 } from '../db/schema';
 import type { NewEvent } from '../db/schema';
 import { eq, sql, and } from 'drizzle-orm';
+import type { SeedDb } from '../db/seed-data';
 import {
   createTableSeatsForEvent,
   createBusSeatsForEvent,
@@ -21,7 +22,6 @@ export class EventsService {
     private readonly dbService: DatabaseService,
     private readonly paymentsService: PaymentsService,
   ) {}
-
 
   async findAll() {
     const rows = await this.dbService.db
@@ -76,11 +76,13 @@ export class EventsService {
       .from(events)
       .where(eq(events.id, id));
 
-    let row = rows[0] ?? null;
+    const row = rows[0] ?? null;
     if (!row) return null;
 
-    let userTicket: { tableSeat: string | null; busSeat: string | null } | null =
-      null;
+    let userTicket: {
+      tableSeat: string | null;
+      busSeat: string | null;
+    } | null = null;
     if (userId != null) {
       const ticketRows = await this.dbService.db
         .select({
@@ -88,12 +90,7 @@ export class EventsService {
           busSeat: tickets.busSeat,
         })
         .from(tickets)
-        .where(
-          and(
-            eq(tickets.eventId, id),
-            eq(tickets.userId, userId),
-          ),
-        )
+        .where(and(eq(tickets.eventId, id), eq(tickets.userId, userId)))
         .limit(1);
       if (ticketRows[0]) {
         userTicket = {
@@ -106,12 +103,11 @@ export class EventsService {
     return { ...row, userTicket };
   }
 
-
   async create(event: NewEvent) {
     // Ensure date is a Date object (JSON sends it as a string)
     const values = {
       ...event,
-      date: new Date(event.date as any),
+      date: new Date(event.date as string | Date),
     };
 
     const result = await this.dbService.db
@@ -130,7 +126,7 @@ export class EventsService {
       created.seatsPerTable
     ) {
       await createTableSeatsForEvent(
-        this.dbService.db as any,
+        this.dbService.db as SeedDb,
         created.id,
         created.tableCount,
         created.seatsPerTable,
@@ -138,13 +134,9 @@ export class EventsService {
     }
 
     // Auto-create bus seats if needed
-    if (
-      created.requiresBusSignup &&
-      created.busCount &&
-      created.busCapacity
-    ) {
+    if (created.requiresBusSignup && created.busCount && created.busCapacity) {
       await createBusSeatsForEvent(
-        this.dbService.db as any,
+        this.dbService.db as SeedDb,
         created.id,
         created.busCount,
         created.busCapacity,
@@ -201,9 +193,7 @@ export class EventsService {
       .where(eq(tableSeats.ticketId, ticket.id));
 
     // Delete ticket
-    await this.dbService.db
-      .delete(tickets)
-      .where(eq(tickets.id, ticket.id));
+    await this.dbService.db.delete(tickets).where(eq(tickets.id, ticket.id));
 
     return { cancelled: true };
   }
@@ -286,8 +276,7 @@ export class EventsService {
 
     const reservationMinutes = 5;
     const expiresAt = new Date(now.getTime() + reservationMinutes * 60 * 1000);
-    const notReservedTable =
-      sql`${tableSeats.id} NOT IN (SELECT table_seat_id FROM seat_reservations WHERE table_seat_id IS NOT NULL AND expires_at > ${now})`;
+    const notReservedTable = sql`${tableSeats.id} NOT IN (SELECT table_seat_id FROM seat_reservations WHERE table_seat_id IS NOT NULL AND expires_at > ${now})`;
 
     let reservedTableSeatId: number | null = null;
     if (ev.requiresTableSignup) {
@@ -320,8 +309,7 @@ export class EventsService {
 
     let reservedBusSeatId: number | null = null;
     if (ev.requiresBusSignup) {
-      const notReservedBus =
-        sql`${busSeats.id} NOT IN (SELECT bus_seat_id FROM seat_reservations WHERE bus_seat_id IS NOT NULL AND expires_at > ${now})`;
+      const notReservedBus = sql`${busSeats.id} NOT IN (SELECT bus_seat_id FROM seat_reservations WHERE bus_seat_id IS NOT NULL AND expires_at > ${now})`;
       const busAvailable = await this.dbService.db
         .select({ id: busSeats.id })
         .from(busSeats)

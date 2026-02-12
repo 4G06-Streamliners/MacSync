@@ -84,9 +84,13 @@ export class PaymentsService {
       });
 
       return { url: session.url || undefined };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Stripe checkout session creation error:', err);
-      return { error: err.message || 'Failed to create checkout session' };
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to create checkout session';
+      return { error: message };
     }
   }
 
@@ -105,11 +109,14 @@ export class PaymentsService {
         session.payment_intent as string,
         { expand: ['charges'] },
       );
-      const charge = (paymentIntent as any).charges?.data?.[0];
+      const paymentIntentWithCharges = paymentIntent as Stripe.PaymentIntent & {
+        charges?: { data?: Array<{ id?: string }> };
+      };
+      const charge = paymentIntentWithCharges.charges?.data?.[0];
 
       return {
         paymentIntentId: paymentIntent.id,
-        chargeId: charge?.id || null,
+        chargeId: charge?.id ?? null,
         amountPaid: session.amount_total || 0,
         currency: session.currency || 'usd',
       };
@@ -230,9 +237,11 @@ export class PaymentsService {
         .where(eq(payments.id, paymentId));
 
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Refund error:', err);
-      return { error: err.message || 'Failed to process refund' };
+      const message =
+        err instanceof Error ? err.message : 'Failed to process refund';
+      return { error: message };
     }
   }
 

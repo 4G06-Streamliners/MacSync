@@ -1,0 +1,9 @@
+{
+  "name": "macsync-root-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root-level dummy tests",
+  "scripts": {
+    "test": "node dummy.test.js"
+  }
+}

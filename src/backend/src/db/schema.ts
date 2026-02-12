@@ -173,7 +173,9 @@ export type NewBusSeat = typeof busSeats.$inferInsert;
 // ------------------- SEAT RESERVATIONS (hold seat during Stripe checkout; expire after 5 min or on payment/cancel) -------------------
 export const seatReservations = pgTable('seat_reservations', {
   id: serial('id').primaryKey(),
-  stripeSessionId: varchar('stripe_session_id', { length: 255 }).notNull().unique(),
+  stripeSessionId: varchar('stripe_session_id', { length: 255 })
+    .notNull()
+    .unique(),
   eventId: integer('event_id')
     .notNull()
     .references(() => events.id, { onDelete: 'cascade' }),

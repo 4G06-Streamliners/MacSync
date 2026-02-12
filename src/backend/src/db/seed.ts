@@ -19,7 +19,9 @@ async function main() {
     console.log('  ⏭️  Database already has data. Skipping.');
   } else {
     console.log('  ✓ Roles, users, user_roles');
-    console.log('  ✓ Events with table_count, seats_per_table, bus_count, bus_capacity');
+    console.log(
+      '  ✓ Events with table_count, seats_per_table, bus_count, bus_capacity',
+    );
     console.log('  ✓ Table seats and bus seats auto-generated');
     console.log('  ✓ Sample tickets and seat assignments');
     console.log('✅ Seed completed.');
@@ -27,10 +29,17 @@ async function main() {
   await pool.end();
 }
 
-main().catch((err) => {
-  const cause = err?.cause ?? err;
-  const msg = String(cause?.message ?? err?.message ?? err);
-  const code = cause?.code ?? err?.code;
+main().catch((err: unknown) => {
+  const msg =
+    err instanceof Error
+      ? err.message
+      : typeof err === 'object' && err !== null && 'message' in err
+        ? String((err as { message: unknown }).message)
+        : String(err);
+  const code =
+    typeof err === 'object' && err !== null && 'code' in err
+      ? (err as { code: string }).code
+      : undefined;
   if (code === '42P01' || /relation .* does not exist/i.test(msg)) {
     console.error('❌ Seed failed: Database tables do not exist.');
     console.error('');

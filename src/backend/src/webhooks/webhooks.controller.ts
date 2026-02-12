@@ -32,7 +32,9 @@ export class WebhooksController {
   ) {
     const rawBody = req.rawBody;
     if (!rawBody) {
-      throw new BadRequestException('Missing raw body for webhook verification');
+      throw new BadRequestException(
+        'Missing raw body for webhook verification',
+      );
     }
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret || !this.stripe) {
@@ -49,12 +51,15 @@ export class WebhooksController {
         signature,
         webhookSecret,
       );
-    } catch (err: any) {
-      throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw new BadRequestException(
+        `Webhook signature verification failed: ${message}`,
+      );
     }
 
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object;
       const sessionId = session.id;
       const eventId = session.metadata?.eventId;
       const userId = session.metadata?.userId;
@@ -65,21 +70,23 @@ export class WebhooksController {
       }
 
       // Retrieve payment details using PaymentsService
-      const paymentData = await this.paymentsService.retrievePaymentDetails(
-        session,
-      );
+      const paymentData =
+        await this.paymentsService.retrievePaymentDetails(session);
 
       const result = await this.eventsService.completeSignupFromReservation(
         sessionId,
         paymentData || undefined,
       );
       if (result.error && result.error !== 'Already signed up for this event') {
-        console.error('Stripe webhook: completeSignupFromReservation failed', result.error);
+        console.error(
+          'Stripe webhook: completeSignupFromReservation failed',
+          result.error,
+        );
       }
     }
 
     if (event.type === 'checkout.session.expired') {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object;
       await this.eventsService.releaseReservation(session.id);
     }
 
