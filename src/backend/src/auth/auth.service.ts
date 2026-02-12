@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { createHash, randomInt } from 'crypto';
+import bcrypt from 'bcryptjs';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const nodemailer = require('nodemailer');
 type Transporter = { sendMail: (options: any) => Promise<any> };
@@ -18,6 +19,7 @@ import type { JwtPayload, OnboardingJwtPayload } from './auth.types';
 const EMAIL_DOMAIN = 'mcmaster.ca';
 const DEFAULT_CODE_EXPIRY_MIN = 10;
 const DEFAULT_JWT_EXPIRES_IN_SECONDS = 60 * 60;
+const DEFAULT_PASSWORD_MIN_LENGTH = 8;
 
 @Injectable()
 export class AuthService {
@@ -110,13 +112,19 @@ export class AuthService {
     return value as SignOptions['expiresIn'];
   }
 
+  private getSaltRounds() {
+    const parsed = Number(process.env.BCRYPT_SALT_ROUNDS);
+    return Number.isFinite(parsed) ? parsed : 10;
+  }
+
   private isProfileComplete(user: User) {
     const hasName =
       (user.firstName?.trim() && user.lastName?.trim()) || user.name?.trim();
     return Boolean(
       hasName &&
         user.phoneNumber?.trim() &&
-        user.program?.trim(),
+        user.program?.trim() &&
+        user.passwordHash?.trim(),
     );
   }
 
@@ -126,12 +134,33 @@ export class AuthService {
   }
 
   async requestVerificationCode(rawEmail: string) {
-    // M8: login(credentials) -> begin passwordless verification sequence.
+    // Legacy OTP request (used by some clients)
+    return this.requestOtp(rawEmail);
+  }
+
+  async checkEmail(rawEmail: string) {
     if (!rawEmail) {
       throw new BadRequestException('Email is required.');
     }
     const email = this.normalizeEmail(rawEmail);
     this.assertMcMasterEmail(email);
+
+    const user = await this.usersService.findByEmail(email);
+    return { isRegistered: Boolean(user?.passwordHash) };
+  }
+
+  async requestOtp(rawEmail: string) {
+    // M8: login(credentials) -> begin OTP sequence for new users.
+    if (!rawEmail) {
+      throw new BadRequestException('Email is required.');
+    }
+    const email = this.normalizeEmail(rawEmail);
+    this.assertMcMasterEmail(email);
+
+    const existing = await this.usersService.findByEmail(email);
+    if (existing?.passwordHash) {
+      throw new BadRequestException('User already registered.');
+    }
 
     const code = this.generateCode();
     const codeHash = this.hashCode(code);
@@ -151,12 +180,22 @@ export class AuthService {
   }
 
   async verifyCode(rawEmail: string, code: string) {
-    // M8: login(credentials) -> return AuthToken after verification succeeds.
+    // Legacy OTP verify (used by some clients)
+    return this.verifyOtp(rawEmail, code);
+  }
+
+  async verifyOtp(rawEmail: string, code: string) {
+    // M8: login(credentials) -> return onboarding token after OTP succeeds.
     if (!rawEmail || !code) {
       throw new BadRequestException('Email and code are required.');
     }
     const email = this.normalizeEmail(rawEmail);
     this.assertMcMasterEmail(email);
+
+    const existing = await this.usersService.findByEmail(email);
+    if (existing?.passwordHash) {
+      throw new BadRequestException('User already registered.');
+    }
 
     const records = await this.dbService.db
       .select()
@@ -186,28 +225,23 @@ export class AuthService {
       .set({ usedAt: new Date() })
       .where(eq(verificationTokens.id, record.id));
 
-    const user = await this.usersService.findByEmailWithRoles(email);
-
-    if (!user || !this.isProfileComplete(user)) {
-      const token = this.issueJwt({ email, onboarding: true });
-      return {
-        token,
-        needsRegistration: true,
-        user: user ?? null,
-      };
-    }
-
-    const token = this.issueJwt({ sub: user.id, email: user.email });
+    const token = this.issueJwt({ email, onboarding: true });
     return {
       token,
-      needsRegistration: false,
-      user,
+      needsRegistration: true,
     };
   }
 
   async registerUser(
     email: string,
-    data: { firstName: string; lastName: string; phone: string; program: string },
+    data: {
+      firstName: string;
+      lastName: string;
+      phone: string;
+      program: string;
+      password: string;
+      confirmPassword?: string;
+    },
   ) {
     // One-time onboarding for newly verified users.
     const safeData = data ?? {
@@ -215,6 +249,7 @@ export class AuthService {
       lastName: '',
       phone: '',
       program: '',
+      password: '',
     };
     if (!safeData.firstName || !safeData.lastName) {
       throw new BadRequestException('First name and last name are required.');
@@ -228,9 +263,9 @@ export class AuthService {
     const program = safeData.program.trim();
     const phone = safeData.phone.trim();
 
-    if (!/^[\p{L}\s'-]+$/u.test(firstName) || !/^[\p{L}\s'-]+$/u.test(lastName)) {
+    if (!/^[A-Za-z-]+$/.test(firstName) || !/^[A-Za-z-]+$/.test(lastName)) {
       throw new BadRequestException(
-        'Name must contain only letters, spaces, hyphens, and apostrophes.',
+        'Name must contain only letters and hyphens.',
       );
     }
 
@@ -245,10 +280,33 @@ export class AuthService {
       throw new BadRequestException('Program is required.');
     }
 
+    if (!safeData.password) {
+      throw new BadRequestException('Password is required.');
+    }
+    if (
+      safeData.confirmPassword != null &&
+      safeData.password !== safeData.confirmPassword
+    ) {
+      throw new BadRequestException('Passwords do not match.');
+    }
+    const password = safeData.password.trim();
+    if (
+      password.length < DEFAULT_PASSWORD_MIN_LENGTH ||
+      !/[A-Z]/.test(password) ||
+      !/[a-z]/.test(password) ||
+      !/\d/.test(password)
+    ) {
+      throw new BadRequestException(
+        'Password must be at least 8 characters and include upper, lower, and number.',
+      );
+    }
+
     const existing = await this.usersService.findByEmail(email);
-    if (existing && this.isProfileComplete(existing)) {
+    if (existing?.passwordHash) {
       throw new BadRequestException('Profile is already complete.');
     }
+
+    const passwordHash = await bcrypt.hash(password, this.getSaltRounds());
 
     let user: User;
     if (existing) {
@@ -256,6 +314,7 @@ export class AuthService {
         name,
         firstName,
         lastName,
+        passwordHash,
         phoneNumber: normalizedPhone,
         program,
       });
@@ -265,6 +324,7 @@ export class AuthService {
         name,
         firstName,
         lastName,
+        passwordHash,
         phoneNumber: normalizedPhone,
         program,
       });
@@ -277,6 +337,28 @@ export class AuthService {
       token,
       user: userWithRoles ?? user,
     };
+  }
+
+  async loginWithPassword(rawEmail: string, password: string) {
+    if (!rawEmail || !password) {
+      throw new BadRequestException('Email and password are required.');
+    }
+    const email = this.normalizeEmail(rawEmail);
+    this.assertMcMasterEmail(email);
+
+    const user = await this.usersService.findByEmail(email);
+    if (!user?.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const matches = await bcrypt.compare(password, user.passwordHash);
+    if (!matches) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    const token = this.issueJwt({ sub: user.id, email: user.email });
+    const userWithRoles = await this.usersService.findOneWithRoles(user.id);
+    return { token, user: userWithRoles ?? user };
   }
 
   async getUserInfo(userId: number) {

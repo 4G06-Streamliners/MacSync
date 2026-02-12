@@ -50,11 +50,35 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 export interface VerifyCodeResponse {
   token: string;
   needsRegistration: boolean;
-  user: User | null;
+  user?: User | null;
+}
+
+export function checkEmail(email: string): Promise<{ isRegistered: boolean }> {
+  return apiFetch('/auth/check-email', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function loginWithPassword(
+  email: string,
+  password: string,
+): Promise<{ token: string; user: User }> {
+  return apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
 }
 
 export function requestVerificationCode(email: string) {
   return apiFetch('/auth/request-code', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function requestOtp(email: string) {
+  return apiFetch('/auth/request-otp', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
@@ -67,11 +91,20 @@ export function verifyCode(email: string, code: string): Promise<VerifyCodeRespo
   });
 }
 
+export function verifyOtp(email: string, code: string): Promise<VerifyCodeResponse> {
+  return apiFetch('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}
+
 export function registerProfile(data: {
   firstName: string;
   lastName: string;
   phone: string;
   program: string;
+  password: string;
+  confirmPassword?: string;
 }) {
   return apiFetch('/auth/register', {
     method: 'POST',

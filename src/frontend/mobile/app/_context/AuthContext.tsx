@@ -1,8 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   getMe,
+  checkEmail,
+  loginWithPassword,
   requestVerificationCode,
+  requestOtp,
   verifyCode,
+  verifyOtp,
   registerProfile,
   type User,
 } from '../_lib/api';
@@ -15,13 +19,18 @@ interface AuthContextType {
   user: User | null;
   pendingEmail: string | null;
   isAdmin: boolean;
+  checkEmail: (email: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<void>;
   requestCode: (email: string) => Promise<void>;
-  confirmCode: (email: string, code: string) => Promise<'needsRegistration' | 'authenticated'>;
+  requestOtp: (email: string) => Promise<void>;
+  confirmCode: (email: string, code: string) => Promise<'needsRegistration'>;
   completeRegistration: (data: {
     firstName: string;
     lastName: string;
     phone: string;
     program: string;
+    password: string;
+    confirmPassword?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -32,7 +41,10 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   pendingEmail: null,
   isAdmin: false,
+  checkEmail: async () => false,
+  login: async () => {},
   requestCode: async () => {},
+  requestOtp: async () => {},
   confirmCode: async () => 'needsRegistration',
   completeRegistration: async () => {},
   logout: async () => {},
@@ -40,7 +52,12 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 function isProfileComplete(user: User) {
-  return Boolean(user.name?.trim() && user.phoneNumber?.trim() && user.program?.trim());
+  return Boolean(
+    (user.firstName?.trim() || user.name?.trim()) &&
+      user.lastName?.trim() &&
+      user.phoneNumber?.trim() &&
+      user.program?.trim(),
+  );
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -72,22 +89,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     init();
   }, []);
 
+  const checkEmailStatus = async (email: string) => {
+    const result = await checkEmail(email);
+    return result.isRegistered;
+  };
+
+  const login = async (email: string, password: string) => {
+    const result = await loginWithPassword(email, password);
+    await setAuthToken(result.token);
+    setUser(result.user);
+    setPendingEmail(null);
+    setStatus('authenticated');
+  };
+
   const requestCode = async (email: string) => {
     await requestVerificationCode(email);
   };
 
+  const requestOtpCode = async (email: string) => {
+    await requestOtp(email);
+  };
+
   const confirmCode = async (email: string, code: string) => {
-    const result = await verifyCode(email, code);
+    const result = await verifyOtp(email, code);
     await setAuthToken(result.token);
     setPendingEmail(email);
-    if (result.needsRegistration) {
-      setStatus('needsRegistration');
-      setUser(result.user ?? null);
-      return 'needsRegistration';
-    }
-    setUser(result.user);
-    setStatus('authenticated');
-    return 'authenticated';
+    setStatus('needsRegistration');
+    return 'needsRegistration';
   };
 
   const completeRegistration = async (data: {
@@ -95,6 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastName: string;
     phone: string;
     program: string;
+    password: string;
+    confirmPassword?: string;
   }) => {
     const result = await registerProfile(data);
     await setAuthToken(result.token);
@@ -120,7 +150,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         pendingEmail,
         isAdmin,
+        checkEmail: checkEmailStatus,
+        login,
         requestCode,
+        requestOtp: requestOtpCode,
         confirmCode,
         completeRegistration,
         logout,

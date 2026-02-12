@@ -19,16 +19,43 @@ export class AuthController {
     return this.authService.requestVerificationCode(email);
   }
 
+  @Post('check-email')
+  checkEmail(@Body('email') email: string) {
+    return this.authService.checkEmail(email);
+  }
+
+  @Post('login')
+  login(@Body() body: { email: string; password: string }) {
+    return this.authService.loginWithPassword(body.email, body.password);
+  }
+
+  @Post('request-otp')
+  requestOtp(@Body('email') email: string) {
+    return this.authService.requestOtp(email);
+  }
+
   @Post('verify-code')
   verifyCode(@Body() body: { email: string; code: string }) {
     return this.authService.verifyCode(body.email, body.code);
+  }
+
+  @Post('verify-otp')
+  verifyOtp(@Body() body: { email: string; code: string }) {
+    return this.authService.verifyOtp(body.email, body.code);
   }
 
   @Post('register')
   @UseGuards(OnboardingGuard)
   register(
     @Body()
-    body: { firstName: string; lastName: string; phone: string; program: string },
+    body: {
+      firstName: string;
+      lastName: string;
+      phone: string;
+      program: string;
+      password: string;
+      confirmPassword?: string;
+    },
     @Req() req: any,
   ) {
     return this.authService.registerUser(req.onboardingEmail, body);

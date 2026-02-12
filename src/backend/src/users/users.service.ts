@@ -8,8 +8,16 @@ import { eq } from 'drizzle-orm';
 export class UsersService {
   constructor(private readonly dbService: DatabaseService) {}
 
+  private stripSensitive<T extends { passwordHash?: string | null }>(user: T) {
+    // Avoid leaking password hashes to clients.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, ...rest } = user;
+    return rest as Omit<T, 'passwordHash'>;
+  }
+
   async findAll() {
-    return await this.dbService.db.select().from(users);
+    const rows = await this.dbService.db.select().from(users);
+    return rows.map((row) => this.stripSensitive(row));
   }
 
   async findOne(id: number) {
@@ -17,7 +25,7 @@ export class UsersService {
       .select()
       .from(users)
       .where(eq(users.id, id));
-    return result[0];
+    return result[0] ? this.stripSensitive(result[0]) : undefined;
   }
 
   async findOneWithRoles(id: number) {
@@ -34,10 +42,10 @@ export class UsersService {
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
       .where(eq(userRoles.userId, id));
 
-    return {
+    return this.stripSensitive({
       ...user[0],
       roles: userRoleRows.map((r) => r.roleName),
-    };
+    });
   }
 
   async findByEmail(email: string) {

@@ -17,6 +17,7 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 255 }).notNull(),
   firstName: varchar('first_name', { length: 255 }),
   lastName: varchar('last_name', { length: 255 }),
+  passwordHash: varchar('password_hash', { length: 255 }),
   phoneNumber: varchar('phone_number', { length: 255 }).notNull(),
   program: varchar('program', { length: 255 }),
   isSystemAdmin: boolean('is_system_admin').default(false),
