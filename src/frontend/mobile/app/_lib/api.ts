@@ -105,7 +105,7 @@ export function registerProfile(data: {
   program: string;
   password: string;
   confirmPassword?: string;
-}) {
+}): Promise<{ token: string; user: User }> {
   return apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify(data),
