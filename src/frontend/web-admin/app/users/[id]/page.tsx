@@ -34,6 +34,7 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [savingRole, setSavingRole] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(userId)) return;
@@ -114,14 +115,49 @@ export default function UserProfilePage() {
           <p className="text-gray-500 mt-1">{user.email}</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 min-w-[260px]">
-          <p className="text-sm font-semibold text-gray-900">System role</p>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Controls admin-only access (login gating comes later).
-          </p>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex flex-wrap gap-2">
+            {user.isSystemAdmin && (
+              <span className="px-2 py-1 rounded-full bg-maroon/10 text-maroon text-xs font-bold">
+                SYSTEM_ADMIN
+              </span>
+            )}
+            {user.roles?.map((r) => (
+              <span
+                key={r}
+                className="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold"
+              >
+                {r}
+              </span>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="text-sm font-medium text-maroon hover:text-maroon-dark hover:underline"
+          >
+            {showAdvanced ? "Hide advanced settings" : "Advanced settings"}
+          </button>
+        </div>
+      </div>
 
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-sm text-gray-700">System admin</span>
+      {showAdvanced && (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
+          <div>
+            <h2 className="text-base font-bold text-gray-900">Advanced settings</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Dangerous actions and system-level changes.
+            </p>
+          </div>
+
+          {/* System admin toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-900">System admin</p>
+              <p className="text-xs text-gray-500">
+                Controls admin-only access (login gating comes later).
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => onToggleSystemAdmin(!user.isSystemAdmin)}
@@ -139,23 +175,26 @@ export default function UserProfilePage() {
             </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {user.isSystemAdmin && (
-              <span className="px-2 py-1 rounded-full bg-maroon/10 text-maroon text-xs font-bold">
-                SYSTEM_ADMIN
-              </span>
-            )}
-            {user.roles?.map((r) => (
-              <span
-                key={r}
-                className="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold"
-              >
-                {r}
-              </span>
-            ))}
+          <hr className="border-gray-200" />
+
+          {/* Delete user */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-900">Delete user</p>
+              <p className="text-xs text-gray-500">
+                Permanently remove this user and all associated data. This action
+                cannot be undone.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="rounded-lg border border-red-600 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+            >
+              Delete user
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
