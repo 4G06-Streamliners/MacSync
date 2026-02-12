@@ -38,14 +38,21 @@ const formatPhoneInput = (value: string) => {
 export default function RegisterScreen() {
   const router = useRouter();
   const { status, pendingEmail, completeRegistration } = useAuth();
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [program, setProgram] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showPrograms, setShowPrograms] = useState(false);
 
   const formattedPhone = formatPhoneInput(phone);
-  const isNameValid = /^[A-Za-z-]+$/.test(name.trim());
+  const normalizedFirstName = firstName.replace(/\s+/g, ' ').trim();
+  const normalizedLastName = lastName.replace(/\s+/g, ' ').trim();
+  const namePattern = /^[\p{L}\s'-]+$/u;
+  const isFirstNameValid =
+    normalizedFirstName.length > 0 && namePattern.test(normalizedFirstName);
+  const isLastNameValid =
+    normalizedLastName.length > 0 && namePattern.test(normalizedLastName);
   const phoneDigits = phone.replace(/\D/g, '');
   const isPhoneValid = /^\d{10,15}$/.test(phoneDigits);
   const isProgramValid = program.trim().length > 0;
@@ -60,8 +67,11 @@ export default function RegisterScreen() {
   }, [status, router]);
 
   const handleSubmit = async () => {
-    if (!/^[A-Za-z-]+$/.test(name.trim())) {
-      Alert.alert('Invalid name', 'Use letters and hyphens only.');
+    if (!isFirstNameValid || !isLastNameValid) {
+      Alert.alert(
+        'Invalid name',
+        'Use letters, spaces, hyphens, and apostrophes only.',
+      );
       return;
     }
     const normalizedPhone = phoneDigits;
@@ -80,7 +90,8 @@ export default function RegisterScreen() {
     setSubmitting(true);
     try {
       await completeRegistration({
-        name: name.trim(),
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
         phone: normalizedPhone,
         program: program.trim(),
       });
@@ -112,12 +123,23 @@ export default function RegisterScreen() {
         />
 
         <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-          Name {isNameValid && name.trim() ? '✅' : ''}
+          First name {isFirstNameValid ? '✅' : ''}
         </Text>
         <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Jane-Doe"
+          value={firstName}
+          onChangeText={setFirstName}
+          placeholder="Jane"
+          placeholderTextColor="#C7CBD1"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
+        />
+
+        <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
+          Last name {isLastNameValid ? '✅' : ''}
+        </Text>
+        <TextInput
+          value={lastName}
+          onChangeText={setLastName}
+          placeholder="Doe"
           placeholderTextColor="#C7CBD1"
           className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
         />

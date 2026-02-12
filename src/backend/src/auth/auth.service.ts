@@ -111,8 +111,10 @@ export class AuthService {
   }
 
   private isProfileComplete(user: User) {
+    const hasName =
+      (user.firstName?.trim() && user.lastName?.trim()) || user.name?.trim();
     return Boolean(
-      user.name?.trim() &&
+      hasName &&
         user.phoneNumber?.trim() &&
         user.program?.trim(),
     );
@@ -205,16 +207,30 @@ export class AuthService {
 
   async registerUser(
     email: string,
-    data: { name: string; phone: string; program: string },
+    data: { firstName: string; lastName: string; phone: string; program: string },
   ) {
     // One-time onboarding for newly verified users.
-    const name = data.name.trim();
-    const program = data.program.trim();
-    const phone = data.phone.trim();
+    const safeData = data ?? {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      program: '',
+    };
+    if (!safeData.firstName || !safeData.lastName) {
+      throw new BadRequestException('First name and last name are required.');
+    }
+    const firstName = safeData.firstName.replace(/\s+/g, ' ').trim();
+    const lastName = safeData.lastName.replace(/\s+/g, ' ').trim();
+    const name = `${firstName} ${lastName}`.trim();
+    if (!safeData.phone || !safeData.program) {
+      throw new BadRequestException('Phone and program are required.');
+    }
+    const program = safeData.program.trim();
+    const phone = safeData.phone.trim();
 
-    if (!/^[A-Za-z-]+$/.test(name)) {
+    if (!/^[\p{L}\s'-]+$/u.test(firstName) || !/^[\p{L}\s'-]+$/u.test(lastName)) {
       throw new BadRequestException(
-        'Name must contain only letters and hyphens.',
+        'Name must contain only letters, spaces, hyphens, and apostrophes.',
       );
     }
 
@@ -238,6 +254,8 @@ export class AuthService {
     if (existing) {
       user = await this.usersService.update(existing.id, {
         name,
+        firstName,
+        lastName,
         phoneNumber: normalizedPhone,
         program,
       });
@@ -245,6 +263,8 @@ export class AuthService {
       user = await this.usersService.create({
         email,
         name,
+        firstName,
+        lastName,
         phoneNumber: normalizedPhone,
         program,
       });

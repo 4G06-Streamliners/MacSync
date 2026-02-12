@@ -27,7 +27,8 @@ export class AuthController {
   @Post('register')
   @UseGuards(OnboardingGuard)
   register(
-    @Body() body: { name: string; phone: string; program: string },
+    @Body()
+    body: { firstName: string; lastName: string; phone: string; program: string },
     @Req() req: any,
   ) {
     return this.authService.registerUser(req.onboardingEmail, body);

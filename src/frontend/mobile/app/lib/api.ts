@@ -20,7 +20,25 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   });
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    let detail = `${res.status} ${res.statusText}`;
+    try {
+      const text = await res.text();
+      if (text) {
+        try {
+          const parsed = JSON.parse(text);
+          const message =
+            parsed?.message ??
+            parsed?.error ??
+            (Array.isArray(parsed) ? parsed.join(', ') : null);
+          detail = message ? `${detail} - ${message}` : `${detail} - ${text}`;
+        } catch {
+          detail = `${detail} - ${text}`;
+        }
+      }
+    } catch {
+      // ignore parsing errors
+    }
+    throw new Error(`API error: ${detail}`);
   }
   return res.json();
 }
@@ -47,7 +65,8 @@ export function verifyCode(email: string, code: string): Promise<VerifyCodeRespo
 }
 
 export function registerProfile(data: {
-  name: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   program: string;
 }) {
@@ -66,6 +85,8 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  firstName?: string | null;
+  lastName?: string | null;
   phoneNumber: string;
   program: string | null;
   isSystemAdmin: boolean;

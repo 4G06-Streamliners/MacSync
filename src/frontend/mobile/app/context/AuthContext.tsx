@@ -17,7 +17,12 @@ interface AuthContextType {
   isAdmin: boolean;
   requestCode: (email: string) => Promise<void>;
   confirmCode: (email: string, code: string) => Promise<'needsRegistration' | 'authenticated'>;
-  completeRegistration: (data: { name: string; phone: string; program: string }) => Promise<void>;
+  completeRegistration: (data: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    program: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -85,7 +90,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return 'authenticated';
   };
 
-  const completeRegistration = async (data: { name: string; phone: string; program: string }) => {
+  const completeRegistration = async (data: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    program: string;
+  }) => {
     const result = await registerProfile(data);
     await setAuthToken(result.token);
     setUser(result.user);
