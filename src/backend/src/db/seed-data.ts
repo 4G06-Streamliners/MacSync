@@ -137,14 +137,71 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
   }
   if (busSeatRows.length > 0) await db.insert(busSeats).values(busSeatRows);
 
-  const [ticket1, ticket2, ticket3] = await db
-    .insert(tickets)
-    .values([
-      { userId: user1.id, eventId: event1.id },
-      { userId: user2.id, eventId: event1.id },
-      { userId: user3.id, eventId: event2.id },
-    ])
-    .returning();
+  // Check if tickets already exist
+  const existingTickets = await db.select().from(tickets).limit(1);
+  let ticket1, ticket2, ticket3;
+  
+  if (existingTickets.length > 0) {
+    // Update existing tickets with QR codes
+    const allTickets = await db.select().from(tickets);
+    for (const ticket of allTickets) {
+      const qrData = `TICKET:${ticket.userId}:${ticket.eventId}:${ticket.id}:${Date.now()}`;
+      await db
+        .update(tickets)
+        .set({ qrCodeData: qrData, updatedAt: new Date() })
+        .where(eq(tickets.id, ticket.id));
+    }
+    // Get first 3 for seat assignment
+    [ticket1, ticket2, ticket3] = allTickets.slice(0, 3);
+  } else {
+    // Create new tickets with QR codes
+    const timestamp = Date.now();
+    const [t1, t2, t3] = await db
+      .insert(tickets)
+      .values([
+        { 
+          userId: user1.id, 
+          eventId: event1.id,
+          qrCodeData: `TICKET:${user1.id}:${event1.id}:temp1:${timestamp}`
+        },
+        { 
+          userId: user2.id, 
+          eventId: event1.id,
+          qrCodeData: `TICKET:${user2.id}:${event1.id}:temp2:${timestamp}`
+        },
+        { 
+          userId: user3.id, 
+          eventId: event2.id,
+          qrCodeData: `TICKET:${user3.id}:${event2.id}:temp3:${timestamp}`
+        },
+      ])
+      .returning();
+    
+    // Update with actual ticket IDs
+    if (t1) {
+      await db
+        .update(tickets)
+        .set({ qrCodeData: `TICKET:${user1.id}:${event1.id}:${t1.id}:${timestamp}`, updatedAt: new Date() })
+        .where(eq(tickets.id, t1.id));
+    }
+    if (t2) {
+      await db
+        .update(tickets)
+        .set({ qrCodeData: `TICKET:${user2.id}:${event1.id}:${t2.id}:${timestamp}`, updatedAt: new Date() })
+        .where(eq(tickets.id, t2.id));
+    }
+    if (t3) {
+      await db
+        .update(tickets)
+        .set({ qrCodeData: `TICKET:${user3.id}:${event2.id}:${t3.id}:${timestamp}`, updatedAt: new Date() })
+        .where(eq(tickets.id, t3.id));
+    }
+    
+    ticket1 = t1;
+    ticket2 = t2;
+    ticket3 = t3;
+  }
+  
   if (!ticket1 || !ticket2 || !ticket3) throw new Error('Ticket insert failed');
 
   const tableSeatToAssign = await db

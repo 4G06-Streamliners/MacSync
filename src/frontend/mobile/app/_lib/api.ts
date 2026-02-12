@@ -217,6 +217,7 @@ export interface Ticket {
   checkedIn: boolean;
   busSeat: string | null;
   tableSeat: string | null;
+  qrCodeData: string | null;
   createdAt: string;
   eventName: string;
   eventDate: string;
