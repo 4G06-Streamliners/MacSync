@@ -1,9 +1,24 @@
 {
-  "name": "macsync-root-tests",
-  "version": "1.0.0",
+  "name": "macsync-tests",
   "private": true,
-  "description": "Root-level dummy tests",
   "scripts": {
-    "test": "node dummy.test.js"
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "jest --config frontend/jest.config.js",
+    "test:backend": "jest --config backend/jest.config.js"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@testing-library/react": "^14.2.0",
+    "@types/jest": "^29.5.0",
+    "@types/react": "~18.3.12",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "ts-jest": "^29.2.5",
+    "typescript": "~5.3.0"
   }
 }
