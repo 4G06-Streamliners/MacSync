@@ -87,7 +87,7 @@ export class PaymentsService {
    */
   async createCheckoutSession(
     params: CreateCheckoutSessionParams,
-  ): Promise<{ url?: string; error?: string }> {
+  ): Promise<{ url?: string; sessionId?: string; error?: string }> {
     if (!this.stripe) {
       return {
         error:
@@ -134,7 +134,7 @@ export class PaymentsService {
         },
       });
 
-      return { url: session.url || undefined };
+      return { url: session.url || undefined, sessionId: session.id };
     } catch (err: unknown) {
       console.error('Stripe checkout session creation error:', err);
       const message =

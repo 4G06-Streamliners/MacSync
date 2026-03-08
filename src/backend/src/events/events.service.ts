@@ -297,7 +297,7 @@ export class EventsService {
     successUrl: string,
     cancelUrl: string,
     selectedTable?: number,
-  ): Promise<{ url?: string; error?: string }> {
+  ): Promise<{ url?: string; sessionId?: string; error?: string }> {
     const eventRows = await this.dbService.db
       .select()
       .from(events)
@@ -347,13 +347,13 @@ export class EventsService {
     const reservationMinutes = 5;
     const expiresAt = new Date(now.getTime() + reservationMinutes * 60 * 1000);
 
-    // Use a transaction with row-level locking to prevent race conditions
-    // when multiple users try to reserve the last seat simultaneously
-    let reservedTableSeatId: number | null = null;
-    let reservedBusSeatId: number | null = null;
+    // Wrap in a transaction to ensure FOR UPDATE SKIP LOCKED works
+    // This prevents race conditions when multiple users click at the same time
+    return await this.dbService.db.transaction(async (tx) => {
+      let reservedTableSeatId: number | null = null;
+      let reservedBusSeatId: number | null = null;
 
-    try {
-      // Use raw SQL with FOR UPDATE to lock the selected seat row
+      // Use raw SQL with FOR UPDATE SKIP LOCKED to lock the selected seat row
       if (ev.requiresTableSignup) {
         const tableLockQuery =
           selectedTable != null
@@ -385,7 +385,7 @@ export class EventsService {
               FOR UPDATE SKIP LOCKED
             `;
 
-        const tableResult = await this.dbService.db.execute(tableLockQuery);
+        const tableResult = await tx.execute(tableLockQuery);
         if (!tableResult.rows || tableResult.rows.length === 0) {
           return {
             error:
@@ -410,7 +410,7 @@ export class EventsService {
           FOR UPDATE SKIP LOCKED
         `;
 
-        const busResult = await this.dbService.db.execute(busLockQuery);
+        const busResult = await tx.execute(busLockQuery);
         if (!busResult.rows || busResult.rows.length === 0) {
           return { error: 'Event is full (no bus seats left).' };
         }
@@ -428,17 +428,15 @@ export class EventsService {
         cancelUrl,
       });
 
-      if (checkoutResult.error || !checkoutResult.url) {
+      if (checkoutResult.error || !checkoutResult.url || !checkoutResult.sessionId) {
         return checkoutResult;
       }
 
-      // Extract session ID from the URL
-      // Stripe's checkout URL format: https://checkout.stripe.com/c/pay/cs_test_...
-      const sessionId =
-        checkoutResult.url.split('/').pop()?.split('#')[0] || '';
+      // Use the session ID returned from Stripe
+      const sessionId = checkoutResult.sessionId;
 
       // Create seat reservation (seat is now locked until transaction completes)
-      await this.dbService.db.insert(seatReservations).values({
+      await tx.insert(seatReservations).values({
         stripeSessionId: sessionId,
         eventId,
         userId,
@@ -447,13 +445,8 @@ export class EventsService {
         expiresAt,
       });
 
-      return checkoutResult;
-    } catch (err) {
-      console.error('Error creating checkout session:', err);
-      return {
-        error: 'Failed to reserve seat. Please try again.',
-      };
-    }
+      return { url: checkoutResult.url, sessionId };
+    });
   }
 
   async completeSignupFromReservation(

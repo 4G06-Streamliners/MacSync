@@ -247,10 +247,10 @@ export function createCheckoutSession(
     cancelUrl?: string;
     selectedTable?: number;
   },
-): Promise<{ url?: string; error?: string }> {
+): Promise<{ url?: string; sessionId?: string; error?: string }> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
-  return apiFetch<{ url?: string; error?: string }>(`/events/${eventId}/checkout-session`, {
+  return apiFetch<{ url?: string; sessionId?: string; error?: string }>(`/events/${eventId}/checkout-session`, {
     method: 'POST',
     signal: controller.signal,
     body: JSON.stringify({
