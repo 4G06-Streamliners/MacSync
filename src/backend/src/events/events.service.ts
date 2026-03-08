@@ -392,7 +392,8 @@ export class EventsService {
               'Event is full (no table seats left). Try another table or check back later.',
           };
         }
-        reservedTableSeatId = (tableResult.rows[0] as any).id;
+        const tableSeatRow = tableResult.rows[0] as Record<string, unknown>;
+        reservedTableSeatId = tableSeatRow.id as number;
       }
 
       if (ev.requiresBusSignup) {
@@ -414,7 +415,8 @@ export class EventsService {
         if (!busResult.rows || busResult.rows.length === 0) {
           return { error: 'Event is full (no bus seats left).' };
         }
-        reservedBusSeatId = (busResult.rows[0] as any).id;
+        const busSeatRow = busResult.rows[0] as Record<string, unknown>;
+        reservedBusSeatId = busSeatRow.id as number;
       }
 
       // Delegate to PaymentsService for Stripe checkout
