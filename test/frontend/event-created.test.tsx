@@ -10,32 +10,14 @@ describe('EventCreatedScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('renders the success icon', () => {
+  it('renders success content and navigates back on button press', () => {
     render(<EventCreatedScreen />);
     expect(screen.getByText('✅')).toBeTruthy();
-  });
-
-  it('renders "Event Created!" heading', () => {
-    render(<EventCreatedScreen />);
     expect(screen.getByText('Event Created!')).toBeTruthy();
-  });
-
-  it('renders success description text', () => {
-    render(<EventCreatedScreen />);
     expect(
-      screen.getByText(
-        'Your event has been successfully created and is now visible to users.',
-      ),
+      screen.getByText('Your event has been successfully created and is now visible to users.'),
     ).toBeTruthy();
-  });
 
-  it('renders "Back to Events" button', () => {
-    render(<EventCreatedScreen />);
-    expect(screen.getByText('Back to Events')).toBeTruthy();
-  });
-
-  it('navigates to /(tabs) when "Back to Events" is pressed', () => {
-    render(<EventCreatedScreen />);
     fireEvent.click(screen.getByText('Back to Events'));
     expect(mockRouter.replace).toHaveBeenCalledWith('/(tabs)');
   });

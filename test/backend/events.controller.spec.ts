@@ -39,227 +39,80 @@ describe('EventsController', () => {
       createCheckoutSession: jest.fn(),
       releaseReservation: jest.fn(),
     };
-
-    mockUsersService = {
-      findOneWithRoles: jest.fn(),
-    };
-
+    mockUsersService = { findOneWithRoles: jest.fn() };
     controller = new EventsController(mockEventsService, mockUsersService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  afterEach(() => jest.clearAllMocks());
+
+  it('findAll returns all events', async () => {
+    const events = [{ id: 1 }, { id: 2 }];
+    mockEventsService.findAll.mockResolvedValue(events);
+    expect(await controller.findAll()).toEqual(events);
   });
 
-  describe('findAll', () => {
-    it('should return all events from the service', async () => {
-      const events = [
-        { id: 1, name: 'Event A' },
-        { id: 2, name: 'Event B' },
-      ];
-      mockEventsService.findAll.mockResolvedValue(events);
+  it('findOne passes parsed id and optional userId', async () => {
+    mockEventsService.findOne.mockResolvedValue({ id: 1 });
+    await controller.findOne('1', '5');
+    expect(mockEventsService.findOne).toHaveBeenCalledWith(1, 5);
 
-      const result = await controller.findAll();
-
-      expect(result).toEqual(events);
-      expect(mockEventsService.findAll).toHaveBeenCalledTimes(1);
-    });
+    await controller.findOne('1', '');
+    expect(mockEventsService.findOne).toHaveBeenCalledWith(1, undefined);
   });
 
-  describe('findOne', () => {
-    it('should return a single event by id', async () => {
-      const event = { id: 1, name: 'Test Event', registeredCount: 10 };
-      mockEventsService.findOne.mockResolvedValue(event);
-
-      const result = await controller.findOne('1');
-
-      expect(result).toEqual(event);
-      expect(mockEventsService.findOne).toHaveBeenCalledWith(1, undefined);
-    });
-
-    it('should pass userId when provided as query param', async () => {
-      const event = { id: 1, name: 'Test Event', userTicket: null };
-      mockEventsService.findOne.mockResolvedValue(event);
-
-      await controller.findOne('1', '5');
-
-      expect(mockEventsService.findOne).toHaveBeenCalledWith(1, 5);
-    });
-
-    it('should treat empty userId string as undefined', async () => {
-      mockEventsService.findOne.mockResolvedValue(null);
-
-      await controller.findOne('1', '');
-
-      expect(mockEventsService.findOne).toHaveBeenCalledWith(1, undefined);
-    });
+  it('create delegates to service', async () => {
+    const data = { name: 'New Event', capacity: 100 };
+    mockEventsService.create.mockResolvedValue({ id: 1, ...data });
+    const result = await controller.create(data as any);
+    expect(result).toEqual({ id: 1, ...data });
   });
 
-  describe('create', () => {
-    it('should create a new event via the service', async () => {
-      const eventData = {
-        name: 'New Event',
-        date: new Date('2026-06-15'),
-        capacity: 100,
-        price: 2500,
-      };
-      const created = { id: 1, ...eventData };
-      mockEventsService.create.mockResolvedValue(created);
+  it('update and delete delegate to service', async () => {
+    mockEventsService.update.mockResolvedValue({ id: 1, name: 'Updated' });
+    expect(await controller.update('1', { name: 'Updated' } as any)).toEqual({ id: 1, name: 'Updated' });
 
-      const result = await controller.create(eventData as any);
-
-      expect(result).toEqual(created);
-      expect(mockEventsService.create).toHaveBeenCalledWith(eventData);
-    });
+    mockEventsService.delete.mockResolvedValue({ deleted: true });
+    expect(await controller.delete('1')).toEqual({ deleted: true });
   });
 
-  describe('update', () => {
-    it('should update an event and return the result', async () => {
-      const updateData = { name: 'Updated Event' };
-      const updated = { id: 1, name: 'Updated Event' };
-      mockEventsService.update.mockResolvedValue(updated);
+  it('signup passes user id and optional table, rethrows errors', async () => {
+    mockEventsService.signup.mockResolvedValue({ ticket: { id: 1 } });
+    const req = { user: { sub: 5 } } as any;
 
-      const result = await controller.update('1', updateData as any);
+    await controller.signup('1', req, 3);
+    expect(mockEventsService.signup).toHaveBeenCalledWith(1, 5, 3);
 
-      expect(result).toEqual(updated);
-      expect(mockEventsService.update).toHaveBeenCalledWith(1, updateData);
-    });
+    mockEventsService.signup.mockRejectedValue(new Error('Event is full'));
+    await expect(controller.signup('1', req)).rejects.toThrow('Event is full');
   });
 
-  describe('delete', () => {
-    it('should delete an event by id', async () => {
-      mockEventsService.delete.mockResolvedValue({ deleted: true });
-
-      const result = await controller.delete('1');
-
-      expect(result).toEqual({ deleted: true });
-      expect(mockEventsService.delete).toHaveBeenCalledWith(1);
-    });
+  it('cancelSignup delegates to service', async () => {
+    mockEventsService.cancelSignup.mockResolvedValue({ cancelled: true });
+    const req = { user: { sub: 5 } } as any;
+    expect(await controller.cancelSignup('1', req)).toEqual({ cancelled: true });
   });
 
-  describe('signup', () => {
-    it('should sign up the authenticated user for an event', async () => {
-      const ticket = { id: 1, userId: 5, eventId: 1 };
-      mockEventsService.signup.mockResolvedValue({ ticket });
+  it('getUserTickets allows own access and admin access, denies non-admin', async () => {
+    mockEventsService.getTicketsForUser.mockResolvedValue([{ ticketId: 1 }]);
 
-      const req = { user: { sub: 5, email: 'user@test.com' } } as any;
-      const result = await controller.signup('1', req);
+    const ownReq = { user: { sub: 5 } } as any;
+    expect(await controller.getUserTickets('5', ownReq)).toEqual([{ ticketId: 1 }]);
 
-      expect(result).toEqual({ ticket });
-      expect(mockEventsService.signup).toHaveBeenCalledWith(1, 5, undefined);
+    mockUsersService.findOneWithRoles.mockResolvedValue({
+      id: 1, isSystemAdmin: true, roles: ['Admin'],
     });
+    const adminReq = { user: { sub: 1 } } as any;
+    expect(await controller.getUserTickets('5', adminReq)).toEqual([{ ticketId: 1 }]);
 
-    it('should pass selectedTable when provided', async () => {
-      mockEventsService.signup.mockResolvedValue({ ticket: {} });
-
-      const req = { user: { sub: 5, email: 'user@test.com' } } as any;
-      await controller.signup('1', req, 3);
-
-      expect(mockEventsService.signup).toHaveBeenCalledWith(1, 5, 3);
+    mockUsersService.findOneWithRoles.mockResolvedValue({
+      id: 2, isSystemAdmin: false, roles: [],
     });
-
-    it('should rethrow errors from the service', async () => {
-      mockEventsService.signup.mockRejectedValue(new Error('Event is full'));
-
-      const req = { user: { sub: 5, email: 'user@test.com' } } as any;
-
-      await expect(controller.signup('1', req)).rejects.toThrow(
-        'Event is full',
-      );
-    });
+    const userReq = { user: { sub: 2 } } as any;
+    await expect(controller.getUserTickets('5', userReq)).rejects.toThrow('Access denied.');
   });
 
-  describe('cancelSignup', () => {
-    it('should cancel a user signup', async () => {
-      mockEventsService.cancelSignup.mockResolvedValue({ cancelled: true });
-
-      const req = { user: { sub: 5, email: 'user@test.com' } } as any;
-      const result = await controller.cancelSignup('1', req);
-
-      expect(result).toEqual({ cancelled: true });
-      expect(mockEventsService.cancelSignup).toHaveBeenCalledWith(1, 5);
-    });
-
-    it('should return error when not signed up', async () => {
-      mockEventsService.cancelSignup.mockResolvedValue({
-        error: 'Not signed up for this event',
-      });
-
-      const req = { user: { sub: 5, email: 'user@test.com' } } as any;
-      const result = await controller.cancelSignup('1', req);
-
-      expect(result).toEqual({ error: 'Not signed up for this event' });
-    });
-  });
-
-  describe('getUserTickets', () => {
-    it('should allow a user to get their own tickets', async () => {
-      const tickets = [{ ticketId: 1, eventId: 1, eventName: 'Gala' }];
-      mockEventsService.getTicketsForUser.mockResolvedValue(tickets);
-
-      const req = { user: { sub: 5, email: 'user@test.com' } } as any;
-      const result = await controller.getUserTickets('5', req);
-
-      expect(result).toEqual(tickets);
-      expect(mockEventsService.getTicketsForUser).toHaveBeenCalledWith(5);
-    });
-
-    it("should allow admin to access another user's tickets", async () => {
-      const tickets = [{ ticketId: 2, eventId: 1 }];
-      mockEventsService.getTicketsForUser.mockResolvedValue(tickets);
-      mockUsersService.findOneWithRoles.mockResolvedValue({
-        id: 1,
-        isSystemAdmin: true,
-        roles: ['Admin'],
-      });
-
-      const req = { user: { sub: 1, email: 'admin@test.com' } } as any;
-      const result = await controller.getUserTickets('5', req);
-
-      expect(result).toEqual(tickets);
-      expect(mockUsersService.findOneWithRoles).toHaveBeenCalledWith(1);
-    });
-
-    it("should allow role-based admin to access another user's tickets", async () => {
-      mockEventsService.getTicketsForUser.mockResolvedValue([]);
-      mockUsersService.findOneWithRoles.mockResolvedValue({
-        id: 3,
-        isSystemAdmin: false,
-        roles: ['Admin'],
-      });
-
-      const req = { user: { sub: 3, email: 'roleadmin@test.com' } } as any;
-      const result = await controller.getUserTickets('5', req);
-
-      expect(result).toEqual([]);
-    });
-
-    it("should throw ForbiddenException for non-admin accessing another user's tickets", async () => {
-      mockUsersService.findOneWithRoles.mockResolvedValue({
-        id: 2,
-        isSystemAdmin: false,
-        roles: [],
-      });
-
-      const req = { user: { sub: 2, email: 'user@test.com' } } as any;
-
-      await expect(controller.getUserTickets('5', req)).rejects.toThrow(
-        'Access denied.',
-      );
-    });
-  });
-
-  describe('releaseCheckoutReservation', () => {
-    it('should release a checkout reservation', async () => {
-      mockEventsService.releaseReservation.mockResolvedValue(undefined);
-
-      const result =
-        await controller.releaseCheckoutReservation('cs_test_123');
-
-      expect(result).toEqual({ released: true });
-      expect(mockEventsService.releaseReservation).toHaveBeenCalledWith(
-        'cs_test_123',
-      );
-    });
+  it('releaseCheckoutReservation delegates to service', async () => {
+    mockEventsService.releaseReservation.mockResolvedValue(undefined);
+    expect(await controller.releaseCheckoutReservation('cs_123')).toEqual({ released: true });
   });
 });

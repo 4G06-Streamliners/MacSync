@@ -1,8 +1,13 @@
+const tsJestPath = require.resolve('ts-jest');
+
 module.exports = {
   testEnvironment: 'node',
+  rootDir: '../..',
+  roots: ['<rootDir>/test/backend', '<rootDir>/src/backend/src/events'],
+  testMatch: ['<rootDir>/test/backend/**/*.spec.ts'],
   transform: {
     '^.+\\.ts$': [
-      'ts-jest',
+      tsJestPath,
       {
         tsconfig: {
           experimentalDecorators: true,
@@ -19,9 +24,14 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   moduleNameMapper: {
-    '^drizzle-orm$': '<rootDir>/__mocks__/drizzle-orm.js',
-    '^drizzle-orm/(.*)$': '<rootDir>/__mocks__/drizzle-orm.js',
+    '^drizzle-orm$': '<rootDir>/test/backend/__mocks__/drizzle-orm.js',
+    '^drizzle-orm/(.*)$': '<rootDir>/test/backend/__mocks__/drizzle-orm.js',
   },
-  modulePaths: ['<rootDir>/../node_modules'],
-  rootDir: '.',
+  modulePaths: ['<rootDir>/test/node_modules'],
+  collectCoverageFrom: [
+    'src/backend/src/events/**/*.ts',
+    '!src/backend/src/events/**/*.d.ts',
+    '!src/backend/src/events/*.module.ts',
+  ],
+  coverageDirectory: '<rootDir>/test/coverage/backend',
 };

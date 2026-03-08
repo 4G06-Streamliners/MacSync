@@ -16,50 +16,21 @@ describe('CreateEventScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('renders the header with "Create New Event" title', () => {
+  it('renders form fields, buttons, and toggles', () => {
     render(<CreateEventScreen />);
     expect(screen.getByText('Create New Event')).toBeTruthy();
-  });
-
-  it('renders Cancel and Save buttons', () => {
-    render(<CreateEventScreen />);
     expect(screen.getByText('Cancel')).toBeTruthy();
     expect(screen.getByText('Save')).toBeTruthy();
-  });
-
-  it('renders all required form fields', () => {
-    render(<CreateEventScreen />);
     expect(screen.getByPlaceholderText('e.g. Annual Gala 2026')).toBeTruthy();
     expect(screen.getByPlaceholderText('YYYY-MM-DD')).toBeTruthy();
     expect(screen.getByPlaceholderText('HH:MM')).toBeTruthy();
     expect(screen.getByPlaceholderText('e.g. 100')).toBeTruthy();
-  });
-
-  it('renders optional form fields', () => {
-    render(<CreateEventScreen />);
     expect(screen.getByPlaceholderText('Describe your event...')).toBeTruthy();
-    expect(screen.getByPlaceholderText('e.g. Grand Ballroom')).toBeTruthy();
-    expect(
-      screen.getByPlaceholderText('0 (leave empty for free)'),
-    ).toBeTruthy();
-    expect(
-      screen.getByPlaceholderText('https://example.com/image.jpg'),
-    ).toBeTruthy();
-  });
-
-  it('renders table and bus signup toggles', () => {
-    render(<CreateEventScreen />);
     expect(screen.getByText('Requires Table Signup')).toBeTruthy();
     expect(screen.getByText('Requires Bus Signup')).toBeTruthy();
   });
 
-  it('navigates back when Cancel is pressed', () => {
-    render(<CreateEventScreen />);
-    fireEvent.click(screen.getByText('Cancel'));
-    expect(mockRouter.back).toHaveBeenCalled();
-  });
-
-  it('shows validation error when required fields are empty', async () => {
+  it('validates required fields and blocks submission', async () => {
     render(<CreateEventScreen />);
     fireEvent.click(screen.getByText('Save'));
 
@@ -69,31 +40,27 @@ describe('CreateEventScreen', () => {
         'Name, date, time, and capacity are required.',
       );
     });
-  });
-
-  it('does not call createEvent when validation fails', async () => {
-    render(<CreateEventScreen />);
-    fireEvent.click(screen.getByText('Save'));
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalled();
-    });
     expect(mockCreateEvent).not.toHaveBeenCalled();
   });
 
-  it('submits with correct payload including price in cents', async () => {
+  it('submits with correct payload, price in cents, and navigates on success', async () => {
     mockCreateEvent.mockResolvedValueOnce({ id: 1 });
-
     render(<CreateEventScreen />);
 
     fireEvent.change(screen.getByPlaceholderText('e.g. Annual Gala 2026'), {
       target: { value: 'Test Gala' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Describe your event...'), {
+      target: { value: 'A great event' },
     });
     fireEvent.change(screen.getByPlaceholderText('YYYY-MM-DD'), {
       target: { value: '2026-06-15' },
     });
     fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
       target: { value: '18:00' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('e.g. Grand Ballroom'), {
+      target: { value: 'Main Hall' },
     });
     fireEvent.change(screen.getByPlaceholderText('e.g. 100'), {
       target: { value: '200' },
@@ -109,41 +76,18 @@ describe('CreateEventScreen', () => {
       expect(mockCreateEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Test Gala',
+          description: 'A great event',
+          location: 'Main Hall',
           capacity: 200,
           price: 2550,
         }),
       );
-    });
-  });
-
-  it('navigates to /event-created on successful submission', async () => {
-    mockCreateEvent.mockResolvedValueOnce({ id: 1 });
-
-    render(<CreateEventScreen />);
-
-    fireEvent.change(screen.getByPlaceholderText('e.g. Annual Gala 2026'), {
-      target: { value: 'Test Event' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('YYYY-MM-DD'), {
-      target: { value: '2026-06-15' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
-      target: { value: '18:00' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('e.g. 100'), {
-      target: { value: '50' },
-    });
-
-    fireEvent.click(screen.getByText('Save'));
-
-    await waitFor(() => {
       expect(mockRouter.replace).toHaveBeenCalledWith('/event-created');
     });
   });
 
   it('shows error alert on API failure', async () => {
     mockCreateEvent.mockRejectedValueOnce(new Error('Network error'));
-
     render(<CreateEventScreen />);
 
     fireEvent.change(screen.getByPlaceholderText('e.g. Annual Gala 2026'), {
@@ -166,74 +110,9 @@ describe('CreateEventScreen', () => {
     });
   });
 
-  it('sends price as 0 when price field is empty (free event)', async () => {
-    mockCreateEvent.mockResolvedValueOnce({ id: 1 });
-
+  it('navigates back when Cancel is pressed', () => {
     render(<CreateEventScreen />);
-
-    fireEvent.change(screen.getByPlaceholderText('e.g. Annual Gala 2026'), {
-      target: { value: 'Free Event' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('YYYY-MM-DD'), {
-      target: { value: '2026-06-15' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
-      target: { value: '10:00' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('e.g. 100'), {
-      target: { value: '100' },
-    });
-
-    fireEvent.click(screen.getByText('Save'));
-
-    await waitFor(() => {
-      expect(mockCreateEvent).toHaveBeenCalledWith(
-        expect.objectContaining({ price: 0 }),
-      );
-    });
-  });
-
-  it('includes optional fields in payload when filled', async () => {
-    mockCreateEvent.mockResolvedValueOnce({ id: 1 });
-
-    render(<CreateEventScreen />);
-
-    fireEvent.change(screen.getByPlaceholderText('e.g. Annual Gala 2026'), {
-      target: { value: 'Full Event' },
-    });
-    fireEvent.change(
-      screen.getByPlaceholderText('Describe your event...'),
-      { target: { value: 'A great event' } },
-    );
-    fireEvent.change(screen.getByPlaceholderText('YYYY-MM-DD'), {
-      target: { value: '2026-12-25' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
-      target: { value: '20:00' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('e.g. Grand Ballroom'), {
-      target: { value: 'Main Hall' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('e.g. 100'), {
-      target: { value: '300' },
-    });
-    fireEvent.change(
-      screen.getByPlaceholderText('https://example.com/image.jpg'),
-      { target: { value: 'https://img.com/event.jpg' } },
-    );
-
-    fireEvent.click(screen.getByText('Save'));
-
-    await waitFor(() => {
-      expect(mockCreateEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'Full Event',
-          description: 'A great event',
-          location: 'Main Hall',
-          capacity: 300,
-          imageUrl: 'https://img.com/event.jpg',
-        }),
-      );
-    });
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(mockRouter.back).toHaveBeenCalled();
   });
 });

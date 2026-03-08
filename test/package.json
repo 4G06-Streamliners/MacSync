@@ -4,7 +4,10 @@
   "scripts": {
     "test": "npm run test:frontend && npm run test:backend",
     "test:frontend": "jest --config frontend/jest.config.js",
-    "test:backend": "jest --config backend/jest.config.js"
+    "test:backend": "jest --config backend/jest.config.js",
+    "coverage": "npm run coverage:frontend && npm run coverage:backend",
+    "coverage:frontend": "jest --config frontend/jest.config.js --coverage",
+    "coverage:backend": "jest --config backend/jest.config.js --coverage"
   },
   "devDependencies": {
     "@nestjs/common": "^11.0.1",
