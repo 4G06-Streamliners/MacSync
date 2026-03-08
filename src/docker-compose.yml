@@ -34,6 +34,9 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/macsync_db
       PORT: 3000
       NODE_ENV: development
+      STRIPE_SECRET_KEY: sk_test_51QnSlqAOwjDlyX8c9Qr4yXzwz5uxUWj0n3Hn6JCQ7ntNZpJndXV4JpRzGJX4QqrfOmL88djbDR9MdkYytA0dA9E400vwehqXXU
+      STRIPE_WEBHOOK_SECRET: whsec_4b4992e11384b5cc2e922d1a8e40b104a869ebbae62d645e450ae0c13a1a14f3
+      QR_SECRET: change-this-to-a-random-secret-in-production
     depends_on:
       postgres:
         condition: service_healthy

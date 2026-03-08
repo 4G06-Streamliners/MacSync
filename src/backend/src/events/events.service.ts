@@ -135,8 +135,31 @@ export class EventsService {
       .returning();
     const created = result[0];
 
-    // Stripe Price ID should be provided when creating paid events
-    // PaymentsService handles the Stripe integration
+    // For paid events, create Stripe Product and Price
+    if (created.price > 0) {
+      const { priceId, error } = await this.paymentsService.createProductAndPrice(
+        created.name,
+        created.id,
+        created.price,
+      );
+
+      if (error) {
+        console.error('Failed to create Stripe product/price:', error);
+        // Don't fail the event creation, just log the error
+        // The event can still be created, but payments won't work until price is set
+      } else if (priceId) {
+        // Update the event with the Stripe price ID
+        const updateResult = await this.dbService.db
+          .update(events)
+          .set({ stripePriceId: priceId, updatedAt: new Date() })
+          .where(eq(events.id, created.id))
+          .returning();
+        // Return the updated event with stripePriceId
+        if (updateResult[0]) {
+          Object.assign(created, { stripePriceId: priceId });
+        }
+      }
+    }
 
     // Auto-create table seats if needed
     if (
@@ -166,8 +189,35 @@ export class EventsService {
   }
 
   async update(id: number, event: Partial<NewEvent>) {
-    // Stripe Price ID should be provided when updating paid events
-    // PaymentsService handles the Stripe integration
+    // If price is being updated and the new price is > 0, create/update Stripe product/price
+    if (event.price !== undefined && event.price > 0) {
+      // Get the event name (either from update payload or existing event)
+      const existingEventRows = await this.dbService.db
+        .select()
+        .from(events)
+        .where(eq(events.id, id))
+        .limit(1);
+      const existingEvent = existingEventRows[0];
+      
+      if (existingEvent) {
+        const eventName = event.name || existingEvent.name;
+        
+        const { priceId, error } = await this.paymentsService.createProductAndPrice(
+          eventName,
+          id,
+          event.price,
+        );
+
+        if (error) {
+          console.error('Failed to create Stripe product/price:', error);
+          // Continue with update, but log the error
+        } else if (priceId) {
+          // Include the stripe price ID in the update
+          event.stripePriceId = priceId;
+        }
+      }
+    }
+
     const result = await this.dbService.db
       .update(events)
       .set({ ...event, updatedAt: new Date() })
@@ -296,87 +346,114 @@ export class EventsService {
 
     const reservationMinutes = 5;
     const expiresAt = new Date(now.getTime() + reservationMinutes * 60 * 1000);
-    const notReservedTable = sql`${tableSeats.id} NOT IN (SELECT table_seat_id FROM seat_reservations WHERE table_seat_id IS NOT NULL AND expires_at > ${now})`;
 
+    // Use a transaction with row-level locking to prevent race conditions
+    // when multiple users try to reserve the last seat simultaneously
     let reservedTableSeatId: number | null = null;
-    if (ev.requiresTableSignup) {
-      const tableConditions =
-        selectedTable != null
-          ? and(
-              eq(tableSeats.eventId, eventId),
-              eq(tableSeats.tableNumber, selectedTable),
-              sql`${tableSeats.ticketId} IS NULL`,
-              notReservedTable,
-            )
-          : and(
-              eq(tableSeats.eventId, eventId),
-              sql`${tableSeats.ticketId} IS NULL`,
-              notReservedTable,
-            );
-      const tableAvailable = await this.dbService.db
-        .select({ id: tableSeats.id })
-        .from(tableSeats)
-        .where(tableConditions)
-        .limit(1);
-      if (tableAvailable.length === 0) {
-        return {
-          error:
-            'Event is full (no table seats left). Try another table or check back later.',
-        };
-      }
-      reservedTableSeatId = tableAvailable[0].id;
-    }
-
     let reservedBusSeatId: number | null = null;
-    if (ev.requiresBusSignup) {
-      const notReservedBus = sql`${busSeats.id} NOT IN (SELECT bus_seat_id FROM seat_reservations WHERE bus_seat_id IS NOT NULL AND expires_at > ${now})`;
-      const busAvailable = await this.dbService.db
-        .select({ id: busSeats.id })
-        .from(busSeats)
-        .where(
-          and(
-            eq(busSeats.eventId, eventId),
-            sql`${busSeats.ticketId} IS NULL`,
-            notReservedBus,
-          ),
-        )
-        .limit(1);
-      if (busAvailable.length === 0) {
-        return { error: 'Event is full (no bus seats left).' };
+
+    try {
+      // Use raw SQL with FOR UPDATE to lock the selected seat row
+      if (ev.requiresTableSignup) {
+        const tableLockQuery =
+          selectedTable != null
+            ? sql`
+              SELECT id FROM ${tableSeats}
+              WHERE event_id = ${eventId}
+                AND table_number = ${selectedTable}
+                AND ticket_id IS NULL
+                AND id NOT IN (
+                  SELECT table_seat_id FROM ${seatReservations}
+                  WHERE table_seat_id IS NOT NULL
+                    AND expires_at > ${now}
+                )
+              ORDER BY table_number, seat_number
+              LIMIT 1
+              FOR UPDATE SKIP LOCKED
+            `
+            : sql`
+              SELECT id FROM ${tableSeats}
+              WHERE event_id = ${eventId}
+                AND ticket_id IS NULL
+                AND id NOT IN (
+                  SELECT table_seat_id FROM ${seatReservations}
+                  WHERE table_seat_id IS NOT NULL
+                    AND expires_at > ${now}
+                )
+              ORDER BY table_number, seat_number
+              LIMIT 1
+              FOR UPDATE SKIP LOCKED
+            `;
+
+        const tableResult = await this.dbService.db.execute(tableLockQuery);
+        if (!tableResult.rows || tableResult.rows.length === 0) {
+          return {
+            error:
+              'Event is full (no table seats left). Try another table or check back later.',
+          };
+        }
+        reservedTableSeatId = (tableResult.rows[0] as any).id;
       }
-      reservedBusSeatId = busAvailable[0].id;
-    }
 
-    // Delegate to PaymentsService for Stripe checkout
-    const checkoutResult = await this.paymentsService.createCheckoutSession({
-      eventId,
-      userId,
-      amount: ev.price,
-      currency: 'usd',
-      eventName: ev.name,
-      successUrl,
-      cancelUrl,
-    });
+      if (ev.requiresBusSignup) {
+        const busLockQuery = sql`
+          SELECT id FROM ${busSeats}
+          WHERE event_id = ${eventId}
+            AND ticket_id IS NULL
+            AND id NOT IN (
+              SELECT bus_seat_id FROM ${seatReservations}
+              WHERE bus_seat_id IS NOT NULL
+                AND expires_at > ${now}
+            )
+          ORDER BY bus_number, seat_number
+          LIMIT 1
+          FOR UPDATE SKIP LOCKED
+        `;
 
-    if (checkoutResult.error || !checkoutResult.url) {
+        const busResult = await this.dbService.db.execute(busLockQuery);
+        if (!busResult.rows || busResult.rows.length === 0) {
+          return { error: 'Event is full (no bus seats left).' };
+        }
+        reservedBusSeatId = (busResult.rows[0] as any).id;
+      }
+
+      // Delegate to PaymentsService for Stripe checkout
+      const checkoutResult = await this.paymentsService.createCheckoutSession({
+        eventId,
+        userId,
+        amount: ev.price,
+        currency: 'usd',
+        eventName: ev.name,
+        successUrl,
+        cancelUrl,
+      });
+
+      if (checkoutResult.error || !checkoutResult.url) {
+        return checkoutResult;
+      }
+
+      // Extract session ID from the URL
+      // Stripe's checkout URL format: https://checkout.stripe.com/c/pay/cs_test_...
+      const sessionId =
+        checkoutResult.url.split('/').pop()?.split('#')[0] || '';
+
+      // Create seat reservation (seat is now locked until transaction completes)
+      await this.dbService.db.insert(seatReservations).values({
+        stripeSessionId: sessionId,
+        eventId,
+        userId,
+        tableSeatId: reservedTableSeatId,
+        busSeatId: reservedBusSeatId,
+        expiresAt,
+      });
+
       return checkoutResult;
+    } catch (err) {
+      console.error('Error creating checkout session:', err);
+      return {
+        error: 'Failed to reserve seat. Please try again.',
+      };
     }
-
-    // Extract session ID from the URL
-    // Stripe's checkout URL format: https://checkout.stripe.com/c/pay/cs_test_...
-    const sessionId = checkoutResult.url.split('/').pop()?.split('#')[0] || '';
-
-    // Create seat reservation
-    await this.dbService.db.insert(seatReservations).values({
-      stripeSessionId: sessionId,
-      eventId,
-      userId,
-      tableSeatId: reservedTableSeatId,
-      busSeatId: reservedBusSeatId,
-      expiresAt,
-    });
-
-    return checkoutResult;
   }
 
   async completeSignupFromReservation(
