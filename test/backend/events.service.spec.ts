@@ -9,6 +9,7 @@ jest.mock('../../src/backend/src/payments/payments.service', () => ({
 jest.mock('../../src/backend/src/db/schema', () => ({
   events: { id: 'events.id', name: 'events.name', date: 'events.date', price: 'events.price', imageUrl: 'events.imageUrl' },
   tickets: { id: 'tickets.id', eventId: 'tickets.eventId', userId: 'tickets.userId', checkedIn: 'tickets.checkedIn', busSeat: 'tickets.busSeat', tableSeat: 'tickets.tableSeat', qrCodeData: 'tickets.qrCodeData', createdAt: 'tickets.createdAt' },
+  users: { id: 'users.id', name: 'users.name', email: 'users.email' },
   tableSeats: { id: 'tableSeats.id', eventId: 'tableSeats.eventId' },
   busSeats: { id: 'busSeats.id', eventId: 'busSeats.eventId' },
   seatReservations: { id: 'seatReservations.id' },
@@ -143,5 +144,106 @@ describe('EventsService', () => {
     mockDb.delete.mockReturnValue(createDbChain());
     await service.releaseReservation('cs_test_123');
     expect(mockDb.delete).toHaveBeenCalled();
+  });
+
+  describe('checkInTicket', () => {
+    function makeValidQR(ticketId: number, userId: number, eventId: number): string {
+      const crypto = require('crypto');
+      const data = `${ticketId}:${userId}:${eventId}`;
+      const secret = process.env.QR_SECRET || 'default-secret-change-in-production';
+      const sig = crypto.createHmac('sha256', secret).update(data).digest('hex');
+      return `${data}:${sig}`;
+    }
+
+    it('returns error for empty or invalid qrCodeData', async () => {
+      expect(await service.checkInTicket('')).toEqual({
+        success: false,
+        error: 'Invalid QR code data',
+      });
+      expect(await service.checkInTicket('  ')).toEqual({
+        success: false,
+        error: 'Invalid or tampered QR code',
+      });
+      expect(await service.checkInTicket('invalid')).toEqual({
+        success: false,
+        error: 'Invalid or tampered QR code',
+      });
+      expect(await service.checkInTicket('1:2:3:bad-signature')).toEqual({
+        success: false,
+        error: 'Invalid or tampered QR code',
+      });
+    });
+
+    it('returns error when ticket not found', async () => {
+      const qr = makeValidQR(999, 5, 10);
+      mockDb.select.mockReturnValue(createDbChain([]));
+
+      const result = await service.checkInTicket(qr);
+
+      expect(result).toEqual({ success: false, error: 'Ticket not found' });
+    });
+
+    it('returns alreadyCheckedIn when ticket already checked in', async () => {
+      const qr = makeValidQR(1, 5, 10);
+      const row = {
+        ticketId: 1,
+        checkedIn: true,
+        eventName: 'Gala',
+        eventDate: new Date('2026-06-15'),
+        userName: 'Alice',
+        userEmail: 'alice@test.com',
+        busSeat: null,
+        tableSeat: 'Table 3',
+      };
+      mockDb.select.mockReturnValue(createDbChain([row]));
+
+      const result = await service.checkInTicket(qr);
+
+      expect(result).toMatchObject({
+        success: false,
+        alreadyCheckedIn: true,
+        error: 'Already checked in',
+        ticket: {
+          ticketId: 1,
+          eventName: 'Gala',
+          userName: 'Alice',
+          userEmail: 'alice@test.com',
+          busSeat: null,
+          tableSeat: 'Table 3',
+        },
+      });
+      expect(mockDb.update).not.toHaveBeenCalled();
+    });
+
+    it('checks in ticket successfully and updates database', async () => {
+      const qr = makeValidQR(1, 5, 10);
+      const row = {
+        ticketId: 1,
+        checkedIn: false,
+        eventName: 'Gala',
+        eventDate: new Date('2026-06-15'),
+        userName: 'Alice',
+        userEmail: 'alice@test.com',
+        busSeat: 'Bus 1 - Seat 5',
+        tableSeat: null,
+      };
+      mockDb.select.mockReturnValue(createDbChain([row]));
+      mockDb.update.mockReturnValue(createDbChain());
+
+      const result = await service.checkInTicket(qr);
+
+      expect(result).toMatchObject({
+        success: true,
+        ticket: {
+          ticketId: 1,
+          eventName: 'Gala',
+          userName: 'Alice',
+          userEmail: 'alice@test.com',
+          busSeat: 'Bus 1 - Seat 5',
+          tableSeat: null,
+        },
+      });
+      expect(mockDb.update).toHaveBeenCalled();
+    });
   });
 });

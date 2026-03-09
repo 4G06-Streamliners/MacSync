@@ -38,6 +38,7 @@ describe('EventsController', () => {
       getTicketsForUser: jest.fn(),
       createCheckoutSession: jest.fn(),
       releaseReservation: jest.fn(),
+      checkInTicket: jest.fn(),
     };
     mockUsersService = { findOneWithRoles: jest.fn() };
     controller = new EventsController(mockEventsService, mockUsersService);
@@ -114,5 +115,29 @@ describe('EventsController', () => {
   it('releaseCheckoutReservation delegates to service', async () => {
     mockEventsService.releaseReservation.mockResolvedValue(undefined);
     expect(await controller.releaseCheckoutReservation('cs_123')).toEqual({ released: true });
+  });
+
+  it('checkIn passes qrCodeData to service and returns result', async () => {
+    const qrData = '1:5:10:abc123valid';
+    const result = {
+      success: true,
+      ticket: {
+        ticketId: 1,
+        eventName: 'Gala',
+        userName: 'Alice',
+        userEmail: 'alice@test.com',
+      },
+    };
+    mockEventsService.checkInTicket.mockResolvedValue(result);
+
+    expect(await controller.checkIn(qrData)).toEqual(result);
+    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith(qrData);
+  });
+
+  it('checkIn passes empty string when qrCodeData is undefined', async () => {
+    mockEventsService.checkInTicket.mockResolvedValue({ success: false, error: 'Invalid QR code data' });
+
+    await controller.checkIn(undefined as any);
+    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith('');
   });
 });

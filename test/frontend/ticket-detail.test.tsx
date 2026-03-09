@@ -58,6 +58,26 @@ describe('TicketDetailScreen', () => {
     });
   });
 
+  it('shows Checked In badge when ticket is checked in', async () => {
+    const tickets = [
+      {
+        ticketId: 1,
+        eventName: 'Gala',
+        eventPrice: 5000,
+        checkedIn: true,
+        qrCodeData: 'TICKET:5:10:1:123',
+      },
+    ];
+
+    mockGetUserTickets.mockResolvedValue(tickets);
+    render(<TicketDetailScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Checked In')).toBeTruthy();
+      expect(screen.getByText("You've been checked in. Welcome to the event!")).toBeTruthy();
+    });
+  });
+
   it('shows Request Refund button for paid events', async () => {
     const tickets = [
       {
