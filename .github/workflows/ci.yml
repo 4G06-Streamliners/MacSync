@@ -58,6 +58,52 @@ jobs:
         working-directory: src/backend
         run: npm run build
 
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: test/package-lock.json
+
+      - name: Install test dependencies
+        working-directory: test
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: test/backend
+        run: npx jest --config jest.config.js
+      
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: test/package-lock.json
+
+      - name: Install test dependencies
+        working-directory: test
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: test/frontend
+        run: npx jest --config jest.config.js
+
   web-admin:
     name: Web Admin
     runs-on: ubuntu-latest
@@ -86,21 +132,6 @@ jobs:
         run: npm run build
         env:
           SKIP_ENV_VALIDATION: "1"
-
-  root-tests:
-    name: Root tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Run root test/ folder
-        run: node test/dummy.test.js
 
   mobile:
     name: Mobile (Expo)
