@@ -201,6 +201,17 @@ export default function MyTickets() {
 
                   {/* Content */}
                   <View className="flex-1 p-4">
+                    {/* Refund Status Badge */}
+                    {ticket.refundRequest && ticket.refundRequest.status === 'pending' && (
+                      <View className="mb-2">
+                        <View className="bg-yellow-100 px-3 py-1.5 rounded-lg self-start">
+                          <Text className="text-xs font-bold text-yellow-800">
+                            ⏳ Refund Pending
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+
                     <View className="flex-row items-start justify-between mb-2">
                       <View className="flex-1">
                         <Text className="text-base font-bold text-gray-900">
@@ -209,37 +220,7 @@ export default function MyTickets() {
                         <Text className="text-maroon text-sm font-semibold mt-1">
                           View Ticket →
                         </Text>
-                      </View>
-                      {ticket.eventPrice === 0 ? (
-                        <Pressable
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            handleCancel(ticket.eventId);
-                          }}
-                          className="px-3 py-1.5 border border-red-200 rounded-lg bg-red-50 active:bg-red-100"
-                        >
-                          <Text className="text-xs font-semibold text-red-600">
-                            Cancel
-                          </Text>
-                        </Pressable>
-                      ) : (
-                        <Pressable
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            // TODO: Implement refund request
-                            if (Platform.OS === 'web') {
-                              alert('Refund request feature coming soon');
-                            } else {
-                              Alert.alert('Coming Soon', 'Refund request feature will be available soon');
-                            }
-                          }}
-                          className="px-3 py-1.5 border border-yellow-200 rounded-lg bg-yellow-50 active:bg-yellow-100"
-                        >
-                          <Text className="text-xs font-semibold text-yellow-700">
-                            Request Refund
-                          </Text>
-                        </Pressable>
-                      )}
+                      </View> 
                     </View>
 
                     <View className="gap-1">

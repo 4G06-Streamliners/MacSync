@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { PaymentsModule } from './payments/payments.module';
 import { StatsModule } from './stats/stats.module';
+import { RefundRequestsModule } from './refund-requests/refund-requests.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { StatsModule } from './stats/stats.module';
     PaymentsModule,
     AuthModule,
     StatsModule,
+    RefundRequestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

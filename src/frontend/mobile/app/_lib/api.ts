@@ -224,6 +224,12 @@ export interface Ticket {
   eventLocation: string | null;
   eventPrice: number;
   eventImageUrl: string | null;
+  refundRequest?: {
+    id: number;
+    status: 'pending' | 'approved' | 'denied';
+    adminResponse: string | null;
+    createdAt: string;
+  } | null;
 }
 
 export function getUserTickets(userId: number): Promise<Ticket[]> {
@@ -276,5 +282,62 @@ export function cancelSignup(
   return apiFetch(`/events/${eventId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({}),
+  });
+}
+
+// ---------- Refund Requests ----------
+export interface RefundRequest {
+  id: number;
+  ticketId: number | null;
+  userId: number;
+  eventId: number;
+  paymentId: number | null;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'denied';
+  adminResponse: string | null;
+  processedBy: number | null;
+  processedAt: string | null;
+  createdAt: string;
+  userName?: string;
+  userEmail?: string;
+  eventName?: string;
+  eventDate?: string;
+}
+
+export function createRefundRequest(
+  ticketId: number,
+  reason?: string,
+): Promise<{ success?: boolean; error?: string; requestId?: number }> {
+  return apiFetch('/refund-requests', {
+    method: 'POST',
+    body: JSON.stringify({ ticketId, reason }),
+  });
+}
+
+export function getAllRefundRequests(): Promise<RefundRequest[]> {
+  return apiFetch('/refund-requests');
+}
+
+export function getMyRefundRequests(): Promise<RefundRequest[]> {
+  return apiFetch('/refund-requests/my-requests');
+}
+
+export function approveRefundRequest(
+  requestId: number,
+  adminResponse?: string,
+): Promise<{ success?: boolean; error?: string }> {
+  return apiFetch(`/refund-requests/${requestId}/approve`, {
+    method: 'PUT',
+    body: JSON.stringify({ adminResponse }),
+  });
+}
+
+export function denyRefundRequest(
+  requestId: number,
+  adminResponse?: string,
+): Promise<{ success?: boolean; error?: string }> {
+  return apiFetch(`/refund-requests/${requestId}/deny`, {
+    method: 'PUT',
+    body: JSON.stringify({ adminResponse }),
   });
 }

@@ -114,6 +114,20 @@ const Alert = {
   alert: jest.fn(),
 };
 
+const Keyboard = {
+  dismiss: jest.fn(),
+};
+
+const TouchableWithoutFeedback = React.forwardRef(
+  function TouchableWithoutFeedback({ onPress, children }, ref) {
+    return React.createElement(
+      'div',
+      { ref, onClick: onPress },
+      children,
+    );
+  },
+);
+
 const Platform = {
   OS: 'ios',
   select: (obj) => obj.ios ?? obj.default,
@@ -137,6 +151,8 @@ module.exports = {
   Modal,
   RefreshControl,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
   Platform,
   useWindowDimensions,
   StyleSheet,

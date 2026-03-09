@@ -7,11 +7,13 @@ jest.mock('../../src/backend/src/payments/payments.service', () => ({
   PaymentsService: jest.fn(),
 }));
 jest.mock('../../src/backend/src/db/schema', () => ({
-  events: { id: 'events.id', name: 'events.name', date: 'events.date' },
-  tickets: { id: 'tickets.id', eventId: 'tickets.eventId', userId: 'tickets.userId' },
+  events: { id: 'events.id', name: 'events.name', date: 'events.date', price: 'events.price', imageUrl: 'events.imageUrl' },
+  tickets: { id: 'tickets.id', eventId: 'tickets.eventId', userId: 'tickets.userId', checkedIn: 'tickets.checkedIn', busSeat: 'tickets.busSeat', tableSeat: 'tickets.tableSeat', qrCodeData: 'tickets.qrCodeData', createdAt: 'tickets.createdAt' },
   tableSeats: { id: 'tableSeats.id', eventId: 'tableSeats.eventId' },
   busSeats: { id: 'busSeats.id', eventId: 'busSeats.eventId' },
   seatReservations: { id: 'seatReservations.id' },
+  refundRequests: { id: 'refundRequests.id', ticketId: 'refundRequests.ticketId', userId: 'refundRequests.userId', status: 'refundRequests.status', adminResponse: 'refundRequests.adminResponse', createdAt: 'refundRequests.createdAt' },
+  payments: { id: 'payments.id', ticketId: 'payments.ticketId' },
 }));
 
 const mockCreateTableSeats = jest.fn();
@@ -30,7 +32,7 @@ function createDbChain(result: any = []) {
   chain.catch = (fn: any) => Promise.resolve(result).catch(fn);
 
   [
-    'select', 'from', 'where', 'orderBy', 'limit', 'innerJoin',
+    'select', 'from', 'where', 'orderBy', 'limit', 'innerJoin', 'leftJoin',
     'insert', 'values', 'returning', 'update', 'set', 'delete',
   ].forEach((method) => {
     chain[method] = jest.fn().mockReturnValue(chain);
@@ -130,7 +132,11 @@ describe('EventsService', () => {
   it('getTicketsForUser returns tickets from database', async () => {
     const tickets = [{ ticketId: 1, eventName: 'Gala' }];
     mockDb.select.mockReturnValue(createDbChain(tickets));
-    expect(await service.getTicketsForUser(5)).toEqual(tickets);
+    const result = await service.getTicketsForUser(5);
+    // Service maps rows and adds refundRequest field; check the stable fields
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ ticketId: 1, eventName: 'Gala' });
+    expect(result[0]).toHaveProperty('refundRequest');
   });
 
   it('releaseReservation deletes by session id', async () => {

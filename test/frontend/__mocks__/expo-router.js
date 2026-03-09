@@ -1,5 +1,7 @@
 const React = require('react');
 
+let mockParams = {};
+
 const mockRouter = {
   back: jest.fn(),
   push: jest.fn(),
@@ -10,7 +12,7 @@ const mockRouter = {
 
 const useRouter = () => mockRouter;
 
-const useLocalSearchParams = jest.fn(() => ({}));
+const useLocalSearchParams = jest.fn(() => mockParams);
 
 function Stack({ children }) {
   return React.createElement('div', null, children);
@@ -30,8 +32,12 @@ function Link({ children }) {
 module.exports = {
   useRouter,
   useLocalSearchParams,
+  router: mockRouter,
   Stack,
   Redirect,
   Link,
   __mockRouter: mockRouter,
+  __setParams: (params) => {
+    mockParams = params;
+  },
 };

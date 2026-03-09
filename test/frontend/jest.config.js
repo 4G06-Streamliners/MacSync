@@ -30,6 +30,7 @@ module.exports = {
     '^react-dom/(.*)$': '<rootDir>/test/node_modules/react-dom/$1',
     '^react-native$': '<rootDir>/test/frontend/__mocks__/react-native.js',
     '^react-native/(.*)$': '<rootDir>/test/frontend/__mocks__/react-native.js',
+    '^react-native-qrcode-svg$': '<rootDir>/test/frontend/__mocks__/react-native-qrcode-svg.js',
     '^expo-router$': '<rootDir>/test/frontend/__mocks__/expo-router.js',
     '^react-native-safe-area-context$':
       '<rootDir>/test/frontend/__mocks__/react-native-safe-area-context.js',

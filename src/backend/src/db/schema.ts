@@ -211,3 +211,34 @@ export const seatReservations = pgTable('seat_reservations', {
 
 export type SeatReservation = typeof seatReservations.$inferSelect;
 export type NewSeatReservation = typeof seatReservations.$inferInsert;
+
+// ------------------- REFUND REQUESTS -------------------
+export const refundRequests = pgTable('refund_requests', {
+  id: serial('id').primaryKey(),
+  ticketId: integer('ticket_id').references(() => tickets.id, {
+    onDelete: 'set null',
+  }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  eventId: integer('event_id')
+    .notNull()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  paymentId: integer('payment_id').references(() => payments.id, {
+    onDelete: 'set null',
+  }),
+  reason: varchar('reason', { length: 500 }),
+  status: varchar('status', { length: 50 })
+    .notNull()
+    .default('pending'), // 'pending', 'approved', 'denied'
+  adminResponse: varchar('admin_response', { length: 500 }),
+  processedBy: integer('processed_by').references(() => users.id, {
+    onDelete: 'set null',
+  }), // admin who processed
+  processedAt: timestamp('processed_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export type RefundRequest = typeof refundRequests.$inferSelect;
+export type NewRefundRequest = typeof refundRequests.$inferInsert;
