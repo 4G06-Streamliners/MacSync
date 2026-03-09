@@ -49,6 +49,7 @@ async function bootstrap() {
     origin: true, // Allow all origins (dev)
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');

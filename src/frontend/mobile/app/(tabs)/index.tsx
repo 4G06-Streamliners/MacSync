@@ -142,31 +142,11 @@ function EventCard({
 
         {/* Action button */}
         {isSignedUp ? (
-          event.price === 0 ? (
-            <Pressable
-              onPress={() => onCancel(event.id)}
-              className="w-full py-3 rounded-xl border border-red-200 bg-red-50 active:bg-red-100"
-            >
-              <Text className="text-center text-sm font-semibold text-red-600">
-                Cancel Sign-Up
-              </Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              onPress={() => {
-                if (Platform.OS === 'web') {
-                  alert('Refund request feature coming soon');
-                } else {
-                  Alert.alert('Coming Soon', 'Refund request feature will be available soon');
-                }
-              }}
-              className="w-full py-3 rounded-xl border border-yellow-200 bg-yellow-50 active:bg-yellow-100"
-            >
-              <Text className="text-center text-sm font-semibold text-yellow-700">
-                Request Refund
-              </Text>
-            </Pressable>
-          )
+          <View className="w-full py-3 rounded-xl border border-green-200 bg-green-50">
+            <Text className="text-center text-sm font-semibold text-green-700">
+              ✓ Signed Up
+            </Text>
+          </View>
         ) : (
           <Pressable
             onPress={() => onSignUp(event.id)}

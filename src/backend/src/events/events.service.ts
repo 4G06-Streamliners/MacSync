@@ -8,6 +8,7 @@ import {
   tableSeats,
   busSeats,
   seatReservations,
+  refundRequests,
 } from '../db/schema';
 import type { NewEvent } from '../db/schema';
 import { eq, sql, and, asc } from 'drizzle-orm';
@@ -282,12 +283,39 @@ export class EventsService {
         eventLocation: events.location,
         eventPrice: events.price,
         eventImageUrl: events.imageUrl,
+        refundRequestId: refundRequests.id,
+        refundRequestStatus: refundRequests.status,
+        refundRequestAdminResponse: refundRequests.adminResponse,
+        refundRequestCreatedAt: refundRequests.createdAt,
       })
       .from(tickets)
       .innerJoin(events, eq(tickets.eventId, events.id))
+      .leftJoin(
+        refundRequests,
+        and(
+          eq(refundRequests.ticketId, tickets.id),
+          eq(refundRequests.status, 'pending'), // Only show pending requests
+        ),
+      )
       .where(eq(tickets.userId, userId));
 
-    return rows;
+    // Transform to include refundRequest as nested object
+    return rows.map((row) => ({
+      ...row,
+      refundRequest: row.refundRequestId
+        ? {
+            id: row.refundRequestId,
+            status: row.refundRequestStatus,
+            adminResponse: row.refundRequestAdminResponse,
+            createdAt: row.refundRequestCreatedAt,
+          }
+        : null,
+      // Remove the flattened fields
+      refundRequestId: undefined,
+      refundRequestStatus: undefined,
+      refundRequestAdminResponse: undefined,
+      refundRequestCreatedAt: undefined,
+    }));
   }
 
   /** Create Stripe Checkout Session for event signup; user is only signed up after payment (via webhook). */

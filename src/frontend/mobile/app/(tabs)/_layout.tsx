@@ -51,6 +51,7 @@ function HeaderLeft() {
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 8);
+  const { isAdmin } = useAuth();
 
   return (
     <Tabs
@@ -100,6 +101,16 @@ export default function TabLayout() {
           title: "Profile",
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>👤</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: "Admin",
+          href: isAdmin ? "/(tabs)/admin" : null,
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>⚙️</Text>
           ),
         }}
       />

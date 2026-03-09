@@ -6,11 +6,16 @@ import {
   Pressable,
   Image,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
-import { getUserTickets, type Ticket } from "./_lib/api";
+import { getUserTickets, createRefundRequest, cancelSignup, type Ticket } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
 
 export default function TicketDetailScreen() {
@@ -19,6 +24,11 @@ export default function TicketDetailScreen() {
   const insets = useSafeAreaInsets();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [refundReason, setRefundReason] = useState("");
+  const [submittingRefund, setSubmittingRefund] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     loadTicket();
@@ -58,6 +68,63 @@ export default function TicketDetailScreen() {
   const formatPrice = (price: number) => {
     if (price === 0) return "Free Event";
     return `$${(price / 100).toFixed(2)}`;
+  };
+
+  const handleRequestRefund = async () => {
+    if (!ticket) return;
+    
+    const trimmedReason = refundReason.trim();
+    if (!trimmedReason) {
+      Alert.alert("Required", "Please provide a reason for your refund request.");
+      return;
+    }
+    
+    setSubmittingRefund(true);
+    try {
+      const result = await createRefundRequest(ticket.ticketId, trimmedReason);
+      
+      if (result.error) {
+        Alert.alert("Error", result.error);
+      } else {
+        Alert.alert(
+          "Refund Requested",
+          "Your refund request has been submitted. An admin will review it shortly.",
+          [{ text: "OK", onPress: () => {
+            setShowRefundModal(false);
+            setRefundReason("");
+            loadTicket(); // Reload to show updated status
+          }}]
+        );
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to submit refund request");
+    } finally {
+      setSubmittingRefund(false);
+    }
+  };
+
+  const handleCancelSignup = async () => {
+    if (!ticket) return;
+    
+    setShowCancelModal(false);
+    setCancelling(true);
+    try {
+      const result = await cancelSignup(ticket.eventId);
+      
+      if (result.error) {
+        Alert.alert("Error", result.error);
+      } else {
+        Alert.alert(
+          "Ticket Cancelled",
+          "Your ticket has been cancelled successfully.",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Failed to cancel ticket");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   if (loading) {
@@ -192,6 +259,67 @@ export default function TicketDetailScreen() {
           </View>
         </View>
 
+        {/* Refund Status Banner */}
+        {ticket.refundRequest && ticket.refundRequest.status === 'pending' && (
+          <View className="bg-yellow-50 border border-yellow-300 rounded-2xl p-4 mb-6">
+            <View className="flex-row items-center gap-2 mb-2">
+              <Text className="text-xl">⏳</Text>
+              <Text className="text-base font-bold text-yellow-900">
+                Refund Requested
+              </Text>
+            </View>
+            <Text className="text-sm text-yellow-800">
+              Your refund request is pending admin review. We'll notify you once it's processed.
+            </Text>
+          </View>
+        )}
+
+        {ticket.refundRequest && ticket.refundRequest.status === 'denied' && ticket.refundRequest.adminResponse && (
+          <View className="bg-red-50 border border-red-300 rounded-2xl p-4 mb-6">
+            <View className="flex-row items-center gap-2 mb-2">
+              <Text className="text-xl">❌</Text>
+              <Text className="text-base font-bold text-red-900">
+                Refund Denied
+              </Text>
+            </View>
+            <Text className="text-sm text-red-800 mb-2">
+              {ticket.refundRequest.adminResponse}
+            </Text>
+            <Text className="text-xs text-red-600">
+              If you have questions, please contact support.
+            </Text>
+          </View>
+        )}
+
+        {/* Request Refund Button (only for paid events without pending request) */}
+        {ticket.eventPrice > 0 && !ticket.refundRequest && (
+          <Pressable
+            onPress={() => setShowRefundModal(true)}
+            className="bg-red-500 active:bg-red-600 rounded-2xl p-4 mb-6 items-center"
+          >
+            <Text className="text-base font-bold text-white">
+              Request Refund
+            </Text>
+          </Pressable>
+        )}
+
+        {/* Cancel Signup Button (only for free events) */}
+        {ticket.eventPrice === 0 && (
+          <Pressable
+            onPress={() => setShowCancelModal(true)}
+            disabled={cancelling}
+            className="bg-gray-500 active:bg-gray-600 rounded-2xl p-4 mb-6 items-center disabled:opacity-50"
+          >
+            {cancelling ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-base font-bold text-white">
+                Cancel Sign-Up
+              </Text>
+            )}
+          </Pressable>
+        )}
+
         {/* QR Code Card */}
         <View className="bg-white rounded-2xl p-6 items-center border border-gray-100 shadow-sm">
           <Text className="text-lg font-bold text-gray-900 mb-2">
@@ -228,6 +356,104 @@ export default function TicketDetailScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Refund Request Modal */}
+      <Modal
+        visible={showRefundModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRefundModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View className="flex-1 bg-black/50 justify-end">
+            <TouchableWithoutFeedback>
+              <View className="bg-white rounded-t-3xl p-6" style={{ paddingBottom: insets.bottom + 24 }}>
+                <Text className="text-xl font-bold text-gray-900 mb-2">
+                  Request Refund
+                </Text>
+                <Text className="text-sm text-gray-600 mb-4">
+                  Please let us know why you're requesting a refund. This information is required.
+                </Text>
+
+                <TextInput
+                  value={refundReason}
+                  onChangeText={setRefundReason}
+                  placeholder="Reason for refund (required)"
+                  multiline
+                  numberOfLines={4}
+                  className="border border-gray-300 rounded-xl p-4 text-base mb-4 min-h-[100px]"
+                  style={{ textAlignVertical: "top" }}
+                  returnKeyType="done"
+                  blurOnSubmit={true}
+                />
+
+                <View className="flex-row gap-3">
+                  <Pressable
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setShowRefundModal(false);
+                      setRefundReason("");
+                    }}
+                    disabled={submittingRefund}
+                    className="flex-1 bg-gray-200 active:bg-gray-300 rounded-xl p-4 items-center"
+                  >
+                    <Text className="text-base font-bold text-gray-700">Cancel</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handleRequestRefund}
+                    disabled={submittingRefund}
+                    className="flex-1 bg-red-500 active:bg-red-600 rounded-xl p-4 items-center disabled:opacity-50"
+                  >
+                    {submittingRefund ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <Text className="text-base font-bold text-white">Submit Request</Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-bold text-gray-900 mb-2">
+              Cancel Sign-Up
+            </Text>
+            <Text className="text-sm text-gray-600 mb-6">
+              Are you sure you want to cancel your registration for this event? This action cannot be undone.
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setShowCancelModal(false)}
+                className="flex-1 py-3 border border-gray-300 rounded-xl active:bg-gray-50"
+              >
+                <Text className="text-center text-sm font-medium text-gray-700">
+                  No, Keep It
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCancelSignup}
+                className="flex-1 py-3 bg-red-500 rounded-xl active:bg-red-600"
+              >
+                <Text className="text-center text-sm font-semibold text-white">
+                  Yes, Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
