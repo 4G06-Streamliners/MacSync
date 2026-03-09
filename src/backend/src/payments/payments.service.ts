@@ -32,11 +32,62 @@ export class PaymentsService {
   }
 
   /**
+   * Creates a Stripe Product and Price for an event
+   * Returns the price ID to be stored in the event record
+   */
+  async createProductAndPrice(
+    eventName: string,
+    eventId: number,
+    priceInCents: number,
+    currency = 'usd',
+  ): Promise<{ priceId?: string; error?: string }> {
+    if (!this.stripe) {
+      return {
+        error:
+          'Payment is not configured. Set STRIPE_SECRET_KEY in the server environment.',
+      };
+    }
+
+    if (priceInCents <= 0) {
+      return { error: 'Price must be greater than 0' };
+    }
+
+    try {
+      // Create the product
+      const product = await this.stripe.products.create({
+        name: eventName,
+        metadata: {
+          eventId: String(eventId),
+        },
+      });
+
+      // Create the price
+      const price = await this.stripe.prices.create({
+        product: product.id,
+        unit_amount: priceInCents,
+        currency,
+        metadata: {
+          eventId: String(eventId),
+        },
+      });
+
+      return { priceId: price.id };
+    } catch (err: unknown) {
+      console.error('Failed to create Stripe product/price:', err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to create Stripe product/price';
+      return { error: message };
+    }
+  }
+
+  /**
    * Creates a Stripe Checkout Session for payment
    */
   async createCheckoutSession(
     params: CreateCheckoutSessionParams,
-  ): Promise<{ url?: string; error?: string }> {
+  ): Promise<{ url?: string; sessionId?: string; error?: string }> {
     if (!this.stripe) {
       return {
         error:
@@ -83,7 +134,7 @@ export class PaymentsService {
         },
       });
 
-      return { url: session.url || undefined };
+      return { url: session.url || undefined, sessionId: session.id };
     } catch (err: unknown) {
       console.error('Stripe checkout session creation error:', err);
       const message =

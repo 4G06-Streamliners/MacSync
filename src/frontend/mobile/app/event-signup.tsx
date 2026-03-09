@@ -6,16 +6,17 @@ import {
   Pressable,
   ActivityIndicator,
   Modal,
-  Linking,
   Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ExpoLinking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import {
   getEvent,
   signupForEvent,
   createCheckoutSession,
+  releaseCheckoutReservation,
   type EventItem,
 } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
@@ -152,26 +153,50 @@ export default function EventSignupScreen() {
         return;
       }
       const checkoutUrl = result.url?.trim();
-      if (checkoutUrl && checkoutUrl.startsWith("http")) {
+      const sessionId = result.sessionId;
+      
+      if (checkoutUrl && checkoutUrl.startsWith("http") && sessionId) {
         if (Platform.OS === "web" && typeof window !== "undefined") {
           window.location.assign(checkoutUrl);
           return;
         }
+        
         try {
-          await Linking.openURL(checkoutUrl);
-          router.replace("/(tabs)");
+          await WebBrowser.openBrowserAsync(checkoutUrl, {
+            dismissButtonStyle: "done",
+            readerMode: false,
+            showTitle: true,
+            enableBarCollapsing: false,
+          });
+          
+          // Browser closed - release the reservation
+          try {
+            await releaseCheckoutReservation(sessionId);
+            console.log('Released seat reservation for session:', sessionId);
+          } catch (releaseErr) {
+            console.warn('Failed to release reservation (may have already completed):', releaseErr);
+          }
+          
+          // Navigate back to home and clear modal stack
+          while (router.canGoBack()) {
+            router.back();
+          }
+          router.navigate("/(tabs)");
         } catch (openErr: any) {
+          console.error("Browser error:", openErr);
           showNotification(
             "error",
             "Error",
-            openErr?.message || "Could not open payment link. Try again."
+            openErr?.message || "Could not open payment. Try again."
           );
         }
       } else {
         showNotification(
           "error",
           "Error",
-          "No payment link received. Check that the backend is running and STRIPE_SECRET_KEY is set."
+          !sessionId
+            ? "Payment session could not be created. Please try again."
+            : "No payment link received. Check that the backend is running and STRIPE_SECRET_KEY is set."
         );
       }
     } catch (err: any) {
@@ -212,7 +237,6 @@ export default function EventSignupScreen() {
         );
         return;
       }
-      // Refetch event so UI shows "You're signed up" even if notification doesn't appear
       const updated = await getEvent(event.id, user.id);
       setEvent(updated);
 

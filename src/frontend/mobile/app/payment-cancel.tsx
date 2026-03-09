@@ -85,9 +85,13 @@ export default function PaymentCancelScreen() {
             {eventId ? (
               <>
                 <Pressable
-                  onPress={() =>
-                    router.replace(`/event-signup?eventId=${encodeURIComponent(eventId)}`)
-                  }
+                  onPress={() => {
+                    // Go back to close this modal, then navigate to event
+                    router.back();
+                    setTimeout(() => {
+                      router.push(`/event-signup?eventId=${encodeURIComponent(eventId)}`);
+                    }, 100);
+                  }}
                   className="bg-maroon active:bg-maroon-dark px-8 py-3 rounded-xl w-full"
                 >
                   <Text className="text-base font-semibold text-white text-center">
@@ -95,7 +99,13 @@ export default function PaymentCancelScreen() {
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={() => router.replace("/(tabs)")}
+                  onPress={() => {
+                    // Navigate to root and clear all modals
+                    while (router.canGoBack()) {
+                      router.back();
+                    }
+                    router.navigate("/(tabs)");
+                  }}
                   className="mt-3 px-8 py-3 rounded-xl w-full border border-gray-300 active:bg-gray-50"
                 >
                   <Text className="text-base font-semibold text-gray-700 text-center">
@@ -105,7 +115,13 @@ export default function PaymentCancelScreen() {
               </>
             ) : (
               <Pressable
-                onPress={() => router.replace("/(tabs)")}
+                onPress={() => {
+                  // Navigate to root and clear all modals
+                  while (router.canGoBack()) {
+                    router.back();
+                  }
+                  router.navigate("/(tabs)");
+                }}
                 className="bg-maroon active:bg-maroon-dark px-8 py-3 rounded-xl w-full"
               >
                 <Text className="text-base font-semibold text-white text-center">

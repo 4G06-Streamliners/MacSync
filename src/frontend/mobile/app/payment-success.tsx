@@ -20,7 +20,13 @@ export default function PaymentSuccessScreen() {
           You're signed up for the event. See you there!
         </Text>
         <Pressable
-          onPress={() => router.replace("/(tabs)")}
+          onPress={() => {
+            // Navigate to root and clear all modals
+            while (router.canGoBack()) {
+              router.back();
+            }
+            router.navigate("/(tabs)");
+          }}
           className="bg-maroon active:bg-maroon-dark px-8 py-3 rounded-xl"
         >
           <Text className="text-base font-semibold text-white">OK</Text>
