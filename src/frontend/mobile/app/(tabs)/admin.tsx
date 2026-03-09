@@ -47,23 +47,23 @@ export default function AdminScreen() {
             </Text>
           </Pressable>
 
-          {/* QR Scanner - Coming Soon */}
-          <View className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm opacity-60">
+          {/* QR Scanner */}
+          <Pressable
+            onPress={() => router.push("/qr-scanner")}
+            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm active:bg-gray-50"
+          >
             <View className="flex-row items-start justify-between mb-3">
               <View className="w-12 h-12 bg-blue-100 rounded-xl items-center justify-center">
                 <Text className="text-2xl">📷</Text>
-              </View>
-              <View className="bg-gray-400 px-2 py-1 rounded-full">
-                <Text className="text-xs font-bold text-white">Soon</Text>
               </View>
             </View>
             <Text className="text-lg font-bold text-gray-900 mb-1">
               QR Code Scanner
             </Text>
             <Text className="text-sm text-gray-600">
-              Scan tickets at event entrance
+              Scan tickets at event entrance to check in attendees
             </Text>
-          </View>
+          </Pressable>
         </View>
       </ScrollView>
     </View>
