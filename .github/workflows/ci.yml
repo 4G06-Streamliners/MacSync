@@ -58,51 +58,51 @@ jobs:
         working-directory: src/backend
         run: npm run build
 
-  backend-tests:
-    name: Backend Tests
-    runs-on: ubuntu-latest
+backend-tests:
+  name: Backend Tests
+  runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: test/package-lock.json
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+        cache-dependency-path: test/package-lock.json
 
-      - name: Install test dependencies
-        working-directory: test
-        run: npm ci
+    - name: Install test dependencies
+      working-directory: test
+      run: npm ci
 
-      - name: Run backend tests
-        working-directory: test/backend
-        run: npx jest --config jest.config.js
-      
-  frontend-tests:
-    name: Frontend Tests
-    runs-on: ubuntu-latest
+    - name: Run backend tests
+      working-directory: test
+      run: npm run test:backend
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+frontend-tests:
+  name: Frontend Tests
+  runs-on: ubuntu-latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: test/package-lock.json
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Install test dependencies
-        working-directory: test
-        run: npm ci
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+        cache: "npm"
+        cache-dependency-path: test/package-lock.json
 
-      - name: Run frontend tests
-        working-directory: test/frontend
-        run: npx jest --config jest.config.js
+    - name: Install test dependencies
+      working-directory: test
+      run: npm ci
+
+    - name: Run frontend tests
+      working-directory: test
+      run: npm run test:frontend
 
   web-admin:
     name: Web Admin
