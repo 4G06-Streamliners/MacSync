@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { updateUser, getMyRefundRequests, type RefundRequest } from "../_lib/api";
 import { useAuth } from "../_context/AuthContext";
 
@@ -40,6 +41,7 @@ export default function ProfileScreen() {
   }, [user]);
 
   const loadRefundedTickets = async () => {
+    setLoadingRefunds(true);
     try {
       const refunds = await getMyRefundRequests();
       // Only show approved refunds (tickets that were actually refunded)
@@ -50,6 +52,15 @@ export default function ProfileScreen() {
       setLoadingRefunds(false);
     }
   };
+
+  // Reload refunded tickets whenever the profile screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        void loadRefundedTickets();
+      }
+    }, [user]),
+  );
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
