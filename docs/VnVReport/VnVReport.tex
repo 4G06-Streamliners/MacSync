@@ -75,6 +75,352 @@ This document ...
 
 \section{Functional Requirements Evaluation}
 
+This section evaluates whether the Large Event Management System (LEMS) satisfies the functional requirements defined in the Software Requirements Specification (SRS). Functional requirements describe the expected behaviour of the system and define how users interact with the platform to perform tasks such as reserving tickets, completing event registrations, processing payments, requesting refunds, and managing user accounts.
+
+The evaluation was performed using automated backend unit tests implemented with the Jest testing framework. These tests validate that controllers, services, and authorization guards behave correctly under both normal and edge-case conditions. The tests simulate realistic user actions and verify that the system enforces capacity constraints, maintains data integrity, and prevents unauthorized access.
+
+The functional areas evaluated are:
+
+\begin{itemize}
+\item Ticket Reservation and Lockout
+\item Payment Processing
+\item Refund Request Management
+\item User Management
+\item Role-Based Access Control (RBAC)
+\end{itemize}
+
+
+\subsection{Ticket Reservation and Lockout (FR1)}
+
+The ticket reservation subsystem ensures that event seats cannot be oversold and that users cannot reserve the same seat simultaneously. The system uses temporary reservations to lock seats during checkout while payment is being processed.
+
+\paragraph{Test Case FR1-T01: Successful Seat Reservation}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR1-T01-1
+
+\textit{Initial State:} An event exists with available table seats and remaining capacity.
+
+\textit{Input:} A user attempts to create a checkout session for a ticket.
+
+\textit{Expected Output:} The system reserves an available seat, creates a reservation record, and generates a Stripe checkout session.
+
+\textit{Test Case Derivation:} Ensures that the system correctly reserves seats before payment and prevents multiple users from selecting the same seat simultaneously.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR1-T02: Event Capacity Enforcement}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR1-T02-1
+
+\textit{Initial State:} The event has reached its maximum capacity.
+
+\textit{Input:} A user attempts to reserve a ticket.
+
+\textit{Expected Output:} The system returns an error message indicating that the event is full.
+
+\textit{Test Case Derivation:} Confirms that the system correctly prevents ticket purchases once the capacity limit is reached.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR1-T03: Seat Lockout When No Seats Available}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR1-T03-1
+
+\textit{Initial State:} All table seats are reserved or locked by other users.
+
+\textit{Input:} A user attempts to create a checkout session.
+
+\textit{Expected Output:} The system returns an error indicating that no table seats remain.
+
+\textit{Test Case Derivation:} Validates the seat lockout mechanism that prevents double booking.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR1-T04: Reservation Completion After Payment}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR1-T04-1
+
+\textit{Initial State:} A reservation exists associated with a Stripe checkout session.
+
+\textit{Input:} The payment is successfully completed.
+
+\textit{Expected Output:} The system creates a ticket record, assigns the seat to the user, records the payment, and deletes the temporary reservation.
+
+\textit{Test Case Derivation:} Ensures that successful payments correctly finalize ticket registration.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR1-T05: Reservation Release}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR1-T05-1
+
+\textit{Initial State:} A temporary seat reservation exists for a checkout session.
+
+\textit{Input:} The checkout session is cancelled or expires.
+
+\textit{Expected Output:} The reservation is deleted and the seat becomes available again.
+
+\textit{Test Case Derivation:} Confirms that seat reservations do not remain locked indefinitely.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR1-T06: Concurrent Reservation Handling}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR1-T06-1
+
+\textit{Initial State:} Only one seat remains available for an event.
+
+\textit{Input:} Two users attempt to reserve the final seat simultaneously.
+
+\textit{Expected Output:} One reservation succeeds while the other receives an error indicating that no seats remain.
+
+\textit{Test Case Derivation:} Verifies that the system prevents race conditions and maintains data consistency during concurrent access.
+
+\end{enumerate}
+
+
+\subsection{Payment Processing (FR2)}
+
+The payment subsystem manages financial transactions associated with event ticket purchases. Payments are processed through the Stripe payment service and recorded within the system.
+
+The functional tests verify that checkout sessions are created correctly, payments are recorded after successful transactions, and reservations are finalized into tickets once payment is completed.
+
+
+\paragraph{Test Case FR2-T01: Checkout Session Creation}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR2-T01-1
+
+\textit{Initial State:} An event exists with a valid Stripe price ID.
+
+\textit{Input:} A user attempts to purchase a ticket.
+
+\textit{Expected Output:} The system creates a Stripe checkout session and returns the session URL and session identifier.
+
+\textit{Test Case Derivation:} Confirms that the payment service successfully initializes a Stripe checkout session for ticket purchases.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR2-T02: Payment Recording}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR2-T02-1
+
+\textit{Initial State:} A Stripe payment has been completed successfully.
+
+\textit{Input:} The system receives payment confirmation containing the Stripe payment intent ID and transaction details.
+
+\textit{Expected Output:} The system records the payment in the database and associates it with the corresponding user, event, and ticket.
+
+\textit{Test Case Derivation:} Ensures that successful payments are properly recorded for financial tracking and auditing.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR2-T03: Reservation Finalization After Payment}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR2-T03-1
+
+\textit{Initial State:} A seat reservation exists for a user and a Stripe checkout session has been completed.
+
+\textit{Input:} The system processes the successful payment event.
+
+\textit{Expected Output:} The system creates a ticket, assigns the reserved seat to the user, records the payment, and deletes the temporary reservation.
+
+\textit{Test Case Derivation:} Validates the full payment completion workflow from reservation to finalized ticket.
+
+\end{enumerate}
+
+
+\subsection{Refund Request Management (FR3)}
+
+The refund subsystem allows users to request refunds for previously purchased tickets and enables administrators to review and process these requests. The tests verify that refund requests can be created, retrieved, and processed correctly.
+
+\paragraph{Test Case FR3-T01: Refund Request Creation}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR3-T01-1
+
+\textit{Initial State:} A user has purchased a ticket for an event.
+
+\textit{Input:} The user submits a refund request containing the ticket identifier and a reason for the refund.
+
+\textit{Expected Output:} A new refund request record is created and associated with the user and ticket.
+
+\textit{Test Case Derivation:} Ensures that users can successfully submit refund requests.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR3-T02: Retrieve Refund Requests}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR3-T02-1
+
+\textit{Initial State:} One or more refund requests exist in the system.
+
+\textit{Input:} An administrator requests the list of refund requests.
+
+\textit{Expected Output:} The system returns all refund requests along with their associated ticket and event information.
+
+\textit{Test Case Derivation:} Confirms that administrators can review submitted refund requests.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR3-T03: Refund Approval}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR3-T03-1
+
+\textit{Initial State:} A refund request exists with status \textit{Pending}.
+
+\textit{Input:} An administrator approves the refund request.
+
+\textit{Expected Output:} The refund request status changes to \textit{Approved} and the payment service processes the refund.
+
+\textit{Test Case Derivation:} Ensures that administrators can approve refund requests and trigger the refund process.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR3-T04: Refund Denial}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR3-T04-1
+
+\textit{Initial State:} A refund request exists with status \textit{Pending}.
+
+\textit{Input:} An administrator denies the refund request.
+
+\textit{Expected Output:} The refund request status changes to \textit{Denied} and the request is closed.
+
+\textit{Test Case Derivation:} Confirms that administrators can reject refund requests and record the decision.
+
+\end{enumerate}
+
+
+\subsection{User Management (FR4)}
+
+The user management subsystem handles user account creation, modification, role assignment, and account deletion.
+
+\paragraph{Test Case FR4-T01: Retrieve Users}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR4-T01-1
+
+\textit{Initial State:} User records exist in the system.
+
+\textit{Input:} A request is made to retrieve all users.
+
+\textit{Expected Output:} The system returns a list of users.
+
+\textit{Test Case Derivation:} Confirms that the user controller correctly retrieves user data.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR4-T02: Update User Information}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR4-T02-1
+
+\textit{Initial State:} A user account exists.
+
+\textit{Input:} A request is made to update user information.
+
+\textit{Expected Output:} The user record is updated and the new information is returned.
+
+\textit{Test Case Derivation:} Ensures that user updates are processed correctly.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR4-T03: Replace User Roles}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR4-T03-1
+
+\textit{Initial State:} A user has existing role assignments.
+
+\textit{Input:} An administrator replaces the user's roles.
+
+\textit{Expected Output:} The previous roles are removed and the new roles are assigned.
+
+\textit{Test Case Derivation:} Confirms that role replacement operations function correctly.
+
+\end{enumerate}
+
+
+
+\subsection{Role-Based Access Control (RBAC) (FR5)}
+
+The RBAC subsystem ensures that only authorized users can access privileged operations.
+
+The system uses a role guard to evaluate role metadata associated with protected routes and verify that the authenticated user possesses the required permissions.
+
+\paragraph{Test Case FR5-T01: Access Granted for Authorized Roles}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR5-T01-1
+
+\textit{Initial State:} A user with the required role attempts to access a protected route.
+
+\textit{Input:} The request passes through the role guard.
+
+\textit{Expected Output:} Access is granted.
+
+\textit{Test Case Derivation:} Ensures that authorized users can access protected functionality.
+
+\end{enumerate}
+
+
+\paragraph{Test Case FR5-T02: Access Denied for Unauthorized Roles}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} FR5-T02-1
+
+\textit{Initial State:} A user without the required role attempts to access a protected route.
+
+\textit{Input:} The request passes through the role guard.
+
+\textit{Expected Output:} The system denies access and throws an authorization error.
+
+\textit{Test Case Derivation:} Confirms that unauthorized users cannot access restricted functionality.
+
+\end{enumerate}
+
 \section{Nonfunctional Requirements Evaluation}
 
 \subsection{Usability}
