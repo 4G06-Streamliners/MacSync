@@ -559,6 +559,27 @@ the feedback from the Rev 0 demo to the supervisor (or to potential users)
 should be highlighted.}
 
 \section{Automated Testing}
+Automated testing forms the foundation of the verification process for the platform, as outlined in the VnV Plan.
+The current implementation uses \textbf{Jest} with \textbf{ts-jest} for both frontend and backend, executed via GitHub Actions on each pull request.\\
+
+\textbf{Backend tests} (run with \texttt{npm run test:backend} from the \texttt{test} directory) exercise NestJS controllers and services in isolation.
+The suite includes unit tests for the users controller and service (including RBAC and role management), events controller and service, refund requests,
+payments, and the roles guard. External dependencies such as Drizzle ORM and Stripe are mocked to ensure deterministic, fast execution. Coverage is
+configured for the events, auth, and users modules. Tests are written in TypeScript with Jest mocks and a chainable database helper to simulate query results.\\
+
+\textbf{Frontend tests} (run with \texttt{npm run test:frontend}) target the Expo React Native mobile app using a jsdom environment. The React Testing
+Library is used to verify components and workflows such as event creation, the events screen, ticket details, refund requests, and QR scanning. React
+Native, Expo Router, and other native modules are mocked so tests run in Node without a device or simulator. Coverage targets the
+\texttt{src/frontend/mobile/app} directory.\\
+
+\textbf{Continuous integration} is implemented with GitHub Actions. The CI workflow runs on pull requests and includes: backend lint and build (with
+a PostgreSQL service container for migrations), backend unit tests, frontend unit tests, web-admin lint and build, and mobile type-checking and Expo
+config validation. Test dependencies are installed from the dedicated \texttt{test} package, which also defines \texttt{npm run coverage:frontend} 
+and \texttt{coverage:backend} for local coverage reporting.\\
+
+This approach aligns with the VnV Plan's emphasis on Jest for the backend, automated CI execution, and separation of frontend and backend test suites.
+ The frontend uses Jest rather than the originally planned Vitest; Cypress end-to-end tests and Supertest-based API integration tests are not yet in
+  place. Static analysis (ESLint, Prettier, TypeScript) is applied in the backend and web-admin CI jobs, consistent with the plan's toolchain requirements.\\
 
 \section{Trace to Requirements}
 
