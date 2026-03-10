@@ -9,6 +9,7 @@ module.exports = {
     '^.+\\.ts$': [
       tsJestPath,
       {
+        diagnostics: false,
         tsconfig: {
           experimentalDecorators: true,
           emitDecoratorMetadata: true,

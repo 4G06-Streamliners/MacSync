@@ -52,12 +52,12 @@ const Pressable = React.forwardRef(function Pressable(
   ref,
 ) {
   return React.createElement(
-    'button',
+    'div',
     {
       ref,
+      role: 'button',
       'data-testid': testID,
-      onClick: onPress,
-      disabled: disabled || false,
+      onClick: disabled ? undefined : onPress,
       className,
     },
     children,

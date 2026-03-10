@@ -138,4 +138,70 @@ describe('EventsService', () => {
     await service.releaseReservation('cs_test_123');
     expect(mockDb.delete).toHaveBeenCalled();
   });
+
+  // --- Signup edge case tests ---
+
+  it('signup returns error when already signed up (duplicate)', async () => {
+    mockDb.select.mockReturnValue(createDbChain([{ id: 99, userId: 5, eventId: 1 }]));
+    const result = await service.signup(1, 5);
+    expect(result).toEqual(expect.objectContaining({ error: 'Already signed up for this event' }));
+  });
+
+  it('signup returns error when event is at full capacity', async () => {
+    mockDb.select
+      .mockReturnValueOnce(createDbChain([]))  // no existing ticket
+      .mockReturnValueOnce(createDbChain([{ id: 1, capacity: 2, requiresTableSignup: false, requiresBusSignup: false }]))  // event found
+      .mockReturnValueOnce(createDbChain([{ count: 2 }]));  // ticket count == capacity
+    const result = await service.signup(1, 5);
+    expect(result).toEqual({ error: 'Event is full' });
+  });
+
+  it('signup returns error when no table seats are left', async () => {
+    mockDb.select
+      .mockReturnValueOnce(createDbChain([]))  // no existing ticket
+      .mockReturnValueOnce(createDbChain([{
+        id: 1, capacity: 100, requiresTableSignup: true, requiresBusSignup: false,
+        tableCount: 5, seatsPerTable: 8,
+      }]))
+      .mockReturnValueOnce(createDbChain([{ count: 10 }]))  // under capacity
+      .mockReturnValueOnce(createDbChain([]));  // no available table seats
+    const result = await service.signup(1, 5, 3);
+    expect(result).toEqual(expect.objectContaining({
+      error: expect.stringContaining('no table seats left'),
+    }));
+  });
+
+  it('signup succeeds and assigns table seat when available', async () => {
+    const ticket = { id: 50 };
+    const tableSeat = { id: 10, tableNumber: 3, seatNumber: 1 };
+    mockDb.select
+      .mockReturnValueOnce(createDbChain([]))  // no existing ticket
+      .mockReturnValueOnce(createDbChain([{
+        id: 1, capacity: 100, requiresTableSignup: true, requiresBusSignup: false,
+        tableCount: 5, seatsPerTable: 8,
+      }]))
+      .mockReturnValueOnce(createDbChain([{ count: 5 }]))  // under capacity
+      .mockReturnValueOnce(createDbChain([tableSeat]));  // available table seat
+    mockDb.insert.mockReturnValue(createDbChain([ticket]));
+    mockDb.update.mockReturnValue(createDbChain());
+    // After insert: select available seat for assignment
+    mockDb.select.mockReturnValueOnce(createDbChain([tableSeat]));
+    const result = await service.signup(1, 5, 3);
+    expect(result).toHaveProperty('ticket');
+    expect(mockDb.insert).toHaveBeenCalled();
+  });
+
+  it('cancelSignup frees table and bus seats then deletes ticket', async () => {
+    const ticket = { id: 10, userId: 5, eventId: 1 };
+    mockDb.select.mockReturnValue(createDbChain([ticket]));
+    mockDb.update.mockReturnValue(createDbChain());
+    mockDb.delete.mockReturnValue(createDbChain());
+
+    const result = await service.cancelSignup(1, 5);
+    expect(result).toEqual({ cancelled: true });
+    // update called twice: once for busSeats, once for tableSeats
+    expect(mockDb.update).toHaveBeenCalledTimes(2);
+    // delete called once for ticket
+    expect(mockDb.delete).toHaveBeenCalledTimes(1);
+  });
 });
