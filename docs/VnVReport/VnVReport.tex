@@ -432,11 +432,163 @@ The system uses a role guard to evaluate role metadata associated with protected
 
 \section{Nonfunctional Requirements Evaluation}
 
-\subsection{Usability}
+This section evaluates whether the system satisfies the nonfunctional requirements defined in the SRS and tested according to the VnV Plan. The evaluation covers performance, usability, and security compliance. Where formal quantitative testing (e.g., timed load benchmarks, structured usability studies) was not conducted within the project timeline, the evaluation describes the alternative evidence gathered through unit tests, developer testing, and informal usability sessions with external users.
 
-\subsection{Performance}
+The nonfunctional areas evaluated are:
 
-\subsection{etc.}
+\begin{itemize}
+\item Performance
+\item Usability
+\item Security Compliance
+\end{itemize}
+
+
+\subsection{Performance (NFR1)}
+
+Performance was evaluated through a combination of manual developer testing during implementation and automated unit-level concurrency tests. Formal timed benchmarking with a dedicated load-testing tool (as described in the VnV Plan) was not conducted due to time constraints; however, the system's responsiveness was validated through real-device testing with external users and the concurrent checkout stress tests described in Section~6.
+
+\paragraph{Test Case NFR1-T01: Registration Workflow Responsiveness}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR1-T01-1
+
+\textit{Initial State:} Backend running locally with a seeded PostgreSQL database; Stripe test-mode payment integration enabled.
+
+\textit{Input:} A developer manually completes the full registration workflow on a physical mobile device: browse events, select ticket, proceed to Stripe checkout, and receive ticket confirmation.
+
+\textit{Expected Output:} The workflow completes without perceivable delay at each step. No timeouts or errors occur.
+
+\textit{Test Case Derivation:} Provides a qualitative confirmation that the registration path is responsive under single-user conditions, addressing VnV Plan NFR1-T01.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR1-T02: Concurrent Signup Handling}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR1-T02-1
+
+\textit{Initial State:} An event with exactly one table seat remaining.
+
+\textit{Input:} Two checkout requests are fired concurrently via \texttt{Promise.all} in a Jest unit test (test SRL6).
+
+\textit{Expected Output:} Exactly one request succeeds; the other receives an error. No duplicate tickets or seats are assigned.
+
+\textit{Test Case Derivation:} Validates that the \texttt{FOR UPDATE SKIP LOCKED} mechanism handles concurrent access without data corruption. While this is a unit-level simulation rather than a full HTTP load test, it directly exercises the critical concurrency code path identified in VnV Plan NFR1-T02.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR1-T03: Check-In Responsiveness}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR1-T03-1
+
+\textit{Initial State:} Event with valid tickets issued; QR scanner screen open on a physical device.
+
+\textit{Input:} A valid ticket QR code is scanned at the event check-in screen.
+
+\textit{Expected Output:} The check-in confirmation appears on the admin device without perceivable delay. The backend correctly marks the ticket as checked in (verified by unit tests TP6--TP9).
+
+\textit{Test Case Derivation:} Confirms that the check-in flow is fast enough for practical use at event doors, as required by VnV Plan NFR1-T03.
+
+\end{enumerate}
+
+
+\subsection{Usability (NFR2)}
+
+Usability was evaluated through informal testing sessions with peers from other capstone groups who had no prior exposure to MacSync. A formal structured usability study (as described in VnV Plan NFR3-T01) was not conducted within the project timeline; however, these sessions on physical mobile devices provided qualitative validation of the core workflows.
+
+\paragraph{Test Case NFR2-T01: Registration Workflow Clarity}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR2-T01-1
+
+\textit{Initial State:} MacSync deployed on a physical mobile device; peers from other capstone groups acting as first-time users.
+
+\textit{Input:} Users complete the event browsing, signup, and ticket purchase workflow without prior instruction.
+
+\textit{Expected Output:} Users complete the workflow without confusion or assistance. No critical navigation or comprehension issues are observed.
+
+\textit{Test Case Derivation:} Provides qualitative evidence that the registration flow is intuitive, partially addressing VnV Plan NFR3-T01-1. External users completed the workflow without requiring guidance.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR2-T02: Feature Discoverability}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR2-T02-1
+
+\textit{Initial State:} MacSync mobile app running with bottom tab navigation.
+
+\textit{Input:} Users navigate to event browsing, My Tickets, and profile screens.
+
+\textit{Expected Output:} All primary features are accessible from the bottom tab bar without requiring multi-step navigation.
+
+\textit{Test Case Derivation:} The tab-based navigation design ensures that core features are one tap away, addressing VnV Plan NFR3-T01-2. This was confirmed during peer testing sessions.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR2-T03: Error Message Clarity}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR2-T03-1
+
+\textit{Initial State:} User interacts with the event signup screen.
+
+\textit{Input:} User attempts to sign up for a full-capacity event or encounters a payment error.
+
+\textit{Expected Output:} A clear error message is displayed explaining the issue (e.g., ``Event Full'', ``Payment failed''). The user is not left on a blank or broken screen.
+
+\textit{Test Case Derivation:} Error handling is verified by frontend unit tests ES7 (full event error) and backend tests SRL2--SRL3 (lockout and capacity errors), addressing VnV Plan NFR3-T01-3.
+
+\end{enumerate}
+
+
+\subsection{Security Compliance (NFR3)}
+
+Security was verified through automated unit tests for role-based access control and through architectural review of the payment and authentication subsystems. The RBAC guard tests (RBAC1--RBAC5) provide direct evidence that access control is enforced correctly.
+
+\paragraph{Test Case NFR3-T01: Role-Based Access Control}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR3-T01-1
+
+\textit{Initial State:} Users with student and admin roles exist in the test environment.
+
+\textit{Input:} Admin users access the Create Event screen; non-admin users attempt the same. Users request their own tickets and other users' tickets.
+
+\textit{Expected Output:} Admin-only features are hidden from non-admin users. Users can access their own tickets but not other users' tickets (unless admin). Unauthorized requests are rejected.
+
+\textit{Test Case Derivation:} Directly tested by automated unit tests RBAC1--RBAC5. Validates VnV Plan NFR4-T01.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR3-T02: Sensitive Data Protection}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR3-T02-1
+
+\textit{Initial State:} System uses Stripe for all payment processing; user authentication handled via Clerk.
+
+\textit{Input:} Review of the database schema and API responses for exposure of sensitive data.
+
+\textit{Expected Output:} No credit card numbers, CVVs, or payment tokens are stored in the application database. Payment data is handled entirely by Stripe. User passwords are managed by Clerk and never stored by the application.
+
+\textit{Test Case Derivation:} Architectural review confirms that the system delegates sensitive data handling to third-party services (Stripe, Clerk), satisfying VnV Plan NFR4-T03. The application database stores only Stripe session IDs and payment intent IDs for reference.
+
+\end{enumerate}
 
 \section{Comparison to Existing Implementation}
 
