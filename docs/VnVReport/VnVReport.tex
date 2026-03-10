@@ -553,10 +553,16 @@ At the time of testing, no dedicated automated unit tests were implemented for w
 
 \section{Changes Due to Testing}
 
-\wss{This section should highlight how feedback from the users and from
-the supervisor (when one exists) shaped the final product. In particular
-the feedback from the Rev 0 demo to the supervisor (or to potential users)
-should be highlighted.}
+This section documents how feedback from the Rev~0 demo, supervisor review, and subsequent testing activities shaped the final product.
+
+\subsection{Refund Functionality}
+
+The Rev~0 feedback noted that \textit{``request refund not yet working.''}  At the time of the demo, the ``Request Refund'' button on the My Tickets screen displayed a ``coming soon'' placeholder.  The backend \texttt{PaymentsService.refundPayment} method and \texttt{POST /payments/:paymentId/refund} endpoint have since been implemented using the Stripe Refunds API.  The frontend button now triggers the refund workflow for paid tickets, while free-event tickets use the direct cancel flow.
+
+\subsection{Admin Event Editing}
+
+The Rev~0 feedback noted that \textit{``don't currently have the ability for the administrators to edit a created event.''} The admin web dashboard event detail page was updated from a placeholder to a fully functional event editing form, allowing administrators to modify event name, date, location, capacity, price, and signup options.
+
 
 \section{Automated Testing}
 
