@@ -750,6 +750,21 @@ SRL6 & \cmark &  &  &  &  \\
 
 \clearpage
 \section{Code Coverage Metrics}
+The VnV Plan specifies that the CI pipeline produce code coverage reports summarizing the percentage of tested lines and functions,
+to be reviewed at the end of each sprint, with a goal of 75\% across all core modules. The current implementation supports coverage
+collection via Jest's built-in instrumentation.\\
+
+\textbf{Backend coverage} is configured in \texttt{test/backend/jest.config.js}. The \texttt{collectCoverageFrom} setting includes:
+\begin{itemize}
+\item \texttt{src/backend/src/events/**/*.ts} (excluding \texttt{*.d.ts} and \texttt{*.module.ts})
+\item \texttt{src/backend/src/auth/**/*.ts}
+\item \texttt{src/backend/src/users/**/*.ts}
+\end{itemize}
+Coverage reports are written to \texttt{test/coverage/backend}. The events, auth, and users modules correspond to the core backend logic for event management, RBAC, and user administration tested by the unit tests described in Section 6.\\
+
+\textbf{Frontend coverage} is configured in \texttt{test/frontend/jest.config.js}. Coverage is collected from \texttt{src/frontend/mobile/app/**/*.\{ts,tsx\}}, excluding type definitions and \texttt{\_layout.tsx}. Reports are written to \texttt{test/coverage/frontend}. This scope aligns the mobile app screens (event creation, events list, ticket detail, refund requests, QR scanner) with the frontend tests.
+
+Coverage is generated locally by running \texttt{npm run coverage:backend} and \texttt{npm run coverage:frontend} (or \texttt{npm run coverage} for both) from the \texttt{test} directory. The CI workflow currently runs the test suites without the \texttt{--coverage} flag; coverage reporting in CI and enforcement of the 75\% target can be added in a future iteration. The VnV Plan also mentions mutation testing to quantify the effectiveness of the test plan; mutation testing is not yet integrated into the build or CI pipeline.
 
 \bibliographystyle{plainnat}
 \bibliography{../../refs/References}
