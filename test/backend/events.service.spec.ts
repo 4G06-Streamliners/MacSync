@@ -30,6 +30,7 @@ import { createDbChain } from './helpers/db-chain';
 describe('EventsService', () => {
   let service: EventsService;
   let mockDb: any;
+  let mockPaymentsService: any;
 
   beforeEach(() => {
     mockDb = {
@@ -38,7 +39,11 @@ describe('EventsService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     };
-    service = new EventsService({ db: mockDb } as any, {} as any);
+    mockPaymentsService = {
+      createCheckoutSession: jest.fn(),
+      recordPayment: jest.fn(),
+    };
+    service = new EventsService({ db: mockDb } as any, mockPaymentsService);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -129,6 +134,210 @@ describe('EventsService', () => {
     mockDb.delete.mockReturnValue(createDbChain());
     await service.releaseReservation('cs_test_123');
     expect(mockDb.delete).toHaveBeenCalled();
+  });
+
+  describe('createCheckoutSession (payment flow)', () => {
+    it('returns error when event not found', async () => {
+      mockDb.select.mockReturnValue(createDbChain([]));
+
+      const result = await service.createCheckoutSession(
+        999,
+        1,
+        'https://app/success',
+        'https://app/cancel',
+      );
+
+      expect(result).toEqual({ error: 'Event not found' });
+      expect(mockPaymentsService.createCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('returns error when event has price but no Stripe price configured', async () => {
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([{ id: 1, name: 'Gala', price: 5000, stripePriceId: null, capacity: 100, requiresTableSignup: false }]))
+        .mockReturnValueOnce(createDbChain([{ count: 0 }]))
+        .mockReturnValueOnce(createDbChain([]));
+
+      const result = await service.createCheckoutSession(
+        1,
+        1,
+        'https://app/success',
+        'https://app/cancel',
+      );
+
+      expect(result).toEqual({
+        error: 'This event requires payment but has no Stripe price configured.',
+      });
+      expect(mockPaymentsService.createCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('returns error when event is full', async () => {
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([{ id: 1, name: 'Gala', price: 5000, stripePriceId: 'price_1', capacity: 10, requiresTableSignup: false }]))
+        .mockReturnValueOnce(createDbChain([{ count: 10 }]));
+
+      const result = await service.createCheckoutSession(
+        1,
+        1,
+        'https://app/success',
+        'https://app/cancel',
+      );
+
+      expect(result).toEqual({ error: 'Event is full' });
+      expect(mockPaymentsService.createCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('returns error when user already signed up', async () => {
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([{ id: 1, name: 'Gala', price: 5000, stripePriceId: 'price_1', capacity: 10, requiresTableSignup: false }]))
+        .mockReturnValueOnce(createDbChain([{ count: 5 }]))
+        .mockReturnValueOnce(createDbChain([{ id: 1, userId: 1, eventId: 1 }]));
+
+      const result = await service.createCheckoutSession(
+        1,
+        1,
+        'https://app/success',
+        'https://app/cancel',
+      );
+
+      expect(result).toEqual({ error: 'Already signed up for this event' });
+      expect(mockPaymentsService.createCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('calls paymentsService.createCheckoutSession and inserts reservation on success', async () => {
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([{ id: 1, name: 'Gala', price: 5000, stripePriceId: 'price_1', capacity: 10, requiresTableSignup: false }]))
+        .mockReturnValueOnce(createDbChain([{ count: 5 }]))
+        .mockReturnValueOnce(createDbChain([]));
+      mockDb.delete.mockReturnValue(createDbChain());
+      mockPaymentsService.createCheckoutSession.mockResolvedValue({
+        url: 'https://checkout.stripe.com/session',
+        sessionId: 'cs_test_123',
+      });
+      const tx = {
+        insert: jest.fn().mockReturnValue({ values: jest.fn().mockReturnValue(createDbChain()) }),
+      };
+      mockDb.transaction = jest.fn().mockImplementation((cb: (tx: any) => Promise<any>) =>
+        cb(tx),
+      );
+
+      const result = await service.createCheckoutSession(
+        1,
+        5,
+        'https://app/success',
+        'https://app/cancel',
+      );
+
+      expect(result).toEqual({ url: 'https://checkout.stripe.com/session', sessionId: 'cs_test_123' });
+      expect(mockPaymentsService.createCheckoutSession).toHaveBeenCalledWith({
+        eventId: 1,
+        userId: 5,
+        amount: 5000,
+        currency: 'usd',
+        eventName: 'Gala',
+        successUrl: 'https://app/success',
+        cancelUrl: 'https://app/cancel',
+      });
+      expect(tx.insert).toHaveBeenCalled();
+    });
+
+    it('returns error when paymentsService.createCheckoutSession returns error', async () => {
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([{ id: 1, name: 'Gala', price: 5000, stripePriceId: 'price_1', capacity: 10, requiresTableSignup: false }]))
+        .mockReturnValueOnce(createDbChain([{ count: 5 }]))
+        .mockReturnValueOnce(createDbChain([]));
+      mockDb.delete.mockReturnValue(createDbChain());
+      mockPaymentsService.createCheckoutSession.mockResolvedValue({
+        error: 'Payment service is not configured.',
+      });
+      const tx = {
+        insert: jest.fn().mockReturnValue({ values: jest.fn().mockReturnValue(createDbChain()) }),
+      };
+      mockDb.transaction = jest.fn().mockImplementation((cb: (tx: any) => Promise<any>) =>
+        cb(tx),
+      );
+
+      const result = await service.createCheckoutSession(
+        1,
+        5,
+        'https://app/success',
+        'https://app/cancel',
+      );
+
+      expect(result).toEqual({ error: 'Payment service is not configured.' });
+      expect(tx.insert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('completeSignupFromReservation (payment flow)', () => {
+    it('returns error when reservation not found', async () => {
+      mockDb.select.mockReturnValue(createDbChain([]));
+
+      const result = await service.completeSignupFromReservation('cs_unknown');
+
+      expect(result).toEqual({ error: 'Reservation not found or already used' });
+      expect(mockPaymentsService.recordPayment).not.toHaveBeenCalled();
+    });
+
+    it('returns error when user already has ticket for event', async () => {
+      const reservation = { id: 1, stripeSessionId: 'cs_123', eventId: 10, userId: 5, tableSeatId: null, busSeatId: null };
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([reservation]))
+        .mockReturnValueOnce(createDbChain([{ id: 1, userId: 5, eventId: 10 }]));
+      mockDb.delete.mockReturnValue(createDbChain());
+
+      const result = await service.completeSignupFromReservation('cs_123');
+
+      expect(result).toEqual({ error: 'Already signed up for this event', ticket: { id: 1, userId: 5, eventId: 10 } });
+      expect(mockPaymentsService.recordPayment).not.toHaveBeenCalled();
+    });
+
+    it('creates ticket and calls recordPayment when paymentData provided', async () => {
+      const reservation = { id: 1, stripeSessionId: 'cs_123', eventId: 10, userId: 5, tableSeatId: null, busSeatId: null };
+      const newTicket = { id: 99, userId: 5, eventId: 10, qrCodeData: null, tableSeat: null, busSeat: null };
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([reservation]))
+        .mockReturnValueOnce(createDbChain([]));
+      mockDb.insert.mockReturnValue(createDbChain([newTicket]));
+      mockDb.update.mockReturnValue(createDbChain());
+      mockDb.delete.mockReturnValue(createDbChain());
+
+      const result = await service.completeSignupFromReservation('cs_123', {
+        paymentIntentId: 'pi_1',
+        chargeId: 'ch_1',
+        amountPaid: 5000,
+        currency: 'usd',
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(result.ticket).toMatchObject({ id: 99, userId: 5, eventId: 10 });
+      expect(mockPaymentsService.recordPayment).toHaveBeenCalledWith({
+        userId: 5,
+        eventId: 10,
+        ticketId: 99,
+        stripeSessionId: 'cs_123',
+        paymentIntentId: 'pi_1',
+        chargeId: 'ch_1',
+        amountPaid: 5000,
+        currency: 'usd',
+      });
+    });
+
+    it('does not call recordPayment when paymentData omitted', async () => {
+      const reservation = { id: 1, stripeSessionId: 'cs_123', eventId: 10, userId: 5, tableSeatId: null, busSeatId: null };
+      const newTicket = { id: 99, userId: 5, eventId: 10, qrCodeData: null, tableSeat: null, busSeat: null };
+      mockDb.select
+        .mockReturnValueOnce(createDbChain([reservation]))
+        .mockReturnValueOnce(createDbChain([]));
+      mockDb.insert.mockReturnValue(createDbChain([newTicket]));
+      mockDb.update.mockReturnValue(createDbChain());
+      mockDb.delete.mockReturnValue(createDbChain());
+
+      const result = await service.completeSignupFromReservation('cs_123');
+
+      expect(result.error).toBeUndefined();
+      expect(result.ticket).toMatchObject({ id: 99 });
+      expect(mockPaymentsService.recordPayment).not.toHaveBeenCalled();
+    });
   });
 
   describe('checkInTicket', () => {

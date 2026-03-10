@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import React from 'react';
 import { render, fireEvent, waitFor, screen } from '@testing-library/react';
 import { Alert } from 'react-native';

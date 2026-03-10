@@ -114,6 +114,49 @@ describe('EventsController', () => {
     await expect(controller.getUserTickets('5', userReq)).rejects.toThrow('Access denied.');
   });
 
+  it('createCheckoutSession passes event id, user id, urls and optional selectedTable', async () => {
+    mockEventsService.createCheckoutSession.mockResolvedValue({
+      url: 'https://checkout.stripe.com/session',
+      sessionId: 'cs_test_123',
+    });
+    const req = { user: { sub: 5 } } as any;
+    const body = {
+      successUrl: 'https://app.example/payment-success',
+      cancelUrl: 'https://app.example/payment-cancel',
+    };
+
+    const result = await controller.createCheckoutSession('10', req, body);
+
+    expect(result).toEqual({ url: 'https://checkout.stripe.com/session', sessionId: 'cs_test_123' });
+    expect(mockEventsService.createCheckoutSession).toHaveBeenCalledWith(
+      10,
+      5,
+      'https://app.example/payment-success',
+      'https://app.example/payment-cancel',
+      undefined,
+    );
+  });
+
+  it('createCheckoutSession passes selectedTable when provided', async () => {
+    mockEventsService.createCheckoutSession.mockResolvedValue({ sessionId: 'cs_1' });
+    const req = { user: { sub: 3 } } as any;
+    const body = {
+      successUrl: 'https://x/s',
+      cancelUrl: 'https://x/c',
+      selectedTable: 2,
+    };
+
+    await controller.createCheckoutSession('1', req, body);
+
+    expect(mockEventsService.createCheckoutSession).toHaveBeenCalledWith(
+      1,
+      3,
+      'https://x/s',
+      'https://x/c',
+      2,
+    );
+  });
+
   it('releaseCheckoutReservation delegates to service', async () => {
     const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mockEventsService.releaseReservation.mockResolvedValue(undefined);
