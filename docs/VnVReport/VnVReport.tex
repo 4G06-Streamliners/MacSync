@@ -547,6 +547,68 @@ RBAC5 & Request another user's tickets as a non-admin. & Access is denied and an
 \end{tabularx}
 }
 
+\subsection{Event Signup Screen Module}
+
+\textbf{Event Signup Page (Frontend)}
+
+These tests verify the \texttt{EventSignupScreen} React Native component that handles the full event registration workflow, including displaying event details, processing free and paid signups, and table selection.
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+ES1 & Load the event signup page for an event with all fields populated. & The page displays the event title, date, location, price, description, and an Open status badge. & All event details and the Open badge were displayed correctly. & Pass \\
+ES2 & Load the signup page for a full-capacity event and a past event. & Full badge shown when at capacity; Past badge and ``Event Ended'' text for past events. & Status badges rendered correctly for both scenarios. & Pass \\
+ES3 & Press ``Back to Events'' or ``Cancel'' on the signup page. & The router navigates back to the events list. & Navigation occurred correctly in both cases. & Pass \\
+ES4 & Confirm signup on a free event. & The \texttt{signupForEvent} API is called and a success notification is displayed. & API was called with correct parameters and success was shown. & Pass \\
+ES5 & Confirm signup on a paid event. & The \texttt{createCheckoutSession} API is called with the correct success and cancel URLs. & Checkout session was created with the correct redirect URLs. & Pass \\
+ES6 & Load the signup page for an event with table selection required (\texttt{tableCount = 3}). & A Table Selection card is visible and the picker lists Table 1 through Table 3. & Table picker appeared and listed all available tables. & Pass \\
+ES7 & Attempt to confirm signup on a full-capacity event. & ``Event Full'' button is shown; clicking it displays an error notification. & Full state and error notification were displayed correctly. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\vspace{0.5cm}
+
+\textbf{My Tickets Screen (Frontend)}
+
+This test verifies the \texttt{MyTickets} component that displays the user's registered event tickets.
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+MT1 & Load the My Tickets screen for a user with existing tickets. & Each ticket card displays the event name, date, location, and price. & Ticket details were rendered correctly for all tickets. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\subsection{Seat Reservation Lockout Module}
+
+These tests verify the concurrency-safe seat reservation mechanism used during paid event checkout. The system uses PostgreSQL \texttt{FOR UPDATE SKIP LOCKED} within a database transaction to atomically lock a seat row, preventing two concurrent users from both entering the payment flow for the same seat. A \texttt{seat\_reservations} table holds the lock while the user completes Stripe checkout.
+
+\textbf{Checkout Session and Reservation (Backend)}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+SRL1 & A single user requests a checkout session for an event with available table seats. & A Stripe checkout URL and session ID are returned; a seat reservation record is created. & Checkout session was created and reservation was inserted successfully. & Pass \\
+SRL2 & A user requests a checkout session when all table seats are locked by other users. & The system returns an error containing ``no table seats left''. & The lockout error was returned correctly with no checkout URL. & Pass \\
+SRL3 & A user requests a checkout session when the event has reached full capacity. & The system returns ``Event is full'' before entering the transaction. & The capacity check prevented the checkout session creation. & Pass \\
+SRL4 & A checkout session is cancelled or expires, providing the Stripe session ID. & The reservation row is deleted from the database and the seat becomes available. & The reservation was released and the delete operation completed. & Pass \\
+SRL5 & A payment completes successfully for a valid reservation with a table seat. & A ticket is created, the seat is assigned, payment is recorded, and the reservation is deleted. & The full completion flow succeeded and all database operations were verified. & Pass \\
+SRL6 & Two users fire checkout requests concurrently for an event with exactly one seat remaining. & Exactly one user succeeds with a checkout URL; the other receives ``no table seats left''. & One request succeeded and one failed as expected; the race condition was handled correctly. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
 \subsection{Waivers and Preference Submission Module}
 
 At the time of testing, no dedicated automated unit tests were implemented for waiver submission or preference submission as separate isolated modules. These behaviours were instead covered indirectly through broader event registration and ticketing workflows. Additional direct tests for waiver completion validation and user preference persistence may be added in future revisions.
@@ -604,6 +666,18 @@ RBAC2 &  &  &  & \cmark &  \\
 RBAC3 & \cmark &  &  & \cmark &  \\
 RBAC4 & \cmark &  &  & \cmark &  \\
 RBAC5 &  &  &  & \cmark &  \\
+\midrule
+ES1  & \cmark &  &  &  &  \\
+ES4  & \cmark & \cmark &  &  &  \\
+ES5  & \cmark & \cmark &  &  &  \\
+ES6  &  & \cmark &  &  &  \\
+ES7  & \cmark &  &  &  &  \\
+MT1  & \cmark &  &  &  &  \\
+SRL1 & \cmark & \cmark &  &  &  \\
+SRL2 & \cmark &  &  &  &  \\
+SRL3 & \cmark &  &  &  &  \\
+SRL5 & \cmark & \cmark &  &  &  \\
+SRL6 & \cmark &  &  &  &  \\
 \bottomrule
 \end{tabular}%
 }
@@ -647,6 +721,19 @@ RBAC2 &  &  &  & \cmark &  \\
 RBAC3 & \cmark &  &  & \cmark &  \\
 RBAC4 & \cmark &  &  & \cmark &  \\
 RBAC5 &  &  &  & \cmark &  \\
+\midrule
+ES1  & \cmark &  &  &  &  \\
+ES4  & \cmark &  &  &  &  \\
+ES5  & \cmark &  &  &  &  \\
+ES6  &  & \cmark &  &  &  \\
+ES7  & \cmark &  &  &  &  \\
+MT1  & \cmark &  &  &  &  \\
+SRL1 & \cmark &  &  &  &  \\
+SRL2 & \cmark &  &  &  &  \\
+SRL3 & \cmark &  &  &  &  \\
+SRL4 & \cmark &  &  &  &  \\
+SRL5 & \cmark &  &  &  &  \\
+SRL6 & \cmark &  &  &  &  \\
 \bottomrule
 \end{tabular}%
 }
