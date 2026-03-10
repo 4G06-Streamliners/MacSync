@@ -166,11 +166,57 @@ BTR5 & Attempt to cancel signup when no signup exists. & The system returns an a
 \toprule
 \textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
 \midrule
-RBAC1 & Load the events screen as an admin user. & The Create Event button is visible and can be used. & The admin user could see and access event creation. & Pass \\
-RBAC2 & Load the events screen as a non-admin user. & The Create Event button is hidden. & The button was not shown to non-admin users. & Pass \\
-RBAC3 & Request a user’s own tickets. & Access is allowed and the ticket list is returned. & Users could access their own tickets correctly. & Pass \\
-RBAC4 & Request another user’s tickets as an admin. & Access is allowed and the ticket list is returned. & Admin access was granted correctly. & Pass \\
-RBAC5 & Request another user’s tickets as a non-admin. & Access is denied and an error is returned. & Unauthorized access was rejected correctly. & Pass \\
+RBAC1 & Admin loads events screen & Create Event visible and usable & As expected & Pass \\
+RBAC2 & Non-admin loads events screen & Create Event hidden & As expected & Pass \\
+RBAC3 & User requests own tickets & Ticket list returned & As expected & Pass \\
+RBAC4 & Admin requests another user's tickets & Ticket list returned & As expected & Pass \\
+RBAC5 & Non-admin requests another user's tickets & Access denied, error returned & As expected & Pass \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.5cm}
+
+\textbf{UsersController Unit Tests (\texttt{users.controller.spec.ts})}
+
+The following unit tests were added for the \texttt{UsersController}, which handles user CRUD and role management. Guards and decorators are mocked so that controller logic is exercised in isolation.
+
+\begin{tabularx}{\textwidth}{p{2.2cm}p{2.5cm}X p{1.5cm} p{1.5cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+RBAC-UC1 & \texttt{findAll()} & Delegates to service, returns list & As expected & Pass \\
+RBAC-UC2 & \texttt{findOne('5')} & Calls \texttt{findOneWithRoles(5)}, returns user with roles & As expected & Pass \\
+RBAC-UC3 & \texttt{create(body)} & Delegates to service, returns created user & As expected & Pass \\
+RBAC-UC4 & \texttt{update} with body & Updates, refreshes with roles & As expected & Pass \\
+RBAC-UC5 & \texttt{update} \texttt{isSystemAdmin} + valid pwd & Verifies pwd, strips from body & As expected & Pass \\
+RBAC-UC6 & \texttt{update} \texttt{isSystemAdmin} no pwd & BadRequest Exception & As expected & Pass \\
+RBAC-UC7 & \texttt{update} \texttt{isSystemAdmin} wrong pwd & Unauthorized Exception & As expected & Pass \\
+RBAC-UC8 & \texttt{update} user not found & Error ``User not found after update'' & As expected & Pass \\
+RBAC-UC9 & \texttt{updateRoles} with roles array & \texttt{replaceRoles} called, returns user & As expected & Pass \\
+RBAC-UC10 & \texttt{updateRoles} empty body & Defaults to empty roles & As expected & Pass \\
+RBAC-UC11 & \texttt{updateRoles} non-array roles & Defaults to empty array & As expected & Pass \\
+RBAC-UC12 & \texttt{delete('5')} & Delegates to service & As expected & Pass \\
+\bottomrule
+\end{tabularx}
+
+\vspace{0.5cm}
+
+\textbf{UsersService Unit Tests (\texttt{users.service.spec.ts})}
+
+The following unit tests were added for the \texttt{UsersService}, which provides \texttt{findOneWithRoles} and \texttt{replaceRoles} to support authorization and role administration. The database layer is mocked via a chainable helper.
+
+\begin{tabularx}{\textwidth}{p{1.5cm}X X X p{1.5cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+RBAC-US1 & \texttt{findOneWithRoles(1)} & Returns user with populated \texttt{roles} & As expected & Pass \\
+RBAC-US2 & \texttt{findOneWithRoles} with \texttt{passwordHash} & \texttt{passwordHash} stripped from result & As expected & Pass \\
+RBAC-US3 & \texttt{findOneWithRoles(999)} & Returns \texttt{null} & As expected & Pass \\
+RBAC-US4 & \texttt{findOneWithRoles} no roles & Returns user with \texttt{roles: []} & As expected & Pass \\
+RBAC-US5 & \texttt{replaceRoles} valid roles & Deletes/inserts, returns updated user & As expected & Pass \\
+RBAC-US6 & \texttt{replaceRoles} non-existent role & BadRequestException, lists available & As expected & Pass \\
+RBAC-US7 & \texttt{replaceRoles(5, [])} & Removes all roles, no insert & As expected & Pass \\
+RBAC-US8 & \texttt{replaceRoles} multiple roles & Returns user, no \texttt{passwordHash} & As expected & Pass \\
 \bottomrule
 \end{tabularx}
 
