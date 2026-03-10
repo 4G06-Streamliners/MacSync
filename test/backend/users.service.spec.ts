@@ -9,7 +9,6 @@ jest.mock('../../src/backend/src/db/schema', () => ({
   roles: { id: 'roles.id', name: 'roles.name' },
 }));
 
-import { BadRequestException } from '@nestjs/common';
 import { UsersService } from '../../src/backend/src/users/users.service';
 import { createDbChain } from './helpers/db-chain';
 
@@ -128,7 +127,7 @@ describe('UsersService', () => {
       mockDb.select.mockReturnValueOnce(createDbChain(allRoles));
 
       await expect(service.replaceRoles(5, ['SuperAdmin'])).rejects.toThrow(
-        BadRequestException,
+        /Role\(s\) not found: SuperAdmin\. Available roles: Admin, Member/,
       );
     });
 

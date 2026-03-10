@@ -9,7 +9,6 @@ jest.mock('../../src/backend/src/db/schema', () => ({
   roles: { id: 'roles.id', name: 'roles.name' },
 }));
 
-import { ForbiddenException } from '@nestjs/common';
 import { RolesGuard } from '../../src/backend/src/auth/roles.guard';
 
 function createMockContext(user?: { sub?: number }) {
@@ -96,18 +95,14 @@ describe('RolesGuard', () => {
     });
     const context = createMockContext({ sub: 3 });
 
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow('Access denied.');
   });
 
   it('denies access when req.user is missing', async () => {
     mockReflector.getAllAndOverride.mockReturnValue(['Admin']);
     const context = createMockContext(undefined);
 
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow('Access denied.');
     expect(mockUsersService.findOneWithRoles).not.toHaveBeenCalled();
   });
 
@@ -115,9 +110,7 @@ describe('RolesGuard', () => {
     mockReflector.getAllAndOverride.mockReturnValue(['Admin']);
     const context = createMockContext({} as any);
 
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow('Access denied.');
   });
 
   it('denies access when findOneWithRoles returns null', async () => {
@@ -125,9 +118,7 @@ describe('RolesGuard', () => {
     mockUsersService.findOneWithRoles.mockResolvedValue(null);
     const context = createMockContext({ sub: 999 });
 
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(guard.canActivate(context)).rejects.toThrow('Access denied.');
   });
 
   it('denies access when findOneWithRoles throws an error', async () => {
@@ -137,8 +128,8 @@ describe('RolesGuard', () => {
     );
     const context = createMockContext({ sub: 1 });
 
-    await expect(guard.canActivate(context)).rejects.toThrow(
-      ForbiddenException,
-    );
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(guard.canActivate(context)).rejects.toThrow('Access denied.');
+    consoleSpy.mockRestore();
   });
 });

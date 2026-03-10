@@ -16,7 +16,6 @@ jest.mock('../../src/backend/src/auth/roles.decorator', () => ({
 }));
 jest.mock('../../src/backend/src/db/schema', () => ({}));
 
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersController } from '../../src/backend/src/users/users.controller';
 
 describe('UsersController', () => {
@@ -118,7 +117,7 @@ describe('UsersController', () => {
       const req = { user: { sub: 1, email: 'admin@mcmaster.ca' } } as any;
 
       await expect(controller.update('5', body, req)).rejects.toThrow(
-        BadRequestException,
+        'Password is required to change admin role.',
       );
       expect(mockService.update).not.toHaveBeenCalled();
     });
@@ -130,7 +129,7 @@ describe('UsersController', () => {
       mockService.verifyUserPassword.mockResolvedValue(false);
 
       await expect(controller.update('5', body, req)).rejects.toThrow(
-        UnauthorizedException,
+        'Invalid password.',
       );
       expect(mockService.update).not.toHaveBeenCalled();
     });
