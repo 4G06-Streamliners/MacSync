@@ -9,6 +9,7 @@ import {
   busSeats,
   seatReservations,
   refundRequests,
+  users,
 } from '../db/schema';
 import type { NewEvent } from '../db/schema';
 import { eq, sql, and, asc } from 'drizzle-orm';
@@ -41,6 +42,116 @@ export class EventsService {
       .update(data)
       .digest('hex');
     return `${data}:${signature}`;
+  }
+
+  /**
+   * Verify QR code signature and return parsed data or null if invalid
+   */
+  private verifyQRCodeData(qrCodeData: string): {
+    ticketId: number;
+    userId: number;
+    eventId: number;
+  } | null {
+    const parts = qrCodeData.split(':');
+    if (parts.length !== 4) return null;
+    const [ticketIdStr, userIdStr, eventIdStr, signature] = parts;
+    const ticketId = parseInt(ticketIdStr, 10);
+    const userId = parseInt(userIdStr, 10);
+    const eventId = parseInt(eventIdStr, 10);
+    if (isNaN(ticketId) || isNaN(userId) || isNaN(eventId)) return null;
+    const data = `${ticketId}:${userId}:${eventId}`;
+    const secret =
+      process.env.QR_SECRET || 'default-secret-change-in-production';
+    const expectedSig = crypto
+      .createHmac('sha256', secret)
+      .update(data)
+      .digest('hex');
+    if (expectedSig !== signature) return null;
+    return { ticketId, userId, eventId };
+  }
+
+  /**
+   * Check in a ticket by scanning its QR code. Admin only.
+   * Returns ticket details on success, or error info.
+   */
+  async checkInTicket(qrCodeData: string): Promise<{
+    success: boolean;
+    alreadyCheckedIn?: boolean;
+    ticket?: {
+      ticketId: number;
+      eventName: string;
+      eventDate: string;
+      userName: string;
+      userEmail: string;
+      busSeat: string | null;
+      tableSeat: string | null;
+    };
+    error?: string;
+  }> {
+    if (!qrCodeData || typeof qrCodeData !== 'string') {
+      return { success: false, error: 'Invalid QR code data' };
+    }
+    const trimmed = qrCodeData.trim();
+    const parsed = this.verifyQRCodeData(trimmed);
+    if (!parsed) {
+      return { success: false, error: 'Invalid or tampered QR code' };
+    }
+    const { ticketId } = parsed;
+
+    const ticketRows = await this.dbService.db
+      .select({
+        ticketId: tickets.id,
+        checkedIn: tickets.checkedIn,
+        busSeat: tickets.busSeat,
+        tableSeat: tickets.tableSeat,
+        eventName: events.name,
+        eventDate: events.date,
+        userName: users.name,
+        userEmail: users.email,
+      })
+      .from(tickets)
+      .innerJoin(events, eq(tickets.eventId, events.id))
+      .innerJoin(users, eq(tickets.userId, users.id))
+      .where(eq(tickets.id, ticketId));
+
+    const row = ticketRows[0];
+    if (!row) {
+      return { success: false, error: 'Ticket not found' };
+    }
+    if (row.checkedIn) {
+      return {
+        success: false,
+        alreadyCheckedIn: true,
+        ticket: {
+          ticketId: row.ticketId,
+          eventName: row.eventName,
+          eventDate: String(row.eventDate),
+          userName: row.userName,
+          userEmail: row.userEmail,
+          busSeat: row.busSeat,
+          tableSeat: row.tableSeat,
+        },
+        error: 'Already checked in',
+      };
+    }
+
+    await this.dbService.db
+      .update(tickets)
+      .set({ checkedIn: true, updatedAt: new Date() })
+      .where(eq(tickets.id, ticketId));
+
+    return {
+      success: true,
+      ticket: {
+        ticketId: row.ticketId,
+        eventName: row.eventName,
+        eventDate: String(row.eventDate),
+        userName: row.userName,
+        userEmail: row.userEmail,
+        busSeat: row.busSeat,
+        tableSeat: row.tableSeat,
+      },
+    };
   }
 
   async findAll() {

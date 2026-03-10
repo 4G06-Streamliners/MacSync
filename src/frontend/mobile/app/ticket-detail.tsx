@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { getUserTickets, createRefundRequest, cancelSignup, type Ticket } from "./_lib/api";
@@ -33,6 +34,12 @@ export default function TicketDetailScreen() {
   useEffect(() => {
     loadTicket();
   }, [ticketId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user && ticketId) loadTicket();
+    }, [user, ticketId]),
+  );
 
   const loadTicket = async () => {
     if (!user || !ticketId) return;
@@ -322,11 +329,21 @@ export default function TicketDetailScreen() {
 
         {/* QR Code Card */}
         <View className="bg-white rounded-2xl p-6 items-center border border-gray-100 shadow-sm">
+          {ticket.checkedIn && (
+            <View className="mb-4 w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex-row items-center gap-2">
+              <Text className="text-lg">✓</Text>
+              <Text className="text-base font-semibold text-green-800">
+                Checked In
+              </Text>
+            </View>
+          )}
           <Text className="text-lg font-bold text-gray-900 mb-2">
             Entry QR Code
           </Text>
           <Text className="text-sm text-gray-500 text-center mb-6">
-            Show this QR code at the event entrance
+            {ticket.checkedIn
+              ? "You've been checked in. Welcome to the event!"
+              : "Show this QR code at the event entrance"}
           </Text>
 
           {ticket.qrCodeData ? (

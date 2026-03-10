@@ -16,13 +16,14 @@ import { EventsService } from './events.service';
 import type { NewEvent } from '../db/schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 interface RequestWithUser extends Request {
   user: { sub: number; email: string };
 }
 
 @Controller('events')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
@@ -32,6 +33,12 @@ export class EventsController {
   @Get()
   findAll() {
     return this.eventsService.findAll();
+  }
+
+  @Post('check-in')
+  @Roles('Admin')
+  checkIn(@Body('qrCodeData') qrCodeData: string) {
+    return this.eventsService.checkInTicket(qrCodeData ?? '');
   }
 
   @Get(':id')

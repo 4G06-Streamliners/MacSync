@@ -4,6 +4,14 @@
     "slug": "mobile",
     "version": "1.0.0",
     "scheme": "mobile",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow MacSync to access your camera to scan ticket QR codes"
+        }
+      ]
+    ],
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,

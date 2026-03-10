@@ -341,3 +341,26 @@ export function denyRefundRequest(
     body: JSON.stringify({ adminResponse }),
   });
 }
+
+// ---------- Check-In (Admin) ----------
+export interface CheckInResult {
+  success: boolean;
+  alreadyCheckedIn?: boolean;
+  ticket?: {
+    ticketId: number;
+    eventName: string;
+    eventDate: string;
+    userName: string;
+    userEmail: string;
+    busSeat: string | null;
+    tableSeat: string | null;
+  };
+  error?: string;
+}
+
+export function checkInTicket(qrCodeData: string): Promise<CheckInResult> {
+  return apiFetch('/events/check-in', {
+    method: 'POST',
+    body: JSON.stringify({ qrCodeData }),
+  });
+}

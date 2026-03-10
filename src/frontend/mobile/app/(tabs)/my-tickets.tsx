@@ -201,16 +201,23 @@ export default function MyTickets() {
 
                   {/* Content */}
                   <View className="flex-1 p-4">
-                    {/* Refund Status Badge */}
-                    {ticket.refundRequest && ticket.refundRequest.status === 'pending' && (
-                      <View className="mb-2">
-                        <View className="bg-yellow-100 px-3 py-1.5 rounded-lg self-start">
+                    {/* Status Badges */}
+                    <View className="flex-row flex-wrap gap-2 mb-2">
+                      {ticket.checkedIn && (
+                        <View className="bg-green-100 px-3 py-1.5 rounded-lg">
+                          <Text className="text-xs font-bold text-green-800">
+                            ✓ Checked In
+                          </Text>
+                        </View>
+                      )}
+                      {ticket.refundRequest && ticket.refundRequest.status === 'pending' && (
+                        <View className="bg-yellow-100 px-3 py-1.5 rounded-lg">
                           <Text className="text-xs font-bold text-yellow-800">
                             ⏳ Refund Pending
                           </Text>
                         </View>
-                      </View>
-                    )}
+                      )}
+                    </View>
 
                     <View className="flex-row items-start justify-between mb-2">
                       <View className="flex-1">
