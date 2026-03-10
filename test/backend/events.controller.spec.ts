@@ -83,8 +83,10 @@ describe('EventsController', () => {
     await controller.signup('1', req, 3);
     expect(mockEventsService.signup).toHaveBeenCalledWith(1, 5, 3);
 
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     mockEventsService.signup.mockRejectedValue(new Error('Event is full'));
     await expect(controller.signup('1', req)).rejects.toThrow('Event is full');
+    consoleErrorSpy.mockRestore();
   });
 
   it('cancelSignup delegates to service', async () => {
@@ -113,8 +115,10 @@ describe('EventsController', () => {
   });
 
   it('releaseCheckoutReservation delegates to service', async () => {
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mockEventsService.releaseReservation.mockResolvedValue(undefined);
     expect(await controller.releaseCheckoutReservation('cs_123')).toEqual({ released: true });
+    consoleLogSpy.mockRestore();
   });
 
   it('checkIn passes qrCodeData to service and returns result', async () => {
