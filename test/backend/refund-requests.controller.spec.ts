@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import 'reflect-metadata';
 
 jest.mock('../../src/backend/src/refund-requests/refund-requests.service', () => ({

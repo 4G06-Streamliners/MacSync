@@ -26,6 +26,7 @@ module.exports = {
   moduleNameMapper: {
     '^drizzle-orm$': '<rootDir>/test/backend/__mocks__/drizzle-orm.js',
     '^drizzle-orm/(.*)$': '<rootDir>/test/backend/__mocks__/drizzle-orm.js',
+    '^stripe$': '<rootDir>/test/backend/__mocks__/stripe.js',
   },
   modulePaths: ['<rootDir>/test/node_modules'],
   collectCoverageFrom: [
