@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import React from 'react';
 import { render, fireEvent, waitFor, screen } from '@testing-library/react';
 
@@ -171,7 +172,7 @@ describe('EventsScreen', () => {
     expect(mockRouter.push).toHaveBeenCalledWith('/event-signup?eventId=1');
   });
 
-  it('shows cancel flow for signed-up free events and refund for paid events', async () => {
+  it('shows signed-up badge for events the user is registered for (no cancel/refund buttons)', async () => {
     mockGetEvents.mockResolvedValue([
       mockEvent({ id: 5, price: 0 }),
       mockEvent({ id: 3, price: 2500 }),
@@ -180,14 +181,12 @@ describe('EventsScreen', () => {
     render(<EventsScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText('Cancel Sign-Up')).toBeTruthy();
-      expect(screen.getByText('Request Refund')).toBeTruthy();
+      const signedUpBadges = screen.getAllByText('✓ Signed Up');
+      expect(signedUpBadges.length).toBe(2);
     });
 
-    fireEvent.click(screen.getByText('Cancel Sign-Up'));
-    await waitFor(() => {
-      expect(screen.getByText('Cancel Ticket')).toBeTruthy();
-      expect(screen.getByText('Are you sure you want to cancel this ticket?')).toBeTruthy();
-    });
+    // Main events list should not show cancel/refund buttons anymore
+    expect(screen.queryByText('Cancel Sign-Up')).toBeNull();
+    expect(screen.queryByText('Request Refund')).toBeNull();
   });
 });

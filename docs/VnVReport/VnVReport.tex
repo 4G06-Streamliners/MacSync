@@ -2,7 +2,11 @@
 
 \usepackage{booktabs}
 \usepackage{tabularx}
+\usepackage{array}
+\usepackage{amssymb}
+\usepackage{graphicx}
 \usepackage{hyperref}
+\usepackage{float}
 \hypersetup{
     colorlinks,
     citecolor=black,
@@ -15,23 +19,28 @@
 \input{../Comments}
 \input{../Common}
 
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\cmark}{\checkmark}
+
 \begin{document}
 
-\title{Verification and Validation Report: \progname} 
+\title{Verification and Validation Report: \progname}
 \author{\authname}
 \date{\today}
-	
+
 \maketitle
 
 \pagenumbering{roman}
 
 \section{Revision History}
 
-\begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
-\toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
+\begin{tabularx}{\textwidth}{L{3cm}L{2cm}Y}
+\toprule
+{\bf Date} & {\bf Version} & {\bf Notes} \\
 \midrule
-Date 1 & 1.0 & Notes\\
-Date 2 & 1.1 & Notes\\
+Date 1 & 1.0 & Notes \\
+Date 2 & 1.1 & Notes \\
 \bottomrule
 \end{tabularx}
 
@@ -40,13 +49,13 @@ Date 2 & 1.1 & Notes\\
 \section{Symbols, Abbreviations and Acronyms}
 
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{l l} 
-  \toprule		
-  \textbf{symbol} & \textbf{description}\\
-  \midrule 
+\begin{tabular}{l l}
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
   T & Test\\
-  \bottomrule
-\end{tabular}\\
+\bottomrule
+\end{tabular}
 
 \wss{symbols, abbreviations or acronyms -- you can reference the SRS tables if needed}
 
@@ -54,9 +63,9 @@ Date 2 & 1.1 & Notes\\
 
 \tableofcontents
 
-\listoftables %if appropriate
+\listoftables
 
-\listoffigures %if appropriate
+\listoffigures
 
 \newpage
 
@@ -69,36 +78,235 @@ This document ...
 \section{Nonfunctional Requirements Evaluation}
 
 \subsection{Usability}
-		
+
 \subsection{Performance}
 
 \subsection{etc.}
-	
-\section{Comparison to Existing Implementation}	
+
+\section{Comparison to Existing Implementation}
 
 This section will not be appropriate for every project.
 
 \section{Unit Testing}
 
+\subsection{Event Creation and Management Module}
+
+\textbf{Create Event Screen}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+ECM1 & Open the create event screen. & The screen displays the event form, input fields, toggles, and Save/Cancel buttons. & The screen displayed all required form controls correctly. & Pass \\
+ECM2 & Press Save with required fields left empty. & Event creation is blocked and an error message is shown for missing required fields. & Submission was blocked and an error alert was shown. & Pass \\
+ECM3 & Enter valid event data and press Save. & The event is created successfully, price is converted to cents, and the user is redirected to the confirmation page. & The event was created with the correct payload and navigation occurred. & Pass \\
+ECM4 & Enter valid data but simulate API failure on Save. & Event creation fails gracefully and an error alert is shown. & The API error was caught and the correct alert was displayed. & Pass \\
+ECM5 & Press Cancel on the create event screen. & The user is returned to the previous screen without creating an event. & The screen navigated back successfully. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\vspace{0.5cm}
+
+\textbf{Events Controller / Service}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+ECM6 & Request all events from the backend. & The system returns the list of stored events. & All events were returned correctly. & Pass \\
+ECM7 & Request one event by id. & The correct event is returned if it exists; otherwise null is returned. & Existing events were returned correctly and missing events returned null. & Pass \\
+ECM8 & Create an event requiring bus or table signup. & The event is created and corresponding seat records are initialized automatically. & Event creation and seat generation both succeeded. & Pass \\
+ECM9 & Update or delete an existing event. & The requested event is modified or deleted successfully. & Update and delete operations completed correctly. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\subsection{Ticket Purchase and Payment System Module}
+
+\textbf{Events Screen / Ticket Access}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+TP1 & Load an available event with price and registration count. & The event card displays the correct event name, location, price, and open status. & The event card showed the correct information. & Pass \\
+TP2 & Load an event that has reached capacity. & The event is marked Full and signup is disabled. & Full badge and disabled action were shown correctly. & Pass \\
+TP3 & Load a past event. & The event is marked Past and signup is disabled. & Past badge and ended status were shown correctly. & Pass \\
+TP4 & Click Sign Up on an available event. & The user is routed to the event signup page for that event. & Navigation to the signup page occurred successfully. & Pass \\
+TP5 & Load events for a user who is already registered. & The system shows the registered status for the user's events. & Registered events were correctly marked as signed up. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\vspace{0.5cm}
+
+\textbf{Ticket Validation / Check-In}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+TP6 & Submit empty or invalid QR code data. & The system rejects the QR code and returns an invalid QR error. & Invalid QR codes were rejected correctly. & Pass \\
+TP7 & Submit a valid QR code for a ticket that does not exist. & The system returns a ticket not found error. & Missing tickets were handled correctly. & Pass \\
+TP8 & Submit a valid QR code for a ticket already checked in. & The system returns an already checked-in response without updating the record. & Already checked-in tickets were detected correctly. & Pass \\
+TP9 & Submit a valid QR code for a valid unchecked ticket. & The ticket is marked as checked in and success is returned. & The ticket was updated and validated successfully. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\subsection{Bus and Table Registration Module}
+
+\textbf{Event Signup / Seat Initialization}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+BTR1 & Create an event with table signup enabled and a valid table configuration. & Table seat records are automatically created for the event. & Table seats were generated correctly. & Pass \\
+BTR2 & Create an event with bus signup enabled and a valid bus configuration. & Bus seat records are automatically created for the event. & Bus seats were generated correctly. & Pass \\
+BTR3 & Sign up a user for an event with an optional table selection. & The selected table information is passed correctly to the backend during signup. & The signup call included the correct event, user, and table id. & Pass \\
+BTR4 & Cancel an existing event signup. & The user's signup is removed successfully. & The signup was cancelled correctly. & Pass \\
+BTR5 & Attempt to cancel signup when no signup exists. & The system returns an appropriate error and does not modify data. & The system returned the expected error response. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\subsection{Role-Based Access Control (RBAC) Module}
+
+\textbf{Frontend and Backend Authorization}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
+\toprule
+\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
+\midrule
+RBAC1 & Load the events screen as an admin user. & The Create Event button is visible and can be used. & The admin user could see and access event creation. & Pass \\
+RBAC2 & Load the events screen as a non-admin user. & The Create Event button is hidden. & The button was not shown to non-admin users. & Pass \\
+RBAC3 & Request a user's own tickets. & Access is allowed and the ticket list is returned. & Users could access their own tickets correctly. & Pass \\
+RBAC4 & Request another user's tickets as an admin. & Access is allowed and the ticket list is returned. & Admin access was granted correctly. & Pass \\
+RBAC5 & Request another user's tickets as a non-admin. & Access is denied and an error is returned. & Unauthorized access was rejected correctly. & Pass \\
+\bottomrule
+\end{tabularx}
+}
+
+\subsection{Waivers and Preference Submission Module}
+
+At the time of testing, no dedicated automated unit tests were implemented for waiver submission or preference submission as separate isolated modules. These behaviours were instead covered indirectly through broader event registration and ticketing workflows. Additional direct tests for waiver completion validation and user preference persistence may be added in future revisions.
+
 \section{Changes Due to Testing}
 
-\wss{This section should highlight how feedback from the users and from 
-the supervisor (when one exists) shaped the final product.  In particular 
-the feedback from the Rev 0 demo to the supervisor (or to potential users) 
+\wss{This section should highlight how feedback from the users and from
+the supervisor (when one exists) shaped the final product. In particular
+the feedback from the Rev 0 demo to the supervisor (or to potential users)
 should be highlighted.}
 
 \section{Automated Testing}
-		
-\section{Trace to Requirements}
-		
-\section{Trace to Modules}		
 
+\section{Trace to Requirements}
+
+Table~\ref{tab:reqtrace} maps the selected tests to the main functional
+requirements. A checkmark indicates that the test provides evidence for the
+corresponding requirement.
+
+\begin{table}[H]
+\centering
+\caption{Traceability Between Tests and Functional Requirements}
+\label{tab:reqtrace}
+\small
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Test ID} & \textbf{FR1} & \textbf{FR2} & \textbf{FR3} & \textbf{FR4} & \textbf{FR5} \\
+\midrule
+ECM2 &  &  &  &  & \cmark \\
+ECM3 &  &  &  &  & \cmark \\
+ECM4 &  &  &  &  & \cmark \\
+ECM8 &  & \cmark &  &  & \cmark \\
+ECM9 &  &  &  &  & \cmark \\
+TP1  & \cmark &  &  &  &  \\
+TP2  & \cmark &  &  &  &  \\
+TP4  & \cmark &  &  &  &  \\
+TP5  & \cmark &  &  &  &  \\
+TP6  & \cmark &  &  &  &  \\
+TP9  & \cmark &  &  &  &  \\
+BTR1 &  & \cmark &  &  & \cmark \\
+BTR2 &  & \cmark &  &  & \cmark \\
+BTR3 &  & \cmark &  &  &  \\
+BTR4 &  & \cmark &  &  &  \\
+BTR5 &  & \cmark &  &  &  \\
+RBAC1 &  &  &  & \cmark & \cmark \\
+RBAC2 &  &  &  & \cmark &  \\
+RBAC3 & \cmark &  &  & \cmark &  \\
+RBAC4 & \cmark &  &  & \cmark &  \\
+RBAC5 &  &  &  & \cmark &  \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Trace to Modules}
+
+Table~\ref{tab:modtrace} maps the selected tests to the major functional
+modules of the system. A checkmark indicates that the test belongs to or
+primarily validates that module.
+
+\begin{table}[H]
+\centering
+\caption{Traceability Between Tests and Modules}
+\label{tab:modtrace}
+\small
+\renewcommand{\arraystretch}{1.2}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Test ID} & \textbf{TPPS} & \textbf{BTR} & \textbf{WPS} & \textbf{RBAC} & \textbf{ECM} \\
+\midrule
+ECM2 &  &  &  &  & \cmark \\
+ECM3 &  &  &  &  & \cmark \\
+ECM4 &  &  &  &  & \cmark \\
+ECM8 &  & \cmark &  &  & \cmark \\
+ECM9 &  &  &  &  & \cmark \\
+TP1  & \cmark &  &  &  &  \\
+TP2  & \cmark &  &  &  &  \\
+TP4  & \cmark &  &  &  &  \\
+TP5  & \cmark &  &  &  &  \\
+TP6  & \cmark &  &  &  &  \\
+TP9  & \cmark &  &  &  &  \\
+BTR1 &  & \cmark &  &  & \cmark \\
+BTR2 &  & \cmark &  &  & \cmark \\
+BTR3 &  & \cmark &  &  &  \\
+BTR4 &  & \cmark &  &  &  \\
+BTR5 &  & \cmark &  &  &  \\
+RBAC1 &  &  &  & \cmark & \cmark \\
+RBAC2 &  &  &  & \cmark &  \\
+RBAC3 & \cmark &  &  & \cmark &  \\
+RBAC4 & \cmark &  &  & \cmark &  \\
+RBAC5 &  &  &  & \cmark &  \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\clearpage
 \section{Code Coverage Metrics}
 
 \bibliographystyle{plainnat}
 \bibliography{../../refs/References}
 
-\newpage{}
+\newpage
 \section*{Appendix --- Reflection}
 
 The information in this section will be used to evaluate the team members on the
@@ -107,7 +315,7 @@ graduate attribute of Reflection.
 \input{../Reflection.tex}
 
 \begin{enumerate}
-  \item What went well while writing this deliverable? 
+  \item What went well while writing this deliverable?
   \item What pain points did you experience during this deliverable, and how
     did you resolve them?
   \item Which parts of this document stemmed from speaking to your client(s) or

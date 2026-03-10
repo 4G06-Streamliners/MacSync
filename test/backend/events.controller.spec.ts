@@ -38,6 +38,7 @@ describe('EventsController', () => {
       getTicketsForUser: jest.fn(),
       createCheckoutSession: jest.fn(),
       releaseReservation: jest.fn(),
+      checkInTicket: jest.fn(),
     };
     mockUsersService = { findOneWithRoles: jest.fn() };
     controller = new EventsController(mockEventsService, mockUsersService);
@@ -82,8 +83,10 @@ describe('EventsController', () => {
     await controller.signup('1', req, 3);
     expect(mockEventsService.signup).toHaveBeenCalledWith(1, 5, 3);
 
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     mockEventsService.signup.mockRejectedValue(new Error('Event is full'));
     await expect(controller.signup('1', req)).rejects.toThrow('Event is full');
+    consoleErrorSpy.mockRestore();
   });
 
   it('cancelSignup delegates to service', async () => {
@@ -111,8 +114,77 @@ describe('EventsController', () => {
     await expect(controller.getUserTickets('5', userReq)).rejects.toThrow('Access denied.');
   });
 
+  it('createCheckoutSession passes event id, user id, urls and optional selectedTable', async () => {
+    mockEventsService.createCheckoutSession.mockResolvedValue({
+      url: 'https://checkout.stripe.com/session',
+      sessionId: 'cs_test_123',
+    });
+    const req = { user: { sub: 5 } } as any;
+    const body = {
+      successUrl: 'https://app.example/payment-success',
+      cancelUrl: 'https://app.example/payment-cancel',
+    };
+
+    const result = await controller.createCheckoutSession('10', req, body);
+
+    expect(result).toEqual({ url: 'https://checkout.stripe.com/session', sessionId: 'cs_test_123' });
+    expect(mockEventsService.createCheckoutSession).toHaveBeenCalledWith(
+      10,
+      5,
+      'https://app.example/payment-success',
+      'https://app.example/payment-cancel',
+      undefined,
+    );
+  });
+
+  it('createCheckoutSession passes selectedTable when provided', async () => {
+    mockEventsService.createCheckoutSession.mockResolvedValue({ sessionId: 'cs_1' });
+    const req = { user: { sub: 3 } } as any;
+    const body = {
+      successUrl: 'https://x/s',
+      cancelUrl: 'https://x/c',
+      selectedTable: 2,
+    };
+
+    await controller.createCheckoutSession('1', req, body);
+
+    expect(mockEventsService.createCheckoutSession).toHaveBeenCalledWith(
+      1,
+      3,
+      'https://x/s',
+      'https://x/c',
+      2,
+    );
+  });
+
   it('releaseCheckoutReservation delegates to service', async () => {
+    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     mockEventsService.releaseReservation.mockResolvedValue(undefined);
     expect(await controller.releaseCheckoutReservation('cs_123')).toEqual({ released: true });
+    consoleLogSpy.mockRestore();
+  });
+
+  it('checkIn passes qrCodeData to service and returns result', async () => {
+    const qrData = '1:5:10:abc123valid';
+    const result = {
+      success: true,
+      ticket: {
+        ticketId: 1,
+        eventName: 'Gala',
+        userName: 'Alice',
+        userEmail: 'alice@test.com',
+      },
+    };
+    mockEventsService.checkInTicket.mockResolvedValue(result);
+
+    expect(await controller.checkIn(qrData)).toEqual(result);
+    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith(qrData);
+  });
+
+  it('checkIn passes empty string when qrCodeData is undefined', async () => {
+    mockEventsService.checkInTicket.mockResolvedValue({ success: false, error: 'Invalid QR code data' });
+
+    await controller.checkIn(undefined as any);
+    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith('');
   });
 });

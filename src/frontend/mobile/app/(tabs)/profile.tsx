@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,18 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { updateUser } from "../_lib/api";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { updateUser, getMyRefundRequests, type RefundRequest } from "../_lib/api";
 import { useAuth } from "../_context/AuthContext";
 
 export default function ProfileScreen() {
   const { user, isAdmin, status, refreshUser } = useAuth();
+  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [refundedTickets, setRefundedTickets] = useState<RefundRequest[]>([]);
+  const [loadingRefunds, setLoadingRefunds] = useState(true);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -31,8 +36,39 @@ export default function ProfileScreen() {
         program: user.program || "",
       });
       setEditing(false);
+      loadRefundedTickets();
     }
   }, [user]);
+
+  const loadRefundedTickets = async () => {
+    setLoadingRefunds(true);
+    try {
+      const refunds = await getMyRefundRequests();
+      // Only show approved refunds (tickets that were actually refunded)
+      setRefundedTickets(refunds.filter(r => r.status === 'approved'));
+    } catch (err) {
+      console.error("Failed to load refunded tickets:", err);
+    } finally {
+      setLoadingRefunds(false);
+    }
+  };
+
+  // Reload refunded tickets whenever the profile screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        void loadRefundedTickets();
+      }
+    }, [user]),
+  );
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   const handleSave = async () => {
     if (!user) return;
@@ -236,6 +272,80 @@ export default function ProfileScreen() {
               )}
             </View>
           </View>
+        </View>
+
+        {/* Refunded Tickets Section */}
+        <View className="mt-6">
+          <View className="flex-row items-center justify-between mb-3">
+            <Text className="text-lg font-bold text-gray-900">
+              Refunded Tickets
+            </Text>
+            {refundedTickets.length > 0 && (
+              <View className="bg-gray-200 px-2 py-1 rounded-full">
+                <Text className="text-xs font-bold text-gray-700">
+                  {refundedTickets.length}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {loadingRefunds ? (
+            <View className="bg-white rounded-2xl p-8 items-center border border-gray-100">
+              <ActivityIndicator size="small" color="#7A1F3E" />
+            </View>
+          ) : refundedTickets.length === 0 ? (
+            <View className="bg-white rounded-2xl p-8 items-center border border-gray-100">
+              <Text className="text-4xl mb-3">🎫</Text>
+              <Text className="text-base font-medium text-gray-900 mb-1">
+                No Refunded Tickets
+              </Text>
+              <Text className="text-sm text-gray-500 text-center">
+                You haven't had any tickets refunded yet
+              </Text>
+            </View>
+          ) : (
+            <View className="gap-3">
+              {refundedTickets.map((refund) => (
+                <View
+                  key={refund.id}
+                  className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm"
+                >
+                  <View className="flex-row items-start justify-between mb-2">
+                    <View className="flex-1">
+                      <Text className="text-base font-bold text-gray-900 mb-1">
+                        {refund.eventName}
+                      </Text>
+                      {refund.eventDate && (
+                        <Text className="text-sm text-gray-600">
+                          {formatDate(refund.eventDate)}
+                        </Text>
+                      )}
+                    </View>
+                    <View className="bg-green-100 px-2 py-1 rounded-lg">
+                      <Text className="text-xs font-bold text-green-800">
+                        REFUNDED
+                      </Text>
+                    </View>
+                  </View>
+
+                  {refund.adminResponse && (
+                    <View className="mt-3 bg-gray-50 rounded-lg p-3">
+                      <Text className="text-xs text-gray-500 mb-1">
+                        Admin Message:
+                      </Text>
+                      <Text className="text-sm text-gray-700">
+                        {refund.adminResponse}
+                      </Text>
+                    </View>
+                  )}
+
+                  <Text className="text-xs text-gray-400 mt-2">
+                    Refunded on {refund.processedAt && formatDate(refund.processedAt)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
