@@ -33,6 +33,8 @@ module.exports = {
     '^react-native-qrcode-svg$': '<rootDir>/test/frontend/__mocks__/react-native-qrcode-svg.js',
     '^expo-camera$': '<rootDir>/test/frontend/__mocks__/expo-camera.js',
     '^expo-router$': '<rootDir>/test/frontend/__mocks__/expo-router.js',
+    '^expo-linking$': '<rootDir>/test/frontend/__mocks__/expo-linking.js',
+    '^expo-web-browser$': '<rootDir>/test/frontend/__mocks__/expo-web-browser.js',
     '^react-native-safe-area-context$':
       '<rootDir>/test/frontend/__mocks__/react-native-safe-area-context.js',
     '^@react-navigation/native$':
