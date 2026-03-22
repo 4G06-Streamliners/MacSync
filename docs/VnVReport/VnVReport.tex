@@ -728,21 +728,6 @@ ES7 & Attempt to confirm signup on a full-capacity event. & ``Event Full'' butto
 \end{tabularx}
 }
 
-\vspace{0.5cm}
-
-\textbf{My Tickets Screen (Frontend)}
-
-{\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{L{1.6cm}Y Y Y L{1.4cm}}
-\toprule
-\textbf{Test ID} & \textbf{Inputs} & \textbf{Expected Values} & \textbf{Actual Values} & \textbf{Result} \\
-\midrule
-MT1 & Load the My Tickets screen for a user with existing tickets. & Each ticket card displays the event name, date, location, and price. & Ticket details were rendered correctly for all tickets. & Pass \\
-\bottomrule
-\end{tabularx}
-}
-
 \subsection{Seat Reservation Lockout Module}
 
 These tests verify the concurrency-safe seat reservation mechanism used during paid event checkout. The system uses PostgreSQL \texttt{FOR UPDATE SKIP LOCKED} within a database transaction to atomically lock a seat row, preventing two concurrent users from both entering the payment flow for the same seat. A \texttt{seat\_reservations} table holds the lock while the user completes Stripe checkout.
@@ -849,7 +834,6 @@ ES4  & \cmark & \cmark &  &  &  \\
 ES5  & \cmark & \cmark &  &  &  \\
 ES6  &  & \cmark &  &  &  \\
 ES7  & \cmark &  &  &  &  \\
-MT1  & \cmark &  &  &  &  \\
 SRL1 & \cmark & \cmark &  &  &  \\
 SRL2 & \cmark &  &  &  &  \\
 SRL3 & \cmark &  &  &  &  \\
@@ -904,7 +888,6 @@ ES4  & \cmark &  &  &  &  \\
 ES5  & \cmark &  &  &  &  \\
 ES6  &  & \cmark &  &  &  \\
 ES7  & \cmark &  &  &  &  \\
-MT1  & \cmark &  &  &  &  \\
 SRL1 & \cmark &  &  &  &  \\
 SRL2 & \cmark &  &  &  &  \\
 SRL3 & \cmark &  &  &  &  \\

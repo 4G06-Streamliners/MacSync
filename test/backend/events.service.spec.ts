@@ -110,6 +110,24 @@ describe('EventsService', () => {
     expect(await service.delete(1)).toEqual({ deleted: true });
   });
 
+  it('signup assigns table seat when selectedTable is provided', async () => {
+    // No existing ticket
+    mockDb.select
+      .mockReturnValueOnce(createDbChain([]))                                          // existing ticket check
+      .mockReturnValueOnce(createDbChain([{ id: 1, requiresTableSignup: true, requiresBusSignup: false, capacity: 100 }])) // event
+      .mockReturnValueOnce(createDbChain([{ count: 0 }]))                             // ticket count
+      .mockReturnValueOnce(createDbChain([{ id: 42 }]))                               // table seat available
+      .mockReturnValueOnce(createDbChain([{ id: 42, tableNumber: 2, seatNumber: 1 }])); // seat to assign
+    mockDb.insert.mockReturnValue(createDbChain([{ id: 99, userId: 5, eventId: 1 }]));
+    mockDb.update.mockReturnValue(createDbChain());
+
+    const result = await service.signup(1, 5, 2);
+
+    expect(result.error).toBeUndefined();
+    expect(result.ticket).toMatchObject({ tableSeat: 'Table 2, Seat 1' });
+    expect(mockDb.update).toHaveBeenCalled();
+  });
+
   it('cancelSignup returns error when not signed up, cancels when signed up', async () => {
     mockDb.select.mockReturnValue(createDbChain([]));
     expect(await service.cancelSignup(1, 5)).toEqual({ error: 'Not signed up for this event' });
