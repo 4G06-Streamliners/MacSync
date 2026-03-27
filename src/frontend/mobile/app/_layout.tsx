@@ -28,6 +28,13 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="edit-event"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name="event-signup"
           options={{
             presentation: "modal",

@@ -206,6 +206,16 @@ export function createEvent(data: CreateEventPayload): Promise<EventItem> {
   });
 }
 
+export function updateEvent(
+  id: number,
+  data: Partial<CreateEventPayload>,
+): Promise<EventItem> {
+  return apiFetch(`/events/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
 export function deleteEvent(id: number): Promise<{ deleted: boolean }> {
   return apiFetch(`/events/${id}`, { method: 'DELETE' });
 }
