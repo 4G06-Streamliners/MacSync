@@ -330,9 +330,14 @@ export class EventsService {
       }
     }
 
+    const values: Record<string, unknown> = { ...event, updatedAt: new Date() };
+    if (values.date != null) {
+      values.date = new Date(values.date as string | Date);
+    }
+
     const result = await this.dbService.db
       .update(events)
-      .set({ ...event, updatedAt: new Date() })
+      .set(values)
       .where(eq(events.id, id))
       .returning();
     return result[0];

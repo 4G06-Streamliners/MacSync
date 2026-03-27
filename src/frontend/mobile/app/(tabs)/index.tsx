@@ -27,13 +27,17 @@ import { useAuth } from "../_context/AuthContext";
 function EventCard({
   event,
   isSignedUp,
+  isAdmin,
   onSignUp,
   onCancel,
+  onEdit,
 }: {
   event: EventItem;
   isSignedUp: boolean;
+  isAdmin: boolean;
   onSignUp: (id: number) => void;
   onCancel: (id: number) => void;
+  onEdit: (id: number) => void;
 }) {
   let effectiveCapacity = event.capacity;
   if (
@@ -161,6 +165,17 @@ function EventCard({
               }`}
             >
               {isPast ? "Event Ended" : isFull ? "Event Full" : "Sign Up"}
+            </Text>
+          </Pressable>
+        )}
+
+        {isAdmin && (
+          <Pressable
+            onPress={() => onEdit(event.id)}
+            className="w-full py-3 mt-2 rounded-xl border border-maroon active:bg-maroon/10"
+          >
+            <Text className="text-center text-sm font-semibold text-maroon">
+              Edit Event
             </Text>
           </Pressable>
         )}
@@ -372,8 +387,10 @@ export default function EventsScreen() {
                 <EventCard
                   event={event}
                   isSignedUp={signedUpEventIds.has(event.id)}
+                  isAdmin={isAdmin}
                   onSignUp={handleSignUp}
                   onCancel={handleCancel}
+                  onEdit={(id) => router.push(`/edit-event?eventId=${id}`)}
                 />
               </View>
             ))}

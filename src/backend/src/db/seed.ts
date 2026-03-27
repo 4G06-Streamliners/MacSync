@@ -10,13 +10,14 @@ import * as schema from './schema';
 import { runSeedDb } from './seed-data';
 
 async function main() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new Pool({ connectionString: 
+process.env.DATABASE_URL });
   const db = drizzle(pool, { schema }) as import('./seed-data').SeedDb;
 
-  console.log('🌱 Seeding database...');
+  console.log(':seedling: Seeding database...');
   const didSeed = await runSeedDb(db);
   if (!didSeed) {
-    console.log('  ⏭️  Database already has data. Skipping.');
+    console.log('  :track_next:  Database already has data. Skipping.');
   } else {
     console.log('  ✓ Roles, users, user_roles');
     console.log(
@@ -24,7 +25,7 @@ async function main() {
     );
     console.log('  ✓ Table seats and bus seats auto-generated');
     console.log('  ✓ Sample tickets and seat assignments');
-    console.log('✅ Seed completed.');
+    console.log(':white_check_mark: Seed completed.');
   }
   await pool.end();
 }
@@ -41,7 +42,7 @@ main().catch((err: unknown) => {
       ? (err as { code: string }).code
       : undefined;
   if (code === '42P01' || /relation .* does not exist/i.test(msg)) {
-    console.error('❌ Seed failed: Database tables do not exist.');
+    console.error(':x: Seed failed: Database tables do not exist.');
     console.error('');
     console.error('   Run the schema first, then seed:');
     console.error('   npm run db:push');
@@ -50,7 +51,7 @@ main().catch((err: unknown) => {
     console.error('   Or do both in one step:');
     console.error('   npm run db:setup');
   } else {
-    console.error('❌ Seed failed:', err);
+    console.error(':x: Seed failed:', err);
   }
   process.exit(1);
 });
