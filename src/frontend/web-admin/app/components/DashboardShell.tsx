@@ -8,6 +8,7 @@ const navItems = [
   { href: "/", label: "Dashboard" },
   { href: "/events", label: "Events" },
   { href: "/users", label: "Users" },
+  { href: "/notifications", label: "Notifications" },
 ];
 
 export default function DashboardShell({

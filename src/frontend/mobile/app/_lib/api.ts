@@ -164,6 +164,7 @@ export interface EventItem {
   busCount: number | null;
   busCapacity: number | null;
   registeredCount: number;
+  createdBy: number | null;
   userTicket?: { tableSeat: string | null; busSeat: string | null } | null;
   createdAt: string;
   updatedAt: string;
@@ -342,7 +343,31 @@ export function denyRefundRequest(
   });
 }
 
-// ---------- Check-In (Admin) ----------
+// ---------- Notifications ----------
+export interface AppNotification {
+  id: number;
+  userId: number;
+  eventId: number | null;
+  type: 'confirmation' | 'cancellation' | 'reminder' | 'blast';
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export function getMyNotifications(): Promise<AppNotification[]> {
+  return apiFetch('/notifications/me');
+}
+
+export function markNotificationRead(id: number): Promise<{ success: boolean }> {
+  return apiFetch(`/notifications/${id}/read`, { method: 'PATCH' });
+}
+
+export function updateNotifPreferences(notifInApp: boolean): Promise<{ success: boolean }> {
+  return apiFetch('/notifications/preferences', {
+    method: 'PATCH',
+    body: JSON.stringify({ notifInApp }),
+  });
+}
 export interface CheckInResult {
   success: boolean;
   alreadyCheckedIn?: boolean;

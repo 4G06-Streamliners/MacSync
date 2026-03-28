@@ -115,6 +115,7 @@ export interface EventItem {
   busCount: number | null;
   busCapacity: number | null;
   registeredCount: number;
+  createdBy: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -181,4 +182,25 @@ export function login(email: string, password: string): Promise<LoginResponse> {
 
 export function getMe(): Promise<User> {
   return apiFetch("/auth/me");
+}
+
+// ---------- Notifications ----------
+export interface AdminEvent {
+  id: number;
+  name: string;
+  date: string;
+}
+
+export function getMyAdminEvents(): Promise<AdminEvent[]> {
+  return apiFetch("/notifications/my-events");
+}
+
+export function sendBlast(
+  eventId: number,
+  message?: string,
+): Promise<{ sent?: number; error?: string }> {
+  return apiFetch("/notifications/blast", {
+    method: "POST",
+    body: JSON.stringify({ eventId, message }),
+  });
 }

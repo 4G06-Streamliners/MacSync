@@ -49,8 +49,8 @@ export class EventsController {
 
   @Post()
   @Roles('Admin')
-  create(@Body() event: NewEvent) {
-    return this.eventsService.create(event);
+  create(@Body() event: NewEvent, @Req() req: RequestWithUser) {
+    return this.eventsService.create({ ...event, createdBy: req.user.sub });
   }
 
   @Put(':id')

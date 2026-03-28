@@ -7,10 +7,11 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import { updateUser, getMyRefundRequests, type RefundRequest } from "../_lib/api";
+import { updateUser, getMyRefundRequests, updateNotifPreferences, type RefundRequest } from "../_lib/api";
 import { useAuth } from "../_context/AuthContext";
 
 export default function ProfileScreen() {
@@ -18,6 +19,8 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [notifInApp, setNotifInApp] = useState(true);
+  const [savingNotif, setSavingNotif] = useState(false);
   const [refundedTickets, setRefundedTickets] = useState<RefundRequest[]>([]);
   const [loadingRefunds, setLoadingRefunds] = useState(true);
   const [form, setForm] = useState({
@@ -35,6 +38,7 @@ export default function ProfileScreen() {
         phoneNumber: user.phoneNumber,
         program: user.program || "",
       });
+      setNotifInApp((user as any).notifInApp ?? true);
       setEditing(false);
       loadRefundedTickets();
     }
@@ -68,6 +72,18 @@ export default function ProfileScreen() {
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  const handleToggleNotif = async (value: boolean) => {
+    setSavingNotif(true);
+    try {
+      await updateNotifPreferences(value);
+      setNotifInApp(value);
+    } catch {
+      Alert.alert("Error", "Failed to update notification preference.");
+    } finally {
+      setSavingNotif(false);
+    }
   };
 
   const handleSave = async () => {
@@ -228,6 +244,30 @@ export default function ProfileScreen() {
                     : "border-gray-200 bg-gray-50 text-gray-500"
                 }`}
               />
+            </View>
+
+            {/* Notification Preferences */}
+            <View className="pt-2 border-t border-gray-100">
+              <Text className="text-sm font-medium text-gray-700 mb-3">
+                🔔 Notification Preferences
+              </Text>
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1 mr-4">
+                  <Text className="text-sm text-gray-800 font-medium">
+                    In-App Notifications
+                  </Text>
+                  <Text className="text-xs text-gray-500 mt-0.5">
+                    Receive confirmations, reminders, and updates
+                  </Text>
+                </View>
+                <Switch
+                  value={notifInApp}
+                  onValueChange={handleToggleNotif}
+                  disabled={savingNotif}
+                  trackColor={{ false: "#D1D5DB", true: "#7A1F3E" }}
+                  thumbColor="#fff"
+                />
+              </View>
             </View>
 
             {/* Actions */}

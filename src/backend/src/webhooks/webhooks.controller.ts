@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { EventsService } from '../events/events.service';
 import { PaymentsService } from '../payments/payments.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import Stripe from 'stripe';
 
 interface RequestWithRawBody {
@@ -20,6 +21,7 @@ export class WebhooksController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly paymentsService: PaymentsService,
+    private readonly notificationsService: NotificationsService,
   ) {
     const key = process.env.STRIPE_SECRET_KEY;
     if (key) this.stripe = new Stripe(key);
@@ -63,6 +65,7 @@ export class WebhooksController {
       const sessionId = session.id;
       const eventId = session.metadata?.eventId;
       const userId = session.metadata?.userId;
+      const eventName = session.metadata?.eventName ?? `event #${eventId}`;
 
       if (!eventId || !userId) {
         console.error('Stripe webhook: missing eventId or userId in metadata');
@@ -81,6 +84,13 @@ export class WebhooksController {
         console.error(
           'Stripe webhook: completeSignupFromReservation failed',
           result.error,
+        );
+      } else if (!result.error) {
+        await this.notificationsService.createNotification(
+          +userId,
+          'confirmation',
+          `You're registered for ${eventName}! Your ticket has been confirmed.`,
+          +eventId,
         );
       }
     }

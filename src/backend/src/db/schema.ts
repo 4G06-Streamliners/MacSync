@@ -21,6 +21,7 @@ export const users = pgTable('users', {
   phoneNumber: varchar('phone_number', { length: 255 }).notNull(),
   program: varchar('program', { length: 255 }),
   isSystemAdmin: boolean('is_system_admin').default(false),
+  notifInApp: boolean('notif_in_app').default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -87,6 +88,7 @@ export const events = pgTable('events', {
   // For bus seats: number of buses, capacity per bus (e.g. 2 buses × 50 seats)
   busCount: integer('bus_count'),
   busCapacity: integer('bus_capacity'),
+  createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -242,3 +244,19 @@ export const refundRequests = pgTable('refund_requests', {
 
 export type RefundRequest = typeof refundRequests.$inferSelect;
 export type NewRefundRequest = typeof refundRequests.$inferInsert;
+
+// ------------------- NOTIFICATIONS -------------------
+export const notifications = pgTable('notifications', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  eventId: integer('event_id').references(() => events.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 50 }).notNull(), // 'confirmation' | 'cancellation' | 'reminder' | 'blast'
+  message: text('message').notNull(),
+  read: boolean('read').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
