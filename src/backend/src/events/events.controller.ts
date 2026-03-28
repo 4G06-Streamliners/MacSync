@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
@@ -17,6 +18,8 @@ import type { NewEvent } from '../db/schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import type { FastifyReply } from 'fastify';
+import { VenueReportPdfService } from './venue-report-pdf.service';
 
 interface RequestWithUser extends Request {
   user: { sub: number; email: string };
@@ -28,6 +31,7 @@ export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
     private readonly usersService: UsersService,
+    private readonly venueReportPdfService: VenueReportPdfService,
   ) {}
 
   @Get()
@@ -39,6 +43,24 @@ export class EventsController {
   @Roles('Admin')
   getEventAttendees(@Param('id') id: string) {
     return this.eventsService.getAttendeesForEvent(+id);
+  }
+
+  @Get(':id/venue-report')
+  @Roles('Admin')
+  async getVenueReport(
+    @Param('id') id: string,
+    @Req() req: RequestWithUser,
+    @Res({ passthrough: false }) reply: FastifyReply,
+  ) {
+    const buf = await this.venueReportPdfService.generateBuffer(
+      +id,
+      req.user.sub,
+    );
+    const filename = `macsync-venue-order-${id}.pdf`;
+    return reply
+      .type('application/pdf')
+      .header('Content-Disposition', `attachment; filename="${filename}"`)
+      .send(buf);
   }
 
   @Post('check-in')

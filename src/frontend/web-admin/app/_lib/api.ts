@@ -199,6 +199,30 @@ export function deleteEvent(id: number): Promise<{ deleted: boolean }> {
   return apiFetch(`/events/${id}`, { method: "DELETE" });
 }
 
+/** Admin: venue order PDF (reportlab via backend). */
+export async function downloadVenueReportPdf(eventId: number): Promise<void> {
+  const base = getBaseUrl();
+  const url = `${base}/events/${eventId}/venue-report`;
+  const token = getToken();
+  const res = await fetch(url, {
+    method: "GET",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `Failed to download venue report (${res.status})`);
+  }
+  const blob = await res.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = `macsync-venue-order-${eventId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(blobUrl);
+}
+
 // ---------- Tickets ----------
 export interface Ticket {
   ticketId: number;
