@@ -384,6 +384,52 @@ export class EventsService {
     return { cancelled: true };
   }
 
+  /** Admin: everyone registered for an event with seat and contact details. */
+  async getAttendeesForEvent(eventId: number) {
+    const rows = await this.dbService.db
+      .select({
+        ticketId: tickets.id,
+        userId: users.id,
+        name: users.name,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        program: users.program,
+        checkedIn: tickets.checkedIn,
+        tableSeat: tickets.tableSeat,
+        busSeat: tickets.busSeat,
+        registeredAt: tickets.createdAt,
+        refundRequestId: refundRequests.id,
+      })
+      .from(tickets)
+      .innerJoin(users, eq(tickets.userId, users.id))
+      .leftJoin(
+        refundRequests,
+        and(
+          eq(refundRequests.ticketId, tickets.id),
+          eq(refundRequests.status, 'pending'),
+        ),
+      )
+      .where(eq(tickets.eventId, eventId))
+      .orderBy(asc(tickets.createdAt));
+
+    return rows.map((row) => ({
+      ticketId: row.ticketId,
+      userId: row.userId,
+      name: row.name,
+      email: row.email,
+      phoneNumber: row.phoneNumber,
+      program: row.program,
+      checkedIn: row.checkedIn ?? false,
+      tableSeat: row.tableSeat,
+      busSeat: row.busSeat,
+      registeredAt:
+        row.registeredAt instanceof Date
+          ? row.registeredAt.toISOString()
+          : String(row.registeredAt),
+      pendingRefund: row.refundRequestId != null,
+    }));
+  }
+
   async getTicketsForUser(userId: number) {
     const rows = await this.dbService.db
       .select({

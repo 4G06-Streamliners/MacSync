@@ -1,5 +1,9 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { StatsService, type DashboardStats } from './stats.service';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  StatsService,
+  type DashboardStats,
+  type RecentSignupDto,
+} from './stats.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 
@@ -12,5 +16,15 @@ export class StatsController {
   @Roles('Admin')
   getDashboardStats(): Promise<DashboardStats> {
     return this.statsService.getDashboardStats();
+  }
+
+  @Get('recent-signups')
+  @Roles('Admin')
+  getRecentSignups(
+    @Query('limit') limitStr?: string,
+  ): Promise<RecentSignupDto[]> {
+    const parsed = limitStr !== undefined ? parseInt(limitStr, 10) : 10;
+    const limit = Number.isFinite(parsed) ? parsed : 10;
+    return this.statsService.getRecentSignups(limit);
   }
 }

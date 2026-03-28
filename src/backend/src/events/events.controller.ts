@@ -35,6 +35,12 @@ export class EventsController {
     return this.eventsService.findAll();
   }
 
+  @Get(':id/attendees')
+  @Roles('Admin')
+  getEventAttendees(@Param('id') id: string) {
+    return this.eventsService.getAttendeesForEvent(+id);
+  }
+
   @Post('check-in')
   @Roles('Admin')
   checkIn(@Body('qrCodeData') qrCodeData: string) {

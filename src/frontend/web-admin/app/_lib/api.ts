@@ -1,3 +1,5 @@
+import { getToken } from "./auth";
+
 const getBaseUrl = (): string => {
   const url = process.env.NEXT_PUBLIC_API_URL;
   if (url && typeof url === "string" && url.trim()) {
@@ -10,8 +12,6 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl();
   const url = `${base}${path}`;
 
-  // Dynamically import to avoid server-side issues with document access
-  const { getToken } = await import("./auth");
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -54,6 +54,22 @@ export interface DashboardStats {
 
 export function getDashboardStats(): Promise<DashboardStats> {
   return apiFetch("/admin/stats");
+}
+
+export interface RecentSignup {
+  ticketId: number;
+  userId: number;
+  buyerName: string;
+  eventId: number;
+  eventName: string;
+  ticketCount: number;
+  totalCents: number;
+  registeredAt: string;
+}
+
+export function getRecentSignups(limit = 10): Promise<RecentSignup[]> {
+  const q = limit !== 10 ? `?limit=${encodeURIComponent(String(limit))}` : "";
+  return apiFetch(`/admin/recent-signups${q}`);
 }
 
 // ---------- Users ----------
@@ -149,6 +165,24 @@ export function createEvent(data: CreateEventPayload): Promise<EventItem> {
 
 export function getEvent(id: number): Promise<EventItem> {
   return apiFetch(`/events/${id}`);
+}
+
+export interface EventAttendee {
+  ticketId: number;
+  userId: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  program: string | null;
+  checkedIn: boolean;
+  tableSeat: string | null;
+  busSeat: string | null;
+  registeredAt: string;
+  pendingRefund: boolean;
+}
+
+export function getEventAttendees(eventId: number): Promise<EventAttendee[]> {
+  return apiFetch(`/events/${eventId}/attendees`);
 }
 
 export function updateEvent(
