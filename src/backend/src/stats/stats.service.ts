@@ -1,7 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { count, sum, sql, gte, eq } from 'drizzle-orm';
+import { count, sum, sql, gte, eq, desc, and, inArray, max } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
-import { users, events, tickets } from '../db/schema';
+import { users, events, tickets, payments } from '../db/schema';
+
+export interface RecentSignupDto {
+  ticketId: number;
+  userId: number;
+  buyerName: string;
+  eventId: number;
+  eventName: string;
+  ticketCount: number;
+  /** Display amount: recorded payment if present, otherwise event list price (0 for free). */
+  totalCents: number;
+  registeredAt: string;
+}
 
 export interface DashboardStats {
   userCount: number;
@@ -66,5 +78,65 @@ export class StatsService {
       totalRevenue,
       conversionRate,
     };
+  }
+
+  /**
+   * Recent event signups (one row per ticket), including free events without a payment row.
+   */
+  async getRecentSignups(limit: number): Promise<RecentSignupDto[]> {
+    const db = this.dbService.db;
+    const capped = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
+    const rows = await db
+      .select({
+        ticketId: tickets.id,
+        userId: tickets.userId,
+        buyerName: users.name,
+        eventId: tickets.eventId,
+        eventName: events.name,
+        eventPrice: events.price,
+        paidAmount: max(payments.amountPaid),
+        registeredAt: tickets.createdAt,
+      })
+      .from(tickets)
+      .innerJoin(users, eq(tickets.userId, users.id))
+      .innerJoin(events, eq(tickets.eventId, events.id))
+      .leftJoin(
+        payments,
+        and(
+          eq(payments.ticketId, tickets.id),
+          inArray(payments.status, ['succeeded', 'partially_refunded'] as const),
+        ),
+      )
+      .groupBy(
+        tickets.id,
+        tickets.userId,
+        tickets.createdAt,
+        users.id,
+        users.name,
+        events.id,
+        events.name,
+        events.price,
+      )
+      .orderBy(desc(tickets.createdAt))
+      .limit(capped);
+
+    return rows.map((r) => {
+      const paid = r.paidAmount != null ? Number(r.paidAmount) : null;
+      const price = Number(r.eventPrice);
+      const totalCents = paid ?? price;
+      const reg = r.registeredAt;
+      return {
+        ticketId: r.ticketId,
+        userId: r.userId,
+        buyerName: r.buyerName,
+        eventId: r.eventId,
+        eventName: r.eventName,
+        ticketCount: 1,
+        totalCents,
+        registeredAt:
+          reg instanceof Date ? reg.toISOString() : String(reg),
+      };
+    });
   }
 }

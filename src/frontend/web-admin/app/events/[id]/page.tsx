@@ -5,11 +5,14 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   getEvent,
+  getEventAttendees,
   updateEvent,
   deleteEvent,
   type EventItem,
+  type EventAttendee,
   type CreateEventPayload,
 } from "../../_lib/api";
+import { EventAttendeesSection } from "../../components/events/EventAttendeesSection";
 
 function toLocalDatetime(iso: string): string {
   const d = new Date(iso);
@@ -40,6 +43,10 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [attendees, setAttendees] = useState<EventAttendee[]>([]);
+  const [attendeesLoading, setAttendeesLoading] = useState(true);
+  const [attendeesError, setAttendeesError] = useState<string | null>(null);
 
   const [editing, setEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -73,6 +80,29 @@ export default function EventDetailPage() {
         setError(e instanceof Error ? e.message : "Failed to load event"),
       )
       .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAttendeesLoading(true);
+    setAttendeesError(null);
+    getEventAttendees(+id)
+      .then((list) => {
+        if (!cancelled) setAttendees(list);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setAttendeesError(
+            e instanceof Error ? e.message : "Failed to load attendees",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAttendeesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   function populateForm(ev: EventItem) {
@@ -152,6 +182,8 @@ export default function EventDetailPage() {
       setEvent(updated);
       populateForm(updated);
       setEditing(false);
+      const list = await getEventAttendees(+id);
+      setAttendees(list);
     } catch (err) {
       setFormError(
         err instanceof Error ? err.message : "Failed to update event",
@@ -187,7 +219,7 @@ export default function EventDetailPage() {
 
   if (error || !event) {
     return (
-      <div className="max-w-2xl">
+      <div className="max-w-4xl">
         <Link
           href="/events"
           className="text-sm font-medium text-maroon hover:text-maroon-dark"
@@ -203,7 +235,7 @@ export default function EventDetailPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-4xl">
       <Link
         href="/events"
         className="text-sm font-medium text-maroon hover:text-maroon-dark"
@@ -276,6 +308,13 @@ export default function EventDetailPage() {
               )}
             </div>
           )}
+
+          <EventAttendeesSection
+            event={event}
+            attendees={attendees}
+            loading={attendeesLoading}
+            error={attendeesError}
+          />
         </div>
       )}
 
