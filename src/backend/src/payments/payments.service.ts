@@ -130,6 +130,7 @@ export class PaymentsService {
         metadata: {
           eventId: String(eventId),
           userId: String(userId),
+          eventName,
           ...metadata,
         },
       });

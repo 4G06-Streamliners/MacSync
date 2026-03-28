@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PaymentsService } from '../payments/payments.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { refundRequests, users, tickets, events, payments } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
@@ -9,6 +10,7 @@ export class RefundRequestsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly paymentsService: PaymentsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -205,6 +207,20 @@ export class RefundRequestsService {
         .delete(tickets)
         .where(eq(tickets.id, request.ticketId));
     }
+
+    // Send cancellation notification
+    const eventRows = await this.dbService.db
+      .select({ name: events.name })
+      .from(events)
+      .where(eq(events.id, request.eventId))
+      .limit(1);
+    const eventName = eventRows[0]?.name ?? 'your event';
+    await this.notificationsService.createNotification(
+      request.userId,
+      'cancellation',
+      `Your refund for ${eventName} has been approved.`,
+      request.eventId,
+    );
 
     return { success: true };
   }
