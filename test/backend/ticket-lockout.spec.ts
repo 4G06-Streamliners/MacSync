@@ -75,7 +75,7 @@ describe('Ticket Lockout – createCheckoutSession', () => {
       createProductAndPrice: jest.fn(),
       recordPayment: jest.fn(),
     };
-    service = new EventsService({ db: mockDb } as any, mockPayments as any);
+    service = new EventsService({ db: mockDb } as any, mockPayments as any, {} as any);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -155,7 +155,7 @@ describe('Ticket Lockout – releaseReservation', () => {
       update: jest.fn(),
       delete: jest.fn(),
     };
-    service = new EventsService({ db: mockDb } as any, {} as any);
+    service = new EventsService({ db: mockDb } as any, {} as any, {} as any);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -180,7 +180,7 @@ describe('Ticket Lockout – completeSignupFromReservation', () => {
       delete: jest.fn(),
     };
     mockPayments = { recordPayment: jest.fn() };
-    service = new EventsService({ db: mockDb } as any, mockPayments as any);
+    service = new EventsService({ db: mockDb } as any, mockPayments as any, {} as any);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -236,7 +236,7 @@ describe('Ticket Lockout – Concurrent Access Simulation', () => {
       transaction: jest.fn(),
     };
     mockPayments = { createCheckoutSession: jest.fn() };
-    service = new EventsService({ db: mockDb } as any, mockPayments as any);
+    service = new EventsService({ db: mockDb } as any, mockPayments as any, {} as any);
   });
 
   afterEach(() => jest.clearAllMocks());

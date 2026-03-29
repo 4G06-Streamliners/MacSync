@@ -309,15 +309,8 @@ describe('TicketDetailScreen', () => {
 
     await waitFor(() => {
       expect(mockCancelSignup).toHaveBeenCalledWith(10);
+      expect(mockRouter.back).toHaveBeenCalled();
     });
-
-    // Simulate user pressing "OK" on the success alert to trigger router.back()
-    const alertCall = (Alert.alert as jest.Mock).mock.calls[0];
-    const buttons = alertCall[2] as Array<{ text: string; onPress?: () => void }>;
-    const okButton = buttons.find((b) => b.text === 'OK');
-    okButton?.onPress?.();
-
-    expect(mockRouter.back).toHaveBeenCalled();
   });
 
   it('displays QR code for entry', async () => {

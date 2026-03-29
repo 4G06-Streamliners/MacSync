@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database/database.module';
@@ -9,9 +10,11 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { PaymentsModule } from './payments/payments.module';
 import { StatsModule } from './stats/stats.module';
 import { RefundRequestsModule } from './refund-requests/refund-requests.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     DatabaseModule,
     UsersModule,
     EventsModule,
@@ -20,6 +23,7 @@ import { RefundRequestsModule } from './refund-requests/refund-requests.module';
     AuthModule,
     StatsModule,
     RefundRequestsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

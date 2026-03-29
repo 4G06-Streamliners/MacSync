@@ -2,6 +2,7 @@ import { Tabs, useRouter } from "expo-router";
 import { View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../_context/AuthContext";
+import { useNotifications } from "../_context/NotificationsContext";
 
 function HeaderRight() {
   const { user, logout } = useAuth();
@@ -52,6 +53,7 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 8);
   const { isAdmin } = useAuth();
+  const { unreadCount } = useNotifications();
 
   return (
     <Tabs
@@ -92,6 +94,37 @@ export default function TabLayout() {
           title: "My Tickets",
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>🎟️</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Notifications",
+          tabBarIcon: ({ color }) => (
+            <View>
+              <Text style={{ fontSize: 20, color }}>🔔</Text>
+              {unreadCount > 0 && (
+                <View
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    right: -6,
+                    backgroundColor: "#7A1F3E",
+                    borderRadius: 8,
+                    minWidth: 16,
+                    height: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingHorizontal: 3,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PaymentsService } from '../payments/payments.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   events,
   tickets,
@@ -24,6 +25,7 @@ export class EventsService {
   constructor(
     private readonly dbService: DatabaseService,
     private readonly paymentsService: PaymentsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -172,6 +174,7 @@ export class EventsService {
         seatsPerTable: events.seatsPerTable,
         busCount: events.busCount,
         busCapacity: events.busCapacity,
+        createdBy: events.createdBy,
         createdAt: events.createdAt,
         updatedAt: events.updatedAt,
         registeredCount: sql<number>`(SELECT COUNT(*)::int FROM tickets WHERE tickets.event_id = events.id)`,
@@ -200,6 +203,7 @@ export class EventsService {
         seatsPerTable: events.seatsPerTable,
         busCount: events.busCount,
         busCapacity: events.busCapacity,
+        createdBy: events.createdBy,
         createdAt: events.createdAt,
         updatedAt: events.updatedAt,
         registeredCount: sql<number>`(SELECT COUNT(*)::int FROM tickets WHERE tickets.event_id = events.id)`,
@@ -380,6 +384,20 @@ export class EventsService {
 
     // Delete ticket
     await this.dbService.db.delete(tickets).where(eq(tickets.id, ticket.id));
+
+    // Get event name for notification
+    const eventRows = await this.dbService.db
+      .select({ name: events.name })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+    const eventName = eventRows[0]?.name ?? 'the event';
+    await this.notificationsService.createNotification(
+      userId,
+      'cancellation',
+      `Your registration for ${eventName} has been cancelled.`,
+      eventId,
+    );
 
     return { cancelled: true };
   }
@@ -906,6 +924,13 @@ export class EventsService {
         })
         .where(eq(tickets.id, ticket.id));
     }
+
+    await this.notificationsService.createNotification(
+      userId,
+      'confirmation',
+      `You're registered for ${event[0].name}! Your ticket has been confirmed.`,
+      eventId,
+    );
 
     return {
       ticket: {
