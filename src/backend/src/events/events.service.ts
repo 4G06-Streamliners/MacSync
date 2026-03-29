@@ -22,6 +22,8 @@ import type { SeedDb } from '../db/seed-data';
 import {
   createTableSeatsForEvent,
   createBusSeatsForEvent,
+  ensureTableSeatsForEvent,
+  ensureBusSeatsForEvent,
 } from '../db/seed-data';
 
 @Injectable()
@@ -362,7 +364,37 @@ export class EventsService {
       .set(values)
       .where(eq(events.id, id))
       .returning();
-    return result[0];
+    const updated = result[0];
+
+    // When capacity / table / bus dimensions change, add any missing seat rows so signups match the new config.
+    if (updated) {
+      if (
+        updated.requiresTableSignup &&
+        updated.tableCount &&
+        updated.seatsPerTable
+      ) {
+        await ensureTableSeatsForEvent(
+          this.dbService.db as SeedDb,
+          updated.id,
+          updated.tableCount,
+          updated.seatsPerTable,
+        );
+      }
+      if (
+        updated.requiresBusSignup &&
+        updated.busCount &&
+        updated.busCapacity
+      ) {
+        await ensureBusSeatsForEvent(
+          this.dbService.db as SeedDb,
+          updated.id,
+          updated.busCount,
+          updated.busCapacity,
+        );
+      }
+    }
+
+    return updated;
   }
 
   async delete(id: number) {

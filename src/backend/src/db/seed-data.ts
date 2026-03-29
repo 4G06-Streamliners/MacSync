@@ -280,9 +280,10 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
 }
 
 /**
- * Call after creating an event with tableCount + seatsPerTable to create all table seat rows.
+ * Upsert missing table seat rows for an event (idempotent). Used on create and when
+ * admins expand tableCount / seatsPerTable via event update.
  */
-export async function createTableSeatsForEvent(
+export async function ensureTableSeatsForEvent(
   db: SeedDb,
   eventId: number,
   tableCount: number,
@@ -298,7 +299,67 @@ export async function createTableSeatsForEvent(
       rows.push({ eventId, tableNumber: t, seatNumber: s });
     }
   }
-  if (rows.length > 0) await db.insert(tableSeats).values(rows);
+  if (rows.length === 0) return;
+  await db
+    .insert(tableSeats)
+    .values(rows)
+    .onConflictDoNothing({
+      target: [
+        tableSeats.eventId,
+        tableSeats.tableNumber,
+        tableSeats.seatNumber,
+      ],
+    });
+}
+
+/**
+ * Insert missing bus seat rows only (bus_seats has no composite unique in schema).
+ */
+export async function ensureBusSeatsForEvent(
+  db: SeedDb,
+  eventId: number,
+  busCount: number,
+  busCapacity: number,
+): Promise<void> {
+  const existing = await db
+    .select({
+      busNumber: busSeats.busNumber,
+      seatNumber: busSeats.seatNumber,
+    })
+    .from(busSeats)
+    .where(eq(busSeats.eventId, eventId));
+
+  const taken = new Set(
+    existing.map((r) => `${r.busNumber}:${r.seatNumber}`),
+  );
+
+  const rows: Array<{
+    eventId: number;
+    busNumber: number;
+    seatNumber: number;
+  }> = [];
+  for (let b = 1; b <= busCount; b++) {
+    for (let s = 1; s <= busCapacity; s++) {
+      const k = `${b}:${s}`;
+      if (!taken.has(k)) {
+        rows.push({ eventId, busNumber: b, seatNumber: s });
+        taken.add(k);
+      }
+    }
+  }
+  if (rows.length > 0) await db.insert(busSeats).values(rows);
+}
+
+/**
+ * Call after creating an event with tableCount + seatsPerTable to create all table seat rows.
+ */
+export async function createTableSeatsForEvent(
+  db: SeedDb,
+  eventId: number,
+  tableCount: number,
+  seatsPerTable: number,
+): Promise<void> {
+  await ensureTableSeatsForEvent(db, eventId, tableCount, seatsPerTable);
 }
 
 /**
@@ -310,15 +371,5 @@ export async function createBusSeatsForEvent(
   busCount: number,
   busCapacity: number,
 ): Promise<void> {
-  const rows: Array<{
-    eventId: number;
-    busNumber: number;
-    seatNumber: number;
-  }> = [];
-  for (let b = 1; b <= busCount; b++) {
-    for (let s = 1; s <= busCapacity; s++) {
-      rows.push({ eventId, busNumber: b, seatNumber: s });
-    }
-  }
-  if (rows.length > 0) await db.insert(busSeats).values(rows);
+  await ensureBusSeatsForEvent(db, eventId, busCount, busCapacity);
 }
