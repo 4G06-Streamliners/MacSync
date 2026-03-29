@@ -23,6 +23,9 @@ jest.mock('../../src/backend/src/db/schema', () => ({
 import { RefundRequestsService } from '../../src/backend/src/refund-requests/refund-requests.service';
 import { createDbChain } from './helpers/db-chain';
 
+/** Event still in the future — passes createRefundRequest date guard */
+const futureEventDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
 describe('RefundRequestsService', () => {
   let service: RefundRequestsService;
   let mockDb: any;
@@ -54,6 +57,9 @@ describe('RefundRequestsService', () => {
 
       mockDb.select
         .mockReturnValueOnce(createDbChain([ticket])) // ticket check
+        .mockReturnValueOnce(
+          createDbChain([{ date: futureEventDate }]),
+        ) // event not past
         .mockReturnValueOnce(createDbChain([])) // no pending request
         .mockReturnValueOnce(createDbChain([payment])); // payment exists
 
@@ -85,6 +91,9 @@ describe('RefundRequestsService', () => {
         .mockReturnValueOnce(
           createDbChain([{ id: 1, userId: 5, eventId: 10 }]),
         )
+        .mockReturnValueOnce(
+          createDbChain([{ date: futureEventDate }]),
+        )
         .mockReturnValueOnce(createDbChain([{ id: 1, status: 'pending' }]));
 
       const result = await service.createRefundRequest(5, 1, 'Duplicate');
@@ -97,6 +106,9 @@ describe('RefundRequestsService', () => {
       const freeTicket = { id: 1, userId: 5, eventId: 10, price: 0 };
       mockDb.select
         .mockReturnValueOnce(createDbChain([freeTicket]))
+        .mockReturnValueOnce(
+          createDbChain([{ date: futureEventDate }]),
+        )
         .mockReturnValueOnce(createDbChain([]))
         .mockReturnValueOnce(createDbChain([])); // no payment
 

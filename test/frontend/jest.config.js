@@ -37,6 +37,8 @@ module.exports = {
     '^expo-web-browser$': '<rootDir>/test/frontend/__mocks__/expo-web-browser.js',
     '^react-native-safe-area-context$':
       '<rootDir>/test/frontend/__mocks__/react-native-safe-area-context.js',
+    '^@react-native-community/datetimepicker$':
+      '<rootDir>/test/frontend/__mocks__/datetimepicker.js',
     '^@react-navigation/native$':
       '<rootDir>/test/frontend/__mocks__/react-navigation-native.js',
     '\\.css$': '<rootDir>/test/frontend/__mocks__/styleMock.js',

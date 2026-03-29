@@ -169,7 +169,7 @@ function EventCard({
           </Pressable>
         )}
 
-        {isAdmin && (
+        {isAdmin && !isPast && (
           <Pressable
             onPress={() => onEdit(event.id)}
             className="w-full py-3 mt-2 rounded-xl border border-maroon active:bg-maroon/10"
@@ -252,9 +252,11 @@ export default function EventsScreen() {
   };
 
   const filteredEvents = useMemo(() => {
-    if (!search.trim()) return events;
+    const now = new Date();
+    let list = events.filter((e) => new Date(e.date) >= now);
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return events.filter(
+    return list.filter(
       (e) =>
         e.name.toLowerCase().includes(q) ||
         (e.location && e.location.toLowerCase().includes(q)) ||
@@ -366,7 +368,9 @@ export default function EventsScreen() {
         {filteredEvents.length === 0 ? (
           <View className="items-center py-16">
             <Text className="text-gray-500 text-base">
-              {search ? "No events match your search." : "No events found."}
+              {search.trim()
+                ? "No upcoming events match your search."
+                : "No upcoming events yet."}
             </Text>
           </View>
         ) : (

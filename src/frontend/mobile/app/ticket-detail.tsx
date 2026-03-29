@@ -78,6 +78,9 @@ export default function TicketDetailScreen() {
     return `$${(price / 100).toFixed(2)}`;
   };
 
+  const eventEnded =
+    ticket != null && new Date(ticket.eventDate).getTime() < Date.now();
+
   const handleRequestRefund = async () => {
     if (!ticket) return;
     
@@ -193,6 +196,18 @@ export default function TicketDetailScreen() {
           </View>
         )}
 
+        {eventEnded && (
+          <View className="bg-gray-100 border border-gray-200 rounded-2xl p-4 mb-6">
+            <Text className="text-base font-semibold text-gray-900">
+              Event ended
+            </Text>
+            <Text className="text-sm text-gray-600 mt-1 leading-5">
+              This is a past ticket for your records. Cancel and refund actions
+              are not available.
+            </Text>
+          </View>
+        )}
+
         {/* Event Info Card */}
         <View className="bg-white rounded-2xl p-6 mb-6 border border-gray-100 shadow-sm">
           <Text className="text-2xl font-bold text-gray-900 mb-4">
@@ -295,8 +310,8 @@ export default function TicketDetailScreen() {
           </View>
         )}
 
-        {/* Request Refund Button (only for paid events without pending request) */}
-        {ticket.eventPrice > 0 && !ticket.refundRequest && (
+        {/* Request Refund — not after event has started/finished */}
+        {!eventEnded && ticket.eventPrice > 0 && !ticket.refundRequest && (
           <Pressable
             onPress={() => setShowRefundModal(true)}
             className="bg-red-500 active:bg-red-600 rounded-2xl p-4 mb-6 items-center"
@@ -307,8 +322,8 @@ export default function TicketDetailScreen() {
           </Pressable>
         )}
 
-        {/* Cancel Signup Button (only for free events) */}
-        {ticket.eventPrice === 0 && (
+        {/* Cancel Signup — free events only, before event ends */}
+        {!eventEnded && ticket.eventPrice === 0 && (
           <Pressable
             onPress={() => setShowCancelModal(true)}
             disabled={cancelling}
@@ -324,43 +339,65 @@ export default function TicketDetailScreen() {
           </Pressable>
         )}
 
-        {/* QR Code Card */}
+        {/* QR — entry only before event ends */}
         <View className="bg-white rounded-2xl p-6 items-center border border-gray-100 shadow-sm">
-          {ticket.checkedIn && (
-            <View className="mb-4 w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex-row items-center gap-2">
-              <Text className="text-lg">✓</Text>
-              <Text className="text-base font-semibold text-green-800">
-                Checked In
+          {eventEnded ? (
+            <>
+              {ticket.checkedIn && (
+                <View className="mb-4 w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex-row items-center gap-2">
+                  <Text className="text-lg">✓</Text>
+                  <Text className="text-base font-semibold text-green-800">
+                    Checked In
+                  </Text>
+                </View>
+              )}
+              <Text className="text-lg font-bold text-gray-900 mb-2">
+                Past event
               </Text>
-            </View>
-          )}
-          <Text className="text-lg font-bold text-gray-900 mb-2">
-            Entry QR Code
-          </Text>
-          <Text className="text-sm text-gray-500 text-center mb-6">
-            {ticket.checkedIn
-              ? "You've been checked in. Welcome to the event!"
-              : "Show this QR code at the event entrance"}
-          </Text>
-
-          {ticket.qrCodeData ? (
-            <View className="bg-white p-6 rounded-xl border-2 border-gray-200">
-              <QRCode value={ticket.qrCodeData} size={220} />
-            </View>
+              <Text className="text-sm text-gray-500 text-center leading-5">
+                Entry QR is no longer shown because this event has ended.
+              </Text>
+            </>
           ) : (
-            <View className="bg-gray-100 p-8 rounded-xl items-center">
-              <Text className="text-4xl mb-2">🎟️</Text>
-              <Text className="text-sm text-gray-500 text-center">
-                QR code will be generated shortly
+            <>
+              {ticket.checkedIn && (
+                <View className="mb-4 w-full bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex-row items-center gap-2">
+                  <Text className="text-lg">✓</Text>
+                  <Text className="text-base font-semibold text-green-800">
+                    Checked In
+                  </Text>
+                </View>
+              )}
+              <Text className="text-lg font-bold text-gray-900 mb-2">
+                Entry QR Code
               </Text>
-            </View>
-          )}
+              <Text className="text-sm text-gray-500 text-center mb-6">
+                {ticket.checkedIn
+                  ? "You've been checked in. Welcome to the event!"
+                  : "Show this QR code at the event entrance"}
+              </Text>
 
-          <View className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-            <Text className="text-xs text-yellow-800 text-center">
-              💡 Save a screenshot of this QR code in case you lose internet connection
-            </Text>
-          </View>
+              {ticket.qrCodeData ? (
+                <View className="bg-white p-6 rounded-xl border-2 border-gray-200">
+                  <QRCode value={ticket.qrCodeData} size={220} />
+                </View>
+              ) : (
+                <View className="bg-gray-100 p-8 rounded-xl items-center">
+                  <Text className="text-4xl mb-2">🎟️</Text>
+                  <Text className="text-sm text-gray-500 text-center">
+                    QR code will be generated shortly
+                  </Text>
+                </View>
+              )}
+
+              <View className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <Text className="text-xs text-yellow-800 text-center">
+                  💡 Save a screenshot of this QR code in case you lose internet
+                  connection
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Ticket ID */}

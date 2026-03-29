@@ -62,13 +62,27 @@ export class AuthService {
   }
 
   private createTransporter(): Transporter | null {
-    const host = process.env.SMTP_HOST;
-    const port = process.env.SMTP_PORT;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
+    const host = process.env.SMTP_HOST?.trim();
+    const port = process.env.SMTP_PORT?.trim();
+    const user = process.env.SMTP_USER?.trim();
+    const pass = process.env.SMTP_PASS?.trim();
 
     if (!host || !port) {
       return null;
+    }
+
+    const useGmail =
+      process.env.SMTP_SERVICE === 'gmail' ||
+      host.toLowerCase() === 'smtp.gmail.com';
+
+    if (useGmail) {
+      if (!user || !pass) {
+        return null;
+      }
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+      });
     }
 
     return nodemailer.createTransport({
@@ -79,6 +93,19 @@ export class AuthService {
     });
   }
 
+  /** From address for OTP mail. Gmail should send as the authenticated account. */
+  private getVerificationEmailFrom(): string {
+    const explicit = process.env.EMAIL_FROM?.trim();
+    if (explicit) return explicit;
+    const useGmail =
+      process.env.SMTP_SERVICE === 'gmail' ||
+      process.env.SMTP_HOST?.trim().toLowerCase() === 'smtp.gmail.com';
+    if (useGmail && process.env.SMTP_USER?.trim()) {
+      return process.env.SMTP_USER.trim();
+    }
+    return `no-reply@${EMAIL_DOMAIN}`;
+  }
+
   private async sendVerificationEmail(email: string, code: string) {
     if (!this.transporter) {
       // Dev fallback when SMTP is not configured.
@@ -86,12 +113,16 @@ export class AuthService {
       return;
     }
 
-    const from = process.env.EMAIL_FROM || `no-reply@${EMAIL_DOMAIN}`;
+    const from = this.getVerificationEmailFrom();
+    const minutes = this.getCodeExpiryMinutes();
+
     await this.transporter.sendMail({
       to: email,
       from,
       subject: 'Your McMaster verification code',
-      text: `Your verification code is ${code}. It expires in ${this.getCodeExpiryMinutes()} minutes.`,
+      text: `Your verification code is ${code}. It expires in ${minutes} minutes.
+
+This message was addressed to ${email}. If you did not request a code, you can ignore this email.`,
     });
   }
 

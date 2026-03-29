@@ -7,6 +7,9 @@ import {
   Alert,
   Modal,
   FlatList,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../_context/AuthContext';
@@ -37,24 +40,34 @@ export default function LoginScreen() {
   } = useAuth();
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  /** Login only — never reused on the registration form */
+  const [loginPassword, setLoginPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [program, setProgram] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showPrograms, setShowPrograms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  /** True after user taps Create account — then show field-level errors */
+  const [registerAttempted, setRegisterAttempted] = useState(false);
 
   useEffect(() => {
-    if (status === 'needsRegistration') {
-      if (pendingEmail) {
-        setEmail(pendingEmail);
-      }
-      setStep('register');
-    }
+    if (status !== 'needsRegistration') return;
+    if (pendingEmail) setEmail(pendingEmail);
+    setFirstName('');
+    setLastName('');
+    setPhone('');
+    setProgram('');
+    setRegPassword('');
+    setRegConfirmPassword('');
+    setRegisterAttempted(false);
+    setErrorMessage('');
+    setOtp('');
+    setStep('register');
   }, [status, pendingEmail]);
 
   const normalizedEmail = email.trim().toLowerCase();
@@ -69,23 +82,25 @@ export default function LoginScreen() {
   const isPhoneValid = /^\d{10,15}$/.test(phoneDigits);
   const isProgramValid = program.trim().length > 0;
   const isPasswordComplex =
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[a-z]/.test(password) &&
-    /\d/.test(password);
-  const passwordsMatch = password.length > 0 && password === confirmPassword;
+    regPassword.length >= 8 &&
+    /[A-Z]/.test(regPassword) &&
+    /[a-z]/.test(regPassword) &&
+    /\d/.test(regPassword);
+  const passwordsMatch =
+    regPassword.length > 0 && regPassword === regConfirmPassword;
 
   const stepTitle = useMemo(() => {
     if (step === 'password') return 'Welcome back';
     if (step === 'otp') return 'Verify your email';
-    if (step === 'register') return 'Complete your profile';
+    if (step === 'register') return 'Create your account';
     return 'Welcome to MacSync';
   }, [step]);
 
   const stepSubtitle = useMemo(() => {
     if (step === 'password') return 'Enter your password to continue.';
     if (step === 'otp') return `Enter the code sent to ${normalizedEmail}.`;
-    if (step === 'register') return 'Create your password and profile.';
+    if (step === 'register')
+      return 'Create your password and complete your profile.';
     return 'Sign in with your McMaster email to continue.';
   }, [step, normalizedEmail]);
 
@@ -117,7 +132,7 @@ export default function LoginScreen() {
   };
 
   const handlePasswordLogin = async () => {
-    if (!password) {
+    if (!loginPassword) {
       const message = 'Password is required.';
       setErrorMessage(message);
       Alert.alert('Missing password', message);
@@ -125,7 +140,7 @@ export default function LoginScreen() {
     }
     setSubmitting(true);
     try {
-      await login(normalizedEmail, password);
+      await login(normalizedEmail, loginPassword);
       setErrorMessage('');
       router.replace('/(tabs)');
     } catch (error: any) {
@@ -148,6 +163,13 @@ export default function LoginScreen() {
     try {
       await confirmCode(normalizedEmail, otp.trim());
       setErrorMessage('');
+      setRegisterAttempted(false);
+      setFirstName('');
+      setLastName('');
+      setPhone('');
+      setProgram('');
+      setRegPassword('');
+      setRegConfirmPassword('');
       setStep('register');
     } catch (error: any) {
       const message = error.message || 'Failed to verify code.';
@@ -159,35 +181,17 @@ export default function LoginScreen() {
   };
 
   const handleRegister = async () => {
-    if (!isFirstNameValid || !isLastNameValid) {
-      const message = 'Use letters and hyphens only.';
-      setErrorMessage(message);
-      Alert.alert('Invalid name', message);
-      return;
-    }
-    if (!isPhoneValid) {
-      const message = 'Use 10 digits or include a valid country code.';
-      setErrorMessage(message);
-      Alert.alert('Invalid phone number', message);
-      return;
-    }
-    if (!isProgramValid) {
-      const message = 'Please select your program.';
-      setErrorMessage(message);
-      Alert.alert('Missing program', message);
-      return;
-    }
-    if (!isPasswordComplex) {
-      const message =
-        'Password must be 8+ chars with upper, lower, and number.';
-      setErrorMessage(message);
-      Alert.alert('Weak password', message);
-      return;
-    }
-    if (!passwordsMatch) {
-      const message = 'Passwords do not match.';
-      setErrorMessage(message);
-      Alert.alert('Password mismatch', message);
+    setRegisterAttempted(true);
+    setErrorMessage('');
+
+    if (
+      !isFirstNameValid ||
+      !isLastNameValid ||
+      !isPhoneValid ||
+      !isProgramValid ||
+      !isPasswordComplex ||
+      !passwordsMatch
+    ) {
       return;
     }
 
@@ -198,8 +202,8 @@ export default function LoginScreen() {
         lastName: normalizedLastName,
         phone: phoneDigits,
         program: program.trim(),
-        password,
-        confirmPassword,
+        password: regPassword,
+        confirmPassword: regConfirmPassword,
       });
       setErrorMessage('');
       router.replace('/(tabs)');
@@ -212,14 +216,31 @@ export default function LoginScreen() {
     }
   };
 
-  return (
-    <View className="flex-1 bg-[#F5F5F7] px-6 justify-center">
-      <View className="mb-8">
-        <Text className="text-3xl font-bold text-gray-900">{stepTitle}</Text>
-        <Text className="text-gray-500 mt-2">{stepSubtitle}</Text>
-      </View>
+  const inputClass =
+    'w-full px-4 py-3.5 border border-gray-200 rounded-xl bg-white text-sm text-gray-900';
 
-      <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+  return (
+    <KeyboardAvoidingView
+      className="flex-1 bg-[#F5F5F7]"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 24,
+          paddingTop: step === 'register' ? 48 : 0,
+          paddingBottom: step === 'register' ? 48 : 0,
+          justifyContent: step === 'register' ? 'flex-start' : 'center',
+        }}
+      >
+        <View className={step === 'register' ? 'mb-6' : 'mb-8'}>
+          <Text className="text-3xl font-bold text-gray-900">{stepTitle}</Text>
+          <Text className="text-gray-500 mt-2 leading-6">{stepSubtitle}</Text>
+        </View>
+
+        <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
         {step === 'email' && (
           <>
             <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
@@ -247,9 +268,9 @@ export default function LoginScreen() {
               Password
             </Text>
             <TextInput
-              value={password}
+              value={loginPassword}
               onChangeText={(value) => {
-                setPassword(value);
+                setLoginPassword(value);
                 if (errorMessage) setErrorMessage('');
               }}
               secureTextEntry
@@ -258,6 +279,8 @@ export default function LoginScreen() {
               returnKeyType="send"
               blurOnSubmit
               onSubmitEditing={handlePasswordLogin}
+              textContentType="password"
+              autoComplete="password"
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
             />
           </>
@@ -288,79 +311,152 @@ export default function LoginScreen() {
 
         {step === 'register' && (
           <>
-            <Text className="text-sm font-medium text-gray-700 mb-2">
-              First name {isFirstNameValid ? '✅' : ''}
+            <View className="mb-5 px-3 py-3 bg-[#FAFAFA] rounded-xl border border-gray-100">
+              <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Verified email
+              </Text>
+              <Text className="text-sm font-semibold text-gray-900 mt-1">
+                {pendingEmail || normalizedEmail}
+              </Text>
+            </View>
+
+            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+              Profile
             </Text>
+
+            <RequiredLabel>First name</RequiredLabel>
             <TextInput
               value={firstName}
-              onChangeText={setFirstName}
+              onChangeText={(v) => {
+                setFirstName(v);
+                if (errorMessage) setErrorMessage('');
+              }}
               placeholder="Jane"
               placeholderTextColor="#C7CBD1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
+              autoCapitalize="words"
+              autoComplete="off"
+              className={`${inputClass} ${registerAttempted && !isFirstNameValid ? 'border-red-300' : ''}`}
             />
+            {registerAttempted && !isFirstNameValid ? (
+              <FieldError>Use letters and hyphens only.</FieldError>
+            ) : (
+              <View className="mb-4" />
+            )}
 
-            <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-              Last name {isLastNameValid ? '✅' : ''}
-            </Text>
+            <RequiredLabel>Last name</RequiredLabel>
             <TextInput
               value={lastName}
-              onChangeText={setLastName}
+              onChangeText={(v) => {
+                setLastName(v);
+                if (errorMessage) setErrorMessage('');
+              }}
               placeholder="Doe"
               placeholderTextColor="#C7CBD1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
+              autoCapitalize="words"
+              autoComplete="off"
+              className={`${inputClass} ${registerAttempted && !isLastNameValid ? 'border-red-300' : ''}`}
             />
+            {registerAttempted && !isLastNameValid ? (
+              <FieldError>Use letters and hyphens only.</FieldError>
+            ) : (
+              <View className="mb-4" />
+            )}
 
-            <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-              Phone number {isPhoneValid ? '✅' : ''}
-            </Text>
+            <RequiredLabel>Phone number</RequiredLabel>
             <TextInput
               value={phone}
-              onChangeText={setPhone}
-              placeholder="(905) 555-1234"
+              onChangeText={(v) => {
+                setPhone(v);
+                if (errorMessage) setErrorMessage('');
+              }}
+              placeholder="Phone number"
               keyboardType="phone-pad"
               placeholderTextColor="#C7CBD1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
+              autoComplete="off"
+              textContentType="telephoneNumber"
+              className={`${inputClass} ${registerAttempted && !isPhoneValid ? 'border-red-300' : ''}`}
             />
+            {registerAttempted && !isPhoneValid ? (
+              <FieldError>Use 10 digits or a number with country code.</FieldError>
+            ) : (
+              <View className="mb-4" />
+            )}
 
-            <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-              Program {isProgramValid ? '✅' : ''}
-            </Text>
+            <RequiredLabel>Program</RequiredLabel>
             <Pressable
               onPress={() => setShowPrograms(true)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50"
+              className={`w-full px-4 py-3.5 border rounded-xl bg-white flex-row items-center justify-between active:bg-gray-50 ${
+                registerAttempted && !isProgramValid
+                  ? 'border-red-300'
+                  : 'border-gray-200'
+              }`}
             >
               <Text
-                className={`text-sm ${
-                  program ? 'text-gray-900' : 'text-gray-400'
-                }`}
+                className={`text-sm ${program ? 'text-gray-900 font-medium' : 'text-gray-400'}`}
               >
-                {program || 'Select your program'}
+                {program || 'Tap to select'}
               </Text>
+              <Text className="text-gray-300 text-xl font-light">›</Text>
             </Pressable>
+            {registerAttempted && !isProgramValid ? (
+              <FieldError>Select your program.</FieldError>
+            ) : (
+              <View className="mb-4" />
+            )}
 
-            <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-              Password {isPasswordComplex ? '✅' : ''}
+            <Text className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 mt-2">
+              Password
             </Text>
+
+            {registerAttempted && !isPasswordComplex ? (
+              <View className="mb-3 p-3 rounded-xl bg-red-50 border border-red-100">
+                <Text className="text-xs text-red-800 leading-5">
+                  Use at least 8 characters with uppercase, lowercase, and a number.
+                </Text>
+              </View>
+            ) : null}
+
+            <RequiredLabel>Password</RequiredLabel>
             <TextInput
-              value={password}
-              onChangeText={setPassword}
+              value={regPassword}
+              onChangeText={(v) => {
+                setRegPassword(v);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry
               placeholder="Create a password"
               placeholderTextColor="#C7CBD1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
+              textContentType="none"
+              autoComplete="off"
+              autoCorrect={false}
+              {...(Platform.OS === 'android'
+                ? { importantForAutofill: 'no' }
+                : {})}
+              className={`${inputClass} ${registerAttempted && !isPasswordComplex ? 'border-red-300' : ''}`}
             />
-
-            <Text className="text-sm font-medium text-gray-700 mt-4 mb-2">
-              Confirm password {passwordsMatch ? '✅' : ''}
-            </Text>
+            <RequiredLabel>Confirm password</RequiredLabel>
             <TextInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              value={regConfirmPassword}
+              onChangeText={(v) => {
+                setRegConfirmPassword(v);
+                if (errorMessage) setErrorMessage('');
+              }}
               secureTextEntry
               placeholder="Re-enter password"
               placeholderTextColor="#C7CBD1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-sm"
+              textContentType="none"
+              autoComplete="off"
+              autoCorrect={false}
+              {...(Platform.OS === 'android'
+                ? { importantForAutofill: 'no' }
+                : {})}
+              className={`${inputClass} ${registerAttempted && !passwordsMatch ? 'border-red-300' : ''}`}
             />
+            {registerAttempted && !passwordsMatch ? (
+              <FieldError>Passwords must match.</FieldError>
+            ) : (
+              <View className="mb-4" />
+            )}
           </>
         )}
 
@@ -387,10 +483,11 @@ export default function LoginScreen() {
                   ? 'Login'
                   : step === 'otp'
                     ? 'Verify code'
-                    : 'Finish registration'}
+                    : 'Create account'}
           </Text>
         </Pressable>
       </View>
+      </ScrollView>
 
       <Modal visible={showPrograms} transparent animationType="fade">
         <Pressable
@@ -432,6 +529,21 @@ export default function LoginScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+function RequiredLabel({ children }: { children: string }) {
+  return (
+    <Text className="text-sm font-semibold text-gray-800 mb-1.5">
+      {children}
+      <Text className="text-[#B91C1C]"> *</Text>
+    </Text>
+  );
+}
+
+function FieldError({ children }: { children: string }) {
+  return (
+    <Text className="text-xs text-red-600 mt-1.5 mb-4">{children}</Text>
   );
 }

@@ -68,7 +68,7 @@ describe('EventsScreen', () => {
     await waitFor(() => {
       expect(screen.getByText('Upcoming Events')).toBeTruthy();
       expect(screen.getByPlaceholderText('Search events by name...')).toBeTruthy();
-      expect(screen.getByText('No events found.')).toBeTruthy();
+      expect(screen.getByText('No upcoming events yet.')).toBeTruthy();
     });
   });
 
@@ -99,16 +99,17 @@ describe('EventsScreen', () => {
     });
   });
 
-  it('shows Past badge and Event Ended for past events', async () => {
+  it('does not list past events (upcoming-only feed)', async () => {
     mockGetEvents.mockResolvedValue([
       mockEvent({ date: '2020-01-01T00:00:00Z', registeredCount: 10 }),
     ]);
     render(<EventsScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText('Past')).toBeTruthy();
-      expect(screen.getByText('Event Ended')).toBeTruthy();
+      expect(screen.getByText('No upcoming events yet.')).toBeTruthy();
     });
+    expect(screen.queryByText('Past')).toBeNull();
+    expect(screen.queryByText('Test Event')).toBeNull();
   });
 
   it('shows Create Event button only for admins and navigates on click', async () => {
@@ -157,7 +158,7 @@ describe('EventsScreen', () => {
       target: { value: 'nonexistent' },
     });
     await waitFor(() => {
-      expect(screen.getByText('No events match your search.')).toBeTruthy();
+      expect(screen.getByText('No upcoming events match your search.')).toBeTruthy();
     });
   });
 

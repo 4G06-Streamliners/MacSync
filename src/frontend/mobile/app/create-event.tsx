@@ -11,18 +11,23 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createEvent, type CreateEventPayload } from "./_lib/api";
-import { goBackOrHome } from "./_lib/navigation";
+import {
+  defaultEventDateTime,
+  localDateToIsoUtc,
+  startOfToday,
+} from "./_lib/datetime";
+import { EventDateTimeFields } from "./components/EventDateTimeFields";
 
 export default function CreateEventScreen() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const insets = useSafeAreaInsets();
 
+  const [eventAt, setEventAt] = useState(defaultEventDateTime);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
-    date: "",
-    time: "",
     location: "",
     capacity: "",
     price: "",
@@ -42,28 +47,18 @@ export default function CreateEventScreen() {
     setSaving(true);
 
     try {
-      if (
-        !form.name ||
-        !form.date ||
-        !form.time ||
-        !form.capacity ||
-        !form.location.trim()
-      ) {
-        Alert.alert(
-          "Error",
-          "Name, date, time, location, and capacity are required.",
-        );
+      if (!form.name || !form.capacity) {
+        Alert.alert("Error", "Name and capacity are required.");
         setSaving(false);
         return;
       }
 
-      const dateStr = `${form.date}T${form.time}:00`;
       const priceDollars = form.price ? parseFloat(form.price) : 0;
       const payload: CreateEventPayload = {
         name: form.name,
         description: form.description || undefined,
-        date: new Date(dateStr).toISOString(),
-        location: form.location.trim(),
+        date: localDateToIsoUtc(eventAt),
+        location: form.location || undefined,
         capacity: parseInt(form.capacity),
         price: Math.round(priceDollars * 100), // store in cents (Stripe price created automatically)
         imageUrl: form.imageUrl || undefined,
@@ -149,32 +144,11 @@ export default function CreateEventScreen() {
           </View>
 
           {/* Date & Time */}
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                Date <Text className="text-red-500">*</Text>
-              </Text>
-              <TextInput
-                value={form.date}
-                onChangeText={(v) => set("date", v)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                Time <Text className="text-red-500">*</Text>
-              </Text>
-              <TextInput
-                value={form.time}
-                onChangeText={(v) => set("time", v)}
-                placeholder="HH:MM"
-                placeholderTextColor="#9CA3AF"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
-              />
-            </View>
-          </View>
+          <EventDateTimeFields
+            value={eventAt}
+            onChange={setEventAt}
+            minimumDate={startOfToday()}
+          />
 
           {/* Location */}
           <View>

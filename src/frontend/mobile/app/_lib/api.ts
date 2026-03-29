@@ -312,7 +312,10 @@ export interface RefundRequest {
   userName?: string;
   userEmail?: string;
   eventName?: string;
+  /** Event start (ISO) — from joined events row */
   eventDate?: string;
+  /** Payment row amount in cents; null if free / no payment row */
+  amountPaidCents?: number | null;
 }
 
 export function createRefundRequest(

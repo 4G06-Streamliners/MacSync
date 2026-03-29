@@ -34,6 +34,21 @@ export class RefundRequestsService {
 
     const ticket = ticketRows[0];
 
+    const eventRow = await this.dbService.db
+      .select({ date: events.date })
+      .from(events)
+      .where(eq(events.id, ticket.eventId))
+      .limit(1);
+    if (
+      eventRow[0] &&
+      new Date(eventRow[0].date).getTime() < Date.now()
+    ) {
+      return {
+        error:
+          'Refund requests are not available after the event date has passed.',
+      };
+    }
+
     // Check if refund request already exists
     const existingRequests = await this.dbService.db
       .select()
@@ -90,7 +105,7 @@ export class RefundRequestsService {
       throw new ForbiddenException('Admin access required');
     }
 
-    // Get all refund requests with user, event, and ticket info
+    // Get all refund requests with user, event, payment amount, and ticket info
     const requests = await this.dbService.db
       .select({
         id: refundRequests.id,
@@ -108,10 +123,12 @@ export class RefundRequestsService {
         userEmail: users.email,
         eventName: events.name,
         eventDate: events.date,
+        amountPaidCents: payments.amountPaid,
       })
       .from(refundRequests)
       .leftJoin(users, eq(refundRequests.userId, users.id))
       .leftJoin(events, eq(refundRequests.eventId, events.id))
+      .leftJoin(payments, eq(refundRequests.paymentId, payments.id))
       .orderBy(desc(refundRequests.createdAt));
 
     return requests;
@@ -126,15 +143,19 @@ export class RefundRequestsService {
         id: refundRequests.id,
         ticketId: refundRequests.ticketId,
         eventId: refundRequests.eventId,
+        paymentId: refundRequests.paymentId,
         reason: refundRequests.reason,
         status: refundRequests.status,
         adminResponse: refundRequests.adminResponse,
         processedAt: refundRequests.processedAt,
         createdAt: refundRequests.createdAt,
         eventName: events.name,
+        eventDate: events.date,
+        amountPaidCents: payments.amountPaid,
       })
       .from(refundRequests)
       .leftJoin(events, eq(refundRequests.eventId, events.id))
+      .leftJoin(payments, eq(refundRequests.paymentId, payments.id))
       .where(eq(refundRequests.userId, userId))
       .orderBy(desc(refundRequests.createdAt));
 

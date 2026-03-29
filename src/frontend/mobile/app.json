@@ -10,7 +10,8 @@
         {
           "cameraPermission": "Allow MacSync to access your camera to scan ticket QR codes"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -30,7 +31,7 @@
       "package": "com.macsync.mobile"
     },
     "web": {
-      "bundler": "metro",
+      "bundler": "metro"
     }
   }
 }

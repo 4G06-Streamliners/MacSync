@@ -392,6 +392,20 @@ export class EventsService {
       return { error: 'Not signed up for this event' };
     }
 
+    const eventCheck = await this.dbService.db
+      .select({ date: events.date })
+      .from(events)
+      .where(eq(events.id, eventId))
+      .limit(1);
+    if (
+      eventCheck[0] &&
+      new Date(eventCheck[0].date).getTime() < Date.now()
+    ) {
+      return {
+        error: 'This event has already ended. Cancellation is not available.',
+      };
+    }
+
     const ticket = existing[0];
 
     // Free bus seat

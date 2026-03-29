@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createEvent, type CreateEventPayload } from "../../_lib/api";
+import { datetimeLocalValueToIsoUtc } from "../../_lib/datetime";
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -55,8 +56,8 @@ export default function CreateEventPage() {
     const payload: CreateEventPayload = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
-      date: new Date(form.date).toISOString(),
-      location: form.location.trim(),
+      date: datetimeLocalValueToIsoUtc(form.date),
+      location: form.location.trim() || undefined,
       capacity,
       imageUrl: undefined,
       price: Math.round(priceDollars * 100),

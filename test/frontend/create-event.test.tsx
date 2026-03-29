@@ -23,8 +23,8 @@ describe('CreateEventScreen', () => {
     expect(screen.getByText('Cancel')).toBeTruthy();
     expect(screen.getByText('Save')).toBeTruthy();
     expect(screen.getByPlaceholderText('e.g. Annual Gala 2026')).toBeTruthy();
-    expect(screen.getByPlaceholderText('YYYY-MM-DD')).toBeTruthy();
-    expect(screen.getByPlaceholderText('HH:MM')).toBeTruthy();
+    expect(screen.getByText('Date')).toBeTruthy();
+    expect(screen.getByText('Time')).toBeTruthy();
     expect(screen.getByPlaceholderText('e.g. 100')).toBeTruthy();
     expect(screen.getByPlaceholderText('Describe your event...')).toBeTruthy();
     expect(screen.getByText('Requires Table Signup')).toBeTruthy();
@@ -38,7 +38,7 @@ describe('CreateEventScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
-        'Name, date, time, location, and capacity are required.',
+        'Name and capacity are required.',
       );
     });
     expect(mockCreateEvent).not.toHaveBeenCalled();
@@ -53,12 +53,6 @@ describe('CreateEventScreen', () => {
     });
     fireEvent.change(screen.getByPlaceholderText('Describe your event...'), {
       target: { value: 'A great event' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('YYYY-MM-DD'), {
-      target: { value: '2026-06-15' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
-      target: { value: '18:00' },
     });
     fireEvent.change(screen.getByPlaceholderText('e.g. Grand Ballroom'), {
       target: { value: 'Main Hall' },
@@ -93,15 +87,6 @@ describe('CreateEventScreen', () => {
 
     fireEvent.change(screen.getByPlaceholderText('e.g. Annual Gala 2026'), {
       target: { value: 'Test Event' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('YYYY-MM-DD'), {
-      target: { value: '2026-06-15' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
-      target: { value: '18:00' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('e.g. Grand Ballroom'), {
-      target: { value: 'Main Hall' },
     });
     fireEvent.change(screen.getByPlaceholderText('e.g. 100'), {
       target: { value: '50' },

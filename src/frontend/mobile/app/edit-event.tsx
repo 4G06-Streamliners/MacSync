@@ -15,22 +15,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   getEvent,
   updateEvent,
-  type EventItem,
   type CreateEventPayload,
 } from "./_lib/api";
-import { goBackOrHome } from "./_lib/navigation";
-
-function toDateStr(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function toTimeStr(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
+import {
+  formatPickerDate,
+  formatPickerTime,
+  localDateToIsoUtc,
+  startOfToday,
+} from "./_lib/datetime";
+import { EventDateTimeFields } from "./components/EventDateTimeFields";
 
 export default function EditEventScreen() {
   const router = useRouter();
@@ -40,12 +33,12 @@ export default function EditEventScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [eventAt, setEventAt] = useState(() => new Date());
+  const [eventEnded, setEventEnded] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
     description: "",
-    date: "",
-    time: "",
     location: "",
     capacity: "",
     price: "",
@@ -65,11 +58,12 @@ export default function EditEventScreen() {
     if (!eventId) return;
     getEvent(+eventId)
       .then((ev) => {
+        const at = new Date(ev.date);
+        setEventAt(at);
+        setEventEnded(at < new Date());
         setForm({
           name: ev.name,
           description: ev.description ?? "",
-          date: toDateStr(ev.date),
-          time: toTimeStr(ev.date),
           location: ev.location ?? "",
           capacity: String(ev.capacity),
           price: ev.price === 0 ? "" : (ev.price / 100).toFixed(2),
@@ -98,29 +92,20 @@ export default function EditEventScreen() {
   };
 
   const handleSubmit = async () => {
-    if (
-      !form.name ||
-      !form.date ||
-      !form.time ||
-      !form.capacity ||
-      !form.location.trim()
-    ) {
-      showAlert(
-        "Error",
-        "Name, date, time, location, and capacity are required.",
-      );
+    if (eventEnded) return;
+    if (!form.name || !form.capacity) {
+      showAlert("Error", "Name and capacity are required.");
       return;
     }
 
     setSaving(true);
     try {
-      const dateStr = `${form.date}T${form.time}:00`;
       const priceDollars = form.price ? parseFloat(form.price) : 0;
       const payload: Partial<CreateEventPayload> = {
         name: form.name,
         description: form.description || undefined,
-        date: new Date(dateStr).toISOString(),
-        location: form.location.trim(),
+        date: localDateToIsoUtc(eventAt),
+        location: form.location || undefined,
         capacity: parseInt(form.capacity),
         price: Math.round(priceDollars * 100),
         imageUrl: form.imageUrl || undefined,
@@ -174,6 +159,103 @@ export default function EditEventScreen() {
             </Text>
           </Pressable>
         </View>
+      </View>
+    );
+  }
+
+  if (eventEnded) {
+    return (
+      <View className="flex-1 bg-[#F5F5F7]">
+        <View
+          className="bg-white border-b border-gray-200 px-4 pb-4 flex-row items-center justify-between"
+          style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
+        >
+          <Pressable onPress={() => router.back()}>
+            <Text className="text-base text-maroon font-medium">Back</Text>
+          </Pressable>
+          <Text className="text-lg font-bold text-gray-900">Event</Text>
+          <View style={{ width: 56 }} />
+        </View>
+
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-4 py-5 pb-10"
+        >
+          <View className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+            <Text className="text-amber-900 text-sm font-medium">
+              This event has ended. Editing is no longer available.
+            </Text>
+          </View>
+
+          <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 gap-4">
+            <View>
+              <Text className="text-xs font-medium text-gray-500 mb-1">Name</Text>
+              <Text className="text-base text-gray-900 font-semibold">
+                {form.name}
+              </Text>
+            </View>
+            {form.description ? (
+              <View>
+                <Text className="text-xs font-medium text-gray-500 mb-1">
+                  Description
+                </Text>
+                <Text className="text-sm text-gray-800">{form.description}</Text>
+              </View>
+            ) : null}
+            <View>
+              <Text className="text-xs font-medium text-gray-500 mb-1">
+                Date & time
+              </Text>
+              <Text className="text-sm text-gray-900">
+                {formatPickerDate(eventAt)} · {formatPickerTime(eventAt)}
+              </Text>
+            </View>
+            {form.location ? (
+              <View>
+                <Text className="text-xs font-medium text-gray-500 mb-1">
+                  Location
+                </Text>
+                <Text className="text-sm text-gray-800">{form.location}</Text>
+              </View>
+            ) : null}
+            <View className="flex-row gap-6">
+              <View>
+                <Text className="text-xs font-medium text-gray-500 mb-1">
+                  Capacity
+                </Text>
+                <Text className="text-sm text-gray-900">{form.capacity}</Text>
+              </View>
+              <View>
+                <Text className="text-xs font-medium text-gray-500 mb-1">
+                  Price ($)
+                </Text>
+                <Text className="text-sm text-gray-900">
+                  {form.price || "0"}
+                </Text>
+              </View>
+            </View>
+            {form.imageUrl ? (
+              <View>
+                <Text className="text-xs font-medium text-gray-500 mb-1">
+                  Image URL
+                </Text>
+                <Text className="text-sm text-gray-800">{form.imageUrl}</Text>
+              </View>
+            ) : null}
+            <View className="flex-row justify-between border-t border-gray-100 pt-3">
+              <Text className="text-sm text-gray-600">Table signup</Text>
+              <Text className="text-sm font-medium text-gray-900">
+                {form.requiresTableSignup ? "Yes" : "No"}
+              </Text>
+            </View>
+            <View className="flex-row justify-between">
+              <Text className="text-sm text-gray-600">Bus signup</Text>
+              <Text className="text-sm font-medium text-gray-900">
+                {form.requiresBusSignup ? "Yes" : "No"}
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -237,32 +319,11 @@ export default function EditEventScreen() {
           </View>
 
           {/* Date & Time */}
-          <View className="flex-row gap-3">
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                Date <Text className="text-red-500">*</Text>
-              </Text>
-              <TextInput
-                value={form.date}
-                onChangeText={(v) => set("date", v)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9CA3AF"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
-              />
-            </View>
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">
-                Time <Text className="text-red-500">*</Text>
-              </Text>
-              <TextInput
-                value={form.time}
-                onChangeText={(v) => set("time", v)}
-                placeholder="HH:MM"
-                placeholderTextColor="#9CA3AF"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
-              />
-            </View>
-          </View>
+          <EventDateTimeFields
+            value={eventAt}
+            onChange={setEventAt}
+            minimumDate={startOfToday()}
+          />
 
           {/* Location */}
           <View>

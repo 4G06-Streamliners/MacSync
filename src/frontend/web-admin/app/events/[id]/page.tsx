@@ -13,6 +13,7 @@ import {
   type EventAttendee,
   type CreateEventPayload,
 } from "../../_lib/api";
+import { datetimeLocalValueToIsoUtc } from "../../_lib/datetime";
 import { EventAttendeesSection } from "../../components/events/EventAttendeesSection";
 
 function toLocalDatetime(iso: string): string {
@@ -169,8 +170,8 @@ export default function EventDetailPage() {
     const payload: Partial<CreateEventPayload> = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
-      date: new Date(form.date).toISOString(),
-      location: form.location.trim(),
+      date: datetimeLocalValueToIsoUtc(form.date),
+      location: form.location.trim() || undefined,
       capacity,
       price: Math.round(priceDollars * 100),
       imageUrl: form.imageUrl.trim() || undefined,

@@ -98,7 +98,7 @@ export default function RefundRequestsScreen() {
     setShowModal(true);
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDateTime = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -107,8 +107,23 @@ export default function RefundRequestsScreen() {
     });
   };
 
-  const formatPrice = (price: number) => {
-    return `$${(price / 100).toFixed(2)}`;
+  const formatEventDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatPrice = (cents: number) => {
+    if (cents === 0) return "Free";
+    return `$${(cents / 100).toFixed(2)}`;
+  };
+
+  const amountLabel = (cents: number | null | undefined) => {
+    const hasPayment =
+      cents != null && typeof cents === "number" && cents > 0;
+    return hasPayment ? `Refund ${formatPrice(cents)}` : "No payment (free ticket)";
   };
 
   if (!isAdmin) {
@@ -183,15 +198,40 @@ export default function RefundRequestsScreen() {
                     </View>
                   </View>
 
+                  <View className="gap-1.5 mb-3">
+                    {request.eventDate ? (
+                      <View className="flex-row items-center gap-1.5">
+                        <Text className="text-xs">📅</Text>
+                        <Text className="text-sm text-gray-700">
+                          Event {formatEventDate(request.eventDate)}
+                        </Text>
+                      </View>
+                    ) : null}
+                    <View className="flex-row items-center gap-1.5">
+                      <Text className="text-xs">💵</Text>
+                      <Text className="text-sm text-gray-800 font-medium">
+                        {amountLabel(request.amountPaidCents)}
+                      </Text>
+                    </View>
+                    {request.ticketId != null ? (
+                      <View className="flex-row items-center gap-1.5">
+                        <Text className="text-xs">🎫</Text>
+                        <Text className="text-sm text-gray-600">
+                          Ticket #{request.ticketId}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+
                   {request.reason && (
                     <View className="bg-gray-50 rounded-lg p-3 mb-3">
-                      <Text className="text-xs text-gray-500 mb-1">Reason:</Text>
+                      <Text className="text-xs text-gray-500 mb-1">User reason</Text>
                       <Text className="text-sm text-gray-700">{request.reason}</Text>
                     </View>
                   )}
 
                   <Text className="text-xs text-gray-400 mb-3">
-                    Requested {formatDate(request.createdAt)}
+                    Requested {formatDateTime(request.createdAt)}
                   </Text>
 
                   <View className="flex-row gap-2">
@@ -245,6 +285,7 @@ export default function RefundRequestsScreen() {
                       </Text>
                       <Text className="text-xs text-gray-500">
                         {request.userName}
+                        {request.userEmail ? ` • ${request.userEmail}` : ""}
                       </Text>
                     </View>
                     <View
@@ -265,13 +306,30 @@ export default function RefundRequestsScreen() {
                       </Text>
                     </View>
                   </View>
+                  <View className="gap-1 mb-2">
+                    {request.eventDate ? (
+                      <Text className="text-xs text-gray-600">
+                        📅 {formatEventDate(request.eventDate)}
+                      </Text>
+                    ) : null}
+                    <Text className="text-xs text-gray-700 font-medium">
+                      💵 {amountLabel(request.amountPaidCents)}
+                    </Text>
+                    {request.ticketId != null ? (
+                      <Text className="text-xs text-gray-500">
+                        🎫 Ticket #{request.ticketId}
+                      </Text>
+                    ) : null}
+                  </View>
                   {request.adminResponse && (
                     <Text className="text-xs text-gray-600 mb-2">
                       Response: {request.adminResponse}
                     </Text>
                   )}
                   <Text className="text-xs text-gray-400">
-                    Processed {request.processedAt && formatDate(request.processedAt)}
+                    {request.processedAt
+                      ? `Processed ${formatDateTime(request.processedAt)}`
+                      : ""}
                   </Text>
                 </View>
               ))}
@@ -297,9 +355,39 @@ export default function RefundRequestsScreen() {
                 <Text className="text-xl font-bold text-gray-900 mb-2">
                   {modalType === "approve" ? "Approve Refund" : "Deny Refund"}
                 </Text>
-                <Text className="text-sm text-gray-600 mb-4">
-                  {selectedRequest?.eventName} - {selectedRequest?.userName}
-                </Text>
+                {selectedRequest ? (
+                  <View className="bg-gray-50 rounded-xl p-3 mb-4 gap-1.5">
+                    <Text className="text-base font-semibold text-gray-900">
+                      {selectedRequest.eventName}
+                    </Text>
+                    <Text className="text-sm text-gray-600">
+                      {selectedRequest.userName} • {selectedRequest.userEmail}
+                    </Text>
+                    {selectedRequest.eventDate ? (
+                      <Text className="text-sm text-gray-700">
+                        📅 {formatEventDate(selectedRequest.eventDate)}
+                      </Text>
+                    ) : null}
+                    <Text className="text-sm text-gray-800 font-medium">
+                      💵 {amountLabel(selectedRequest.amountPaidCents)}
+                    </Text>
+                    {selectedRequest.ticketId != null ? (
+                      <Text className="text-sm text-gray-600">
+                        🎫 Ticket #{selectedRequest.ticketId}
+                      </Text>
+                    ) : null}
+                    {selectedRequest.reason ? (
+                      <View className="mt-1 pt-2 border-t border-gray-200">
+                        <Text className="text-xs text-gray-500 mb-0.5">
+                          User reason
+                        </Text>
+                        <Text className="text-sm text-gray-800">
+                          {selectedRequest.reason}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
 
                 <View className="mb-4">
                   <Text className="text-sm font-medium text-gray-700 mb-2">
