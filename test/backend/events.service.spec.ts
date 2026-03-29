@@ -79,9 +79,17 @@ describe('EventsService', () => {
     mockDb.insert.mockReturnValue(createDbChain([created]));
 
     await service.create({
-      name: 'Event', date: '2026-06-15', capacity: 100, price: 0,
-      requiresTableSignup: true, tableCount: 5, seatsPerTable: 8,
-      requiresBusSignup: true, busCount: 2, busCapacity: 50,
+      name: 'Event',
+      date: '2026-06-15',
+      capacity: 100,
+      price: 0,
+      location: 'Campus Hall',
+      requiresTableSignup: true,
+      tableCount: 5,
+      seatsPerTable: 8,
+      requiresBusSignup: true,
+      busCount: 2,
+      busCapacity: 50,
     } as any);
 
     expect(mockDb.insert).toHaveBeenCalled();
@@ -96,7 +104,13 @@ describe('EventsService', () => {
     };
     mockDb.insert.mockReturnValue(createDbChain([created]));
 
-    await service.create({ name: 'Simple', date: '2026-06-15', capacity: 50, price: 0 } as any);
+    await service.create({
+      name: 'Simple',
+      date: '2026-06-15',
+      capacity: 50,
+      price: 0,
+      location: 'Room 101',
+    } as any);
 
     expect(mockCreateTableSeats).not.toHaveBeenCalled();
     expect(mockCreateBusSeats).not.toHaveBeenCalled();
@@ -106,8 +120,13 @@ describe('EventsService', () => {
     mockDb.update.mockReturnValue(createDbChain([{ id: 1, name: 'Updated' }]));
     expect(await service.update(1, { name: 'Updated' } as any)).toEqual({ id: 1, name: 'Updated' });
 
-    mockDb.delete.mockReturnValue(createDbChain());
+    mockDb.delete.mockReturnValue(createDbChain([{ id: 1 }]));
     expect(await service.delete(1)).toEqual({ deleted: true });
+  });
+
+  it('delete throws when no event row is removed', async () => {
+    mockDb.delete.mockReturnValue(createDbChain([]));
+    await expect(service.delete(999)).rejects.toThrow('Event not found');
   });
 
   it('signup assigns table seat when selectedTable is provided', async () => {

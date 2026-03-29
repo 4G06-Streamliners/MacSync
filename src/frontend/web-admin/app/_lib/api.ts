@@ -14,11 +14,22 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
   const token = getToken();
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...((options?.headers as Record<string, string>) ?? {}),
   };
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+  // Only set JSON content-type when there is a body. Fastify rejects requests that
+  // send Content-Type: application/json with an empty body (e.g. DELETE).
+  const body = options?.body;
+  const hasStringBody =
+    typeof body === "string" && body.length > 0;
+  if (
+    hasStringBody &&
+    !headers["Content-Type"] &&
+    !headers["content-type"]
+  ) {
+    headers["Content-Type"] = "application/json";
   }
   
   try {
@@ -27,12 +38,20 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
       headers,
     });
     
+    const text = await res.text();
+
     if (!res.ok) {
-      const text = await res.text();
       throw new Error(text || `API error: ${res.status} ${res.statusText}`);
     }
-    
-    return res.json();
+
+    if (!text.trim()) {
+      return {} as T;
+    }
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new Error(text);
+    }
   } catch (error) {
     if (error instanceof TypeError && error.message.includes("fetch")) {
       throw new Error(`Failed to connect to backend at ${url}. Is the backend running?`);

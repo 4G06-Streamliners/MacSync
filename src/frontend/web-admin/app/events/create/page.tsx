@@ -33,6 +33,10 @@ export default function CreateEventPage() {
       setError("Date is required");
       return;
     }
+    if (!form.location.trim()) {
+      setError("Location is required");
+      return;
+    }
 
     const capacity = Number(form.capacity);
     if (!Number.isFinite(capacity) || capacity <= 0) {
@@ -52,7 +56,7 @@ export default function CreateEventPage() {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       date: new Date(form.date).toISOString(),
-      location: form.location.trim() || undefined,
+      location: form.location.trim(),
       capacity,
       imageUrl: undefined,
       price: Math.round(priceDollars * 100),
@@ -142,13 +146,14 @@ export default function CreateEventPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Location
+            Location<span className="text-red-500 ml-0.5">*</span>
           </label>
           <input
             type="text"
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
             value={form.location}
             onChange={(e) => update("location", e.target.value)}
+            required
           />
         </div>
 

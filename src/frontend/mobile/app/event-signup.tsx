@@ -20,6 +20,7 @@ import {
   type EventItem,
 } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
+import { goBackOrHome } from "./_lib/navigation";
 
 type NotificationType = "success" | "error" | "info";
 
@@ -91,7 +92,7 @@ export default function EventSignupScreen() {
     } catch (err) {
       console.error("Failed to load event:", err);
       showNotification("error", "Error", "Failed to load event details");
-      setTimeout(() => router.back(), 2000);
+      setTimeout(() => goBackOrHome(router), 2000);
     } finally {
       setLoading(false);
     }
@@ -329,7 +330,7 @@ export default function EventSignupScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => goBackOrHome(router)}>
           <Text className="text-base text-maroon font-medium">
             ← Back to Events
           </Text>
@@ -423,7 +424,7 @@ export default function EventSignupScreen() {
         <View className="flex-row gap-3">
           {isRegistered ? (
             <Pressable
-              onPress={() => router.back()}
+              onPress={() => goBackOrHome(router)}
               className="flex-1 py-3 bg-maroon rounded-xl active:bg-maroon-dark"
             >
               <Text className="text-center text-sm font-semibold text-white">
@@ -433,7 +434,7 @@ export default function EventSignupScreen() {
           ) : (
             <>
               <Pressable
-                onPress={() => router.back()}
+                onPress={() => goBackOrHome(router)}
                 className="flex-1 py-3 border border-gray-300 rounded-xl active:bg-gray-50"
               >
                 <Text className="text-center text-sm font-medium text-gray-700">

@@ -38,7 +38,7 @@ describe('CreateEventScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
-        'Name, date, time, and capacity are required.',
+        'Name, date, time, location, and capacity are required.',
       );
     });
     expect(mockCreateEvent).not.toHaveBeenCalled();
@@ -99,6 +99,9 @@ describe('CreateEventScreen', () => {
     });
     fireEvent.change(screen.getByPlaceholderText('HH:MM'), {
       target: { value: '18:00' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('e.g. Grand Ballroom'), {
+      target: { value: 'Main Hall' },
     });
     fireEvent.change(screen.getByPlaceholderText('e.g. 100'), {
       target: { value: '50' },

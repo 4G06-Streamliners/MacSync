@@ -54,6 +54,7 @@ export default function EventDetailPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [venueReportLoading, setVenueReportLoading] = useState(false);
   const [venueReportError, setVenueReportError] = useState<string | null>(null);
 
@@ -148,6 +149,10 @@ export default function EventDetailPage() {
       setFormError("Date is required");
       return;
     }
+    if (!form.location.trim()) {
+      setFormError("Location is required");
+      return;
+    }
     const capacity = Number(form.capacity);
     if (!Number.isFinite(capacity) || capacity <= 0) {
       setFormError("Capacity must be a positive number");
@@ -165,7 +170,7 @@ export default function EventDetailPage() {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       date: new Date(form.date).toISOString(),
-      location: form.location.trim() || undefined,
+      location: form.location.trim(),
       capacity,
       price: Math.round(priceDollars * 100),
       imageUrl: form.imageUrl.trim() || undefined,
@@ -211,20 +216,40 @@ export default function EventDetailPage() {
   }
 
   async function handleDelete() {
+    setDeleteError(null);
     try {
       setDeleting(true);
       await deleteEvent(+id);
+      setShowDeleteConfirm(false);
       router.push("/events");
       router.refresh();
     } catch (err) {
-      setFormError(
-        err instanceof Error ? err.message : "Failed to delete event",
-      );
+      const msg =
+        err instanceof Error ? err.message : "Failed to delete event";
+      let display = msg.trim();
+      if (display.startsWith("{")) {
+        try {
+          const parsed = JSON.parse(display) as {
+            message?: string | string[];
+          };
+          if (Array.isArray(parsed.message)) {
+            display = parsed.message.join(". ");
+          } else if (typeof parsed.message === "string") {
+            display = parsed.message;
+          }
+        } catch {
+          /* keep raw message */
+        }
+      }
+      setDeleteError(display);
       setShowDeleteConfirm(false);
     } finally {
       setDeleting(false);
     }
   }
+
+  const headerActionsDisabled =
+    !!deleteError || showDeleteConfirm || deleting;
 
   if (loading) {
     return (
@@ -260,6 +285,22 @@ export default function EventDetailPage() {
         ← Back to events
       </Link>
 
+      {deleteError && !editing && (
+        <div
+          className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 flex justify-between gap-3 items-start"
+          role="alert"
+        >
+          <p className="text-sm text-red-800 flex-1">{deleteError}</p>
+          <button
+            type="button"
+            className="text-sm font-semibold text-red-900 shrink-0 hover:underline"
+            onClick={() => setDeleteError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mt-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -273,7 +314,7 @@ export default function EventDetailPage() {
             <button
               type="button"
               onClick={handleDownloadVenueReport}
-              disabled={venueReportLoading}
+              disabled={headerActionsDisabled || venueReportLoading}
               className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               {venueReportLoading ? "Generating PDF…" : "Download venue report"}
@@ -281,14 +322,19 @@ export default function EventDetailPage() {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="px-4 py-2 rounded-lg bg-maroon text-white text-sm font-semibold hover:bg-maroon-dark transition-colors"
+              disabled={headerActionsDisabled}
+              className="px-4 py-2 rounded-lg bg-maroon text-white text-sm font-semibold hover:bg-maroon-dark transition-colors disabled:opacity-50 disabled:pointer-events-none"
             >
               Edit event
             </button>
             <button
               type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm font-semibold hover:bg-red-50 transition-colors"
+              onClick={() => {
+                setDeleteError(null);
+                setShowDeleteConfirm(true);
+              }}
+              disabled={headerActionsDisabled}
+              className="px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-50 disabled:pointer-events-none"
             >
               Delete
             </button>
@@ -398,12 +444,13 @@ export default function EventDetailPage() {
             </Field>
           </div>
 
-          <Field label="Location">
+          <Field label="Location" required>
             <input
               type="text"
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
               value={form.location}
               onChange={(e) => update("location", e.target.value)}
+              required
             />
           </Field>
 
@@ -535,9 +582,25 @@ export default function EventDetailPage() {
 
       {/* Delete confirmation */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-event-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !deleting) {
+              setShowDeleteConfirm(false);
+              setDeleteError(null);
+            }
+          }}
+        >
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900">Delete event</h3>
+            <h3
+              id="delete-event-title"
+              className="text-lg font-bold text-gray-900"
+            >
+              Delete event
+            </h3>
             <p className="text-sm text-gray-600 mt-2">
               Are you sure you want to delete{" "}
               <span className="font-semibold">{event.name}</span>? This action
@@ -547,7 +610,10 @@ export default function EventDetailPage() {
               <button
                 type="button"
                 className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteError(null);
+                }}
                 disabled={deleting}
               >
                 Cancel
