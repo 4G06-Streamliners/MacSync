@@ -9,9 +9,9 @@ import {
   Modal,
   Alert,
   Keyboard,
-  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -347,23 +347,27 @@ export default function RefundRequestsScreen() {
         animationType="slide"
         onRequestClose={() => setShowModal(false)}
       >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
-        >
-          <View className="flex-1 bg-black/50 justify-end">
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-              <View className="flex-1" />
-            </TouchableWithoutFeedback>
+        <View className="flex-1 justify-end bg-black/50">
+          <Pressable
+            style={StyleSheet.absoluteFillObject}
+            onPress={() => Keyboard.dismiss()}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss keyboard"
+          />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
+            style={{ width: "100%" }}
+            pointerEvents="box-none"
+          >
             <ScrollView
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
               bounces={false}
-              contentContainerStyle={{
-                paddingBottom: Math.max(insets.bottom, 12) + 16,
-              }}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingBottom: Math.max(insets.bottom, 12) + 8,
+              }}
             >
               <View className="bg-white rounded-t-3xl p-6">
                 <Text className="text-xl font-bold text-gray-900 mb-2">
@@ -420,8 +424,8 @@ export default function RefundRequestsScreen() {
                     blurOnSubmit={true}
                   />
                   <Text className="text-xs text-gray-500 mt-1">
-                    * Required: {modalType === "approve" 
-                      ? "Provide a confirmation message for the user" 
+                    * Required: {modalType === "approve"
+                      ? "Provide a confirmation message for the user"
                       : "Explain why the refund is being denied"}
                   </Text>
                 </View>
@@ -459,8 +463,8 @@ export default function RefundRequestsScreen() {
                 </View>
               </View>
             </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
