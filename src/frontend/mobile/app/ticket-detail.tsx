@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -10,8 +10,7 @@ import {
   TextInput,
   Alert,
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
+  Dimensions,
   StyleSheet,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -20,11 +19,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { getUserTickets, createRefundRequest, cancelSignup, type Ticket } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
+import { useKeyboardPad } from "./_hooks/useKeyboardPad";
+
+const WINDOW_HEIGHT = Dimensions.get("window").height;
+
 export default function TicketDetailScreen() {
   const router = useRouter();
   const { ticketId } = useLocalSearchParams<{ ticketId: string }>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const keyboardPad = useKeyboardPad();
+  const refundSheetScrollRef = useRef<ScrollView>(null);
 
   const leaveScreen = useCallback(() => {
     if (router.canGoBack()) {
@@ -431,22 +436,27 @@ export default function TicketDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel="Dismiss keyboard"
           />
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
-            style={{ width: "100%" }}
-            pointerEvents="box-none"
+          <View
+            style={{
+              width: "100%",
+              maxHeight: WINDOW_HEIGHT * 0.92,
+              marginBottom: keyboardPad,
+            }}
           >
             <ScrollView
+              ref={refundSheetScrollRef}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="interactive"
-              bounces={false}
+              bounces
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
-                paddingBottom: Math.max(insets.bottom, 12) + 8,
+                paddingBottom: Math.max(insets.bottom, 12),
               }}
             >
-              <View className="bg-white rounded-t-3xl p-6">
+              <View className="bg-white rounded-t-3xl px-6 pt-3 pb-6">
+                <View className="items-center mb-4">
+                  <View className="w-10 h-1 rounded-full bg-gray-300" />
+                </View>
                 <Text className="text-xl font-bold text-gray-900 mb-2">
                   Request Refund
                 </Text>
@@ -465,6 +475,11 @@ export default function TicketDetailScreen() {
                   style={{ textAlignVertical: "top" }}
                   returnKeyType="done"
                   blurOnSubmit={true}
+                  onFocus={() => {
+                    requestAnimationFrame(() =>
+                      refundSheetScrollRef.current?.scrollToEnd({ animated: true }),
+                    );
+                  }}
                 />
 
                 <View className="flex-row gap-3">
@@ -494,7 +509,7 @@ export default function TicketDetailScreen() {
                 </View>
               </View>
             </ScrollView>
-          </KeyboardAvoidingView>
+          </View>
         </View>
       </Modal>
 
