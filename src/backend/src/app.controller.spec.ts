@@ -1,14 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { DatabaseService } from './database/database.service';
 
 describe('AppController', () => {
   let appController: AppController;
 
   beforeEach(async () => {
+    const mockDatabaseService = {
+      db: {
+        execute: jest.fn().mockResolvedValue(undefined),
+      },
+    };
+
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        AppService,
+        { provide: DatabaseService, useValue: mockDatabaseService },
+      ],
     }).compile();
 
     appController = app.get<AppController>(AppController);

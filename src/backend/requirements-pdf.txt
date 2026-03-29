@@ -1,0 +1,2 @@
+# Used by scripts/venue_order_pdf.py (venue order PDF generation)
+reportlab>=4.0,<5

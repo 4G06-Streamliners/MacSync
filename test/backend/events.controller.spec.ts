@@ -25,6 +25,7 @@ describe('EventsController', () => {
   let controller: EventsController;
   let mockEventsService: any;
   let mockUsersService: any;
+  let mockVenueReportPdfService: { generateBuffer: jest.Mock };
 
   beforeEach(() => {
     mockEventsService = {
@@ -41,7 +42,12 @@ describe('EventsController', () => {
       checkInTicket: jest.fn(),
     };
     mockUsersService = { findOneWithRoles: jest.fn() };
-    controller = new EventsController(mockEventsService, mockUsersService);
+    mockVenueReportPdfService = { generateBuffer: jest.fn() };
+    controller = new EventsController(
+      mockEventsService,
+      mockUsersService,
+      mockVenueReportPdfService as any,
+    );
   });
 
   afterEach(() => jest.clearAllMocks());

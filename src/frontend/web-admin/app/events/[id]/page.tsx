@@ -8,6 +8,7 @@ import {
   getEventAttendees,
   updateEvent,
   deleteEvent,
+  downloadVenueReportPdf,
   type EventItem,
   type EventAttendee,
   type CreateEventPayload,
@@ -53,6 +54,8 @@ export default function EventDetailPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [venueReportLoading, setVenueReportLoading] = useState(false);
+  const [venueReportError, setVenueReportError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -193,6 +196,20 @@ export default function EventDetailPage() {
     }
   }
 
+  async function handleDownloadVenueReport() {
+    setVenueReportError(null);
+    try {
+      setVenueReportLoading(true);
+      await downloadVenueReportPdf(+id);
+    } catch (err) {
+      setVenueReportError(
+        err instanceof Error ? err.message : "Failed to generate venue report",
+      );
+    } finally {
+      setVenueReportLoading(false);
+    }
+  }
+
   async function handleDelete() {
     try {
       setDeleting(true);
@@ -252,7 +269,15 @@ export default function EventDetailPage() {
           <p className="text-gray-500 mt-1">{formatDate(event.date)}</p>
         </div>
         {!editing && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2 flex-shrink-0 justify-end">
+            <button
+              type="button"
+              onClick={handleDownloadVenueReport}
+              disabled={venueReportLoading}
+              className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              {venueReportLoading ? "Generating PDF…" : "Download venue report"}
+            </button>
             <button
               type="button"
               onClick={() => setEditing(true)}
@@ -274,6 +299,11 @@ export default function EventDetailPage() {
       {/* View mode */}
       {!editing && (
         <div className="mt-6 space-y-5">
+          {venueReportError && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {venueReportError}
+            </div>
+          )}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
             <DetailRow label="Description" value={event.description || "—"} />
             <DetailRow label="Location" value={event.location || "—"} />
