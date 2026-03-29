@@ -11,6 +11,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { StatsModule } from './stats/stats.module';
 import { RefundRequestsModule } from './refund-requests/refund-requests.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     StatsModule,
     RefundRequestsModule,
     NotificationsModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

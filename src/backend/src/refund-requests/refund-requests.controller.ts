@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { StaffGuard } from '../auth/staff.guard';
 import { RefundRequestsService } from './refund-requests.service';
 
 interface RequestWithUser extends Request {
@@ -38,6 +39,7 @@ export class RefundRequestsController {
   }
 
   @Get()
+  @UseGuards(StaffGuard)
   getAllRefundRequests(@Req() req: RequestWithUser) {
     return this.refundRequestsService.getAllRefundRequests(req.user.sub);
   }
@@ -48,6 +50,7 @@ export class RefundRequestsController {
   }
 
   @Put(':id/approve')
+  @UseGuards(StaffGuard)
   approveRefundRequest(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
@@ -61,6 +64,7 @@ export class RefundRequestsController {
   }
 
   @Put(':id/deny')
+  @UseGuards(StaffGuard)
   denyRefundRequest(
     @Param('id') id: string,
     @Req() req: RequestWithUser,

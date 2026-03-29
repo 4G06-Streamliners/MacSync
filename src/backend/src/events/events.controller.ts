@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -12,26 +13,31 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { AuthorizationService } from '../users/authorization.service';
 import { EventsService } from './events.service';
 import type { NewEvent } from '../db/schema';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { StaffGuard } from '../auth/staff.guard';
 import type { FastifyReply } from 'fastify';
 import { VenueReportPdfService } from './venue-report-pdf.service';
+import { DatabaseService } from '../database/database.service';
+import { eq } from 'drizzle-orm';
+import { events as eventsTable, roles as rolesTable, users as usersTable } from '../db/schema';
 
 interface RequestWithUser extends Request {
   user: { sub: number; email: string };
 }
 
 @Controller('events')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard)
 export class EventsController {
   constructor(
     private readonly eventsService: EventsService,
-    private readonly usersService: UsersService,
+    private readonly authorizationService: AuthorizationService,
     private readonly venueReportPdfService: VenueReportPdfService,
+    private readonly dbService: DatabaseService,
   ) {}
 
   @Get()
@@ -39,19 +45,42 @@ export class EventsController {
     return this.eventsService.findAll();
   }
 
+  @Get('user/:userId/tickets')
+  async getUserTickets(
+    @Param('userId') userId: string,
+    @Req() req: RequestWithUser,
+  ) {
+    const currentUserId = req.user.sub;
+    if (currentUserId === +userId) {
+      return this.eventsService.getTicketsForUser(+userId);
+    }
+    const access = await this.authorizationService.getStaffAccess(currentUserId);
+    const isStaff =
+      access.isGlobalAdmin || access.managedEventIds.length > 0;
+    if (!isStaff) {
+      throw new ForbiddenException('Access denied.');
+    }
+    return this.eventsService.getTicketsForUserScoped(+userId, access);
+  }
+
   @Get(':id/attendees')
-  @Roles('Admin')
-  getEventAttendees(@Param('id') id: string) {
+  @UseGuards(StaffGuard)
+  async getEventAttendees(
+    @Param('id') id: string,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.authorizationService.assertCanManageEvent(req.user.sub, +id);
     return this.eventsService.getAttendeesForEvent(+id);
   }
 
   @Get(':id/venue-report')
-  @Roles('Admin')
+  @UseGuards(StaffGuard)
   async getVenueReport(
     @Param('id') id: string,
     @Req() req: RequestWithUser,
     @Res({ passthrough: false }) reply: FastifyReply,
   ) {
+    await this.authorizationService.assertCanManageEvent(req.user.sub, +id);
     const buf = await this.venueReportPdfService.generateBuffer(
       +id,
       req.user.sub,
@@ -64,9 +93,12 @@ export class EventsController {
   }
 
   @Post('check-in')
-  @Roles('Admin')
-  checkIn(@Body('qrCodeData') qrCodeData: string) {
-    return this.eventsService.checkInTicket(qrCodeData ?? '');
+  @UseGuards(StaffGuard)
+  checkIn(
+    @Body('qrCodeData') qrCodeData: string,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.eventsService.checkInTicket(qrCodeData ?? '', req.user.sub);
   }
 
   @Get(':id')
@@ -76,21 +108,98 @@ export class EventsController {
   }
 
   @Post()
+  @UseGuards(RolesGuard)
   @Roles('Admin')
   create(@Body() event: NewEvent, @Req() req: RequestWithUser) {
     return this.eventsService.create({ ...event, createdBy: req.user.sub });
   }
 
   @Put(':id')
-  @Roles('Admin')
-  update(@Param('id') id: string, @Body() event: Partial<NewEvent>) {
+  @UseGuards(StaffGuard)
+  async update(
+    @Param('id') id: string,
+    @Body() event: Partial<NewEvent>,
+    @Req() req: RequestWithUser,
+  ) {
+    await this.authorizationService.assertCanManageEvent(req.user.sub, +id);
+
+    // Only global admins may modify the event's managing role.
+    const access = await this.authorizationService.getStaffAccess(req.user.sub);
+    if (
+      Object.prototype.hasOwnProperty.call(event, 'managingRoleId') &&
+      (event as Partial<NewEvent>).managingRoleId !== undefined &&
+      !access.isGlobalAdmin
+    ) {
+      throw new ForbiddenException('Only super admins can modify event admin role.');
+    }
     return this.eventsService.update(+id, event);
   }
 
   @Delete(':id')
-  @Roles('Admin')
-  delete(@Param('id') id: string) {
+  @UseGuards(StaffGuard)
+  async delete(@Param('id') id: string, @Req() req: RequestWithUser) {
+    await this.authorizationService.assertCanManageEvent(req.user.sub, +id);
     return this.eventsService.delete(+id);
+  }
+
+  /** Global admins only: assign which users may administer this event. */
+  @Patch(':id/admins')
+  @UseGuards(RolesGuard)
+  @Roles('Admin')
+  async setEventAdmins(
+    @Param('id') id: string,
+    @Body() body: { userIds?: number[] },
+  ) {
+    await this.authorizationService.setEventAdminsForEvent(
+      +id,
+      Array.isArray(body.userIds) ? body.userIds : [],
+    );
+    return { ok: true };
+  }
+
+  // Super admin: assigns which *role* manages this event (Option A).
+  @Patch(':id/managing-role')
+  @UseGuards(RolesGuard)
+  @Roles('Admin')
+  async setEventManagingRole(
+    @Param('id') id: string,
+    @Body() body: { roleName?: string | null },
+    @Req() req: RequestWithUser,
+  ) {
+    const me = await this.dbService.db
+      .select({ isSystemAdmin: usersTable.isSystemAdmin })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.user.sub))
+      .limit(1);
+
+    if (!me[0]?.isSystemAdmin) {
+      throw new ForbiddenException('Only super admins can modify event admin roles.');
+    }
+
+    const roleName = body.roleName ?? null;
+    if (roleName !== null) {
+      const roleRow = await this.dbService.db
+        .select({ id: rolesTable.id })
+        .from(rolesTable)
+        .where(eq(rolesTable.name, roleName))
+        .limit(1);
+
+      if (!roleRow[0]) {
+        throw new ForbiddenException(`Role not found: ${roleName}`);
+      }
+
+      await this.dbService.db
+        .update(eventsTable)
+        .set({ managingRoleId: roleRow[0].id, updatedAt: new Date() })
+        .where(eq(eventsTable.id, +id));
+    } else {
+      await this.dbService.db
+        .update(eventsTable)
+        .set({ managingRoleId: null, updatedAt: new Date() })
+        .where(eq(eventsTable.id, +id));
+    }
+
+    return { ok: true };
   }
 
   @Post(':id/signup')
@@ -121,7 +230,6 @@ export class EventsController {
       selectedTable?: number;
     },
   ) {
-    // Accept http(s) and deep-link schemes (e.g. exp:// for Expo Go) so mobile redirects open the app
     const isValidRedirectUrl = (s: string) =>
       typeof s === 'string' &&
       s.length > 0 &&
@@ -146,12 +254,10 @@ export class EventsController {
       req.user.sub,
       successUrl,
       cancelUrl,
-      body.selectedTable, // Guaranteed table assignment, not just a preference
+      body.selectedTable,
     );
   }
 
-  // Called by the client when Stripe redirects to cancel_url.
-  // Releases the held seat immediately so the user can retry without waiting for expiry.
   @Post('checkout-session/:sessionId/release')
   async releaseCheckoutReservation(@Param('sessionId') sessionId: string) {
     console.log(
@@ -166,24 +272,5 @@ export class EventsController {
   @Post(':id/cancel')
   cancelSignup(@Param('id') id: string, @Req() req: RequestWithUser) {
     return this.eventsService.cancelSignup(+id, req.user.sub);
-  }
-
-  @Get('user/:userId/tickets')
-  async getUserTickets(
-    @Param('userId') userId: string,
-    @Req() req: RequestWithUser,
-  ) {
-    const currentUserId = req.user.sub;
-    // Allow: self-access (user fetching own tickets) OR admin
-    if (currentUserId !== +userId) {
-      const dbUser = await this.usersService.findOneWithRoles(currentUserId);
-      const isAdmin =
-        (dbUser as { isSystemAdmin?: boolean })?.isSystemAdmin ||
-        (dbUser?.roles ?? []).includes('Admin');
-      if (!isAdmin) {
-        throw new ForbiddenException('Access denied.');
-      }
-    }
-    return this.eventsService.getTicketsForUser(+userId);
   }
 }

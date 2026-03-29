@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { DatabaseService } from '../database/database.service';
+import { AuthorizationService } from '../users/authorization.service';
 import { notifications, tickets, events, users } from '../db/schema';
-import { eq, and, gte, lt, sql } from 'drizzle-orm';
+import { eq, and, gte, lt, sql, inArray } from 'drizzle-orm';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(
+    private readonly dbService: DatabaseService,
+    private readonly authorizationService: AuthorizationService,
+  ) {}
 
   async createNotification(
     userId: number,
@@ -69,14 +73,18 @@ export class NotificationsService {
 
   async blast(adminId: number, eventId: number, customMessage?: string) {
     const eventRows = await this.dbService.db
-      .select({ name: events.name, createdBy: events.createdBy })
+      .select({ name: events.name })
       .from(events)
       .where(eq(events.id, eventId))
       .limit(1);
 
     const event = eventRows[0];
     if (!event) return { error: 'Event not found' };
-    if (event.createdBy !== adminId) return { error: 'Not your event' };
+    try {
+      await this.authorizationService.assertCanManageEvent(adminId, eventId);
+    } catch {
+      return { error: 'Not your event' };
+    }
 
     const attendees = await this.dbService.db
       .select({ userId: tickets.userId })
@@ -98,11 +106,22 @@ export class NotificationsService {
     return { sent };
   }
 
-  async getCreatorEvents(adminId: number) {
+  /** Events this admin may blast (global admin: all events). */
+  async getManagedEventsForBlast(adminId: number) {
+    const access = await this.authorizationService.getStaffAccess(adminId);
+    if (access.isGlobalAdmin) {
+      return this.dbService.db
+        .select({ id: events.id, name: events.name, date: events.date })
+        .from(events)
+        .orderBy(events.date);
+    }
+    if (access.managedEventIds.length === 0) {
+      return [];
+    }
     return this.dbService.db
       .select({ id: events.id, name: events.name, date: events.date })
       .from(events)
-      .where(eq(events.createdBy, adminId))
+      .where(inArray(events.id, access.managedEventIds))
       .orderBy(events.date);
   }
 

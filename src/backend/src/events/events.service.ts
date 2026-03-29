@@ -15,9 +15,12 @@ import {
   seatReservations,
   refundRequests,
   users,
+  roles,
 } from '../db/schema';
 import type { NewEvent } from '../db/schema';
-import { eq, sql, and, asc } from 'drizzle-orm';
+import { eq, sql, and, asc, inArray } from 'drizzle-orm';
+import type { StaffAccess } from '../users/authorization.types';
+import { AuthorizationService } from '../users/authorization.service';
 import type { SeedDb } from '../db/seed-data';
 import {
   createTableSeatsForEvent,
@@ -32,6 +35,7 @@ export class EventsService {
     private readonly dbService: DatabaseService,
     private readonly paymentsService: PaymentsService,
     private readonly notificationsService: NotificationsService,
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   /**
@@ -82,7 +86,10 @@ export class EventsService {
    * Check in a ticket by scanning its QR code. Admin only.
    * Returns ticket details on success, or error info.
    */
-  async checkInTicket(qrCodeData: string): Promise<{
+  async checkInTicket(
+    qrCodeData: string,
+    adminUserId: number,
+  ): Promise<{
     success: boolean;
     alreadyCheckedIn?: boolean;
     ticket?: {
@@ -104,7 +111,11 @@ export class EventsService {
     if (!parsed) {
       return { success: false, error: 'Invalid or tampered QR code' };
     }
-    const { ticketId } = parsed;
+    const { ticketId, eventId } = parsed;
+    const access = await this.authorizationService.getStaffAccess(adminUserId);
+    if (!this.authorizationService.canManageEvent(access, eventId)) {
+      return { success: false, error: 'Access denied for this event' };
+    }
 
     const ticketRows = await this.dbService.db
       .select({
@@ -209,12 +220,15 @@ export class EventsService {
         seatsPerTable: events.seatsPerTable,
         busCount: events.busCount,
         busCapacity: events.busCapacity,
+        managingRoleId: events.managingRoleId,
+        managingRoleName: roles.name,
         createdBy: events.createdBy,
         createdAt: events.createdAt,
         updatedAt: events.updatedAt,
         registeredCount: sql<number>`(SELECT COUNT(*)::int FROM tickets WHERE tickets.event_id = events.id)`,
       })
       .from(events)
+      .leftJoin(roles, eq(events.managingRoleId, roles.id))
       .where(eq(events.id, id));
 
     const row = rows[0] ?? null;
@@ -561,6 +575,69 @@ export class EventsService {
           }
         : null,
       // Remove the flattened fields
+      refundRequestId: undefined,
+      refundRequestStatus: undefined,
+      refundRequestAdminResponse: undefined,
+      refundRequestCreatedAt: undefined,
+    }));
+  }
+
+  /**
+   * Tickets for another user, limited to events the viewer may administer.
+   */
+  async getTicketsForUserScoped(
+    targetUserId: number,
+    access: StaffAccess,
+  ) {
+    if (access.isGlobalAdmin) {
+      return this.getTicketsForUser(targetUserId);
+    }
+    const ids = access.managedEventIds;
+    if (ids.length === 0) {
+      return [];
+    }
+    const rows = await this.dbService.db
+      .select({
+        ticketId: tickets.id,
+        eventId: tickets.eventId,
+        checkedIn: tickets.checkedIn,
+        busSeat: tickets.busSeat,
+        tableSeat: tickets.tableSeat,
+        qrCodeData: tickets.qrCodeData,
+        createdAt: tickets.createdAt,
+        eventName: events.name,
+        eventDate: events.date,
+        eventLocation: events.location,
+        eventPrice: events.price,
+        eventImageUrl: events.imageUrl,
+        refundRequestId: refundRequests.id,
+        refundRequestStatus: refundRequests.status,
+        refundRequestAdminResponse: refundRequests.adminResponse,
+        refundRequestCreatedAt: refundRequests.createdAt,
+      })
+      .from(tickets)
+      .innerJoin(events, eq(tickets.eventId, events.id))
+      .leftJoin(
+        refundRequests,
+        and(
+          eq(refundRequests.ticketId, tickets.id),
+          eq(refundRequests.status, 'pending'),
+        ),
+      )
+      .where(
+        and(eq(tickets.userId, targetUserId), inArray(tickets.eventId, ids)),
+      );
+
+    return rows.map((row) => ({
+      ...row,
+      refundRequest: row.refundRequestId
+        ? {
+            id: row.refundRequestId,
+            status: row.refundRequestStatus,
+            adminResponse: row.refundRequestAdminResponse,
+            createdAt: row.refundRequestCreatedAt,
+          }
+        : null,
       refundRequestId: undefined,
       refundRequestStatus: undefined,
       refundRequestAdminResponse: undefined,

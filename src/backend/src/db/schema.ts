@@ -82,6 +82,10 @@ export const events = pgTable('events', {
   stripeProductId: varchar('stripe_product_id', { length: 255 }),
   requiresTableSignup: boolean('requires_table_signup').default(false),
   requiresBusSignup: boolean('requires_bus_signup').default(false),
+  /** RBAC: role that is allowed to administer this event. */
+  managingRoleId: integer('managing_role_id').references(() => roles.id, {
+    onDelete: 'set null',
+  }),
   // For table seats: number of tables, seats per table (e.g. 10 tables × 8 seats)
   tableCount: integer('table_count'),
   seatsPerTable: integer('seats_per_table'),
@@ -95,6 +99,23 @@ export const events = pgTable('events', {
 
 export type Event = typeof events.$inferSelect;
 export type NewEvent = typeof events.$inferInsert;
+
+// ------------------- EVENT ADMINS (scoped staff per event) -------------------
+export const eventAdmins = pgTable(
+  'event_admins',
+  {
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    eventId: integer('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.eventId] })],
+);
+
+export type EventAdmin = typeof eventAdmins.$inferSelect;
+export type NewEventAdmin = typeof eventAdmins.$inferInsert;
 
 // ------------------- TICKETS -------------------
 export const tickets = pgTable('tickets', {

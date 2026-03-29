@@ -7,7 +7,7 @@ import 'dotenv/config';
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from './schema';
-import { runSeedDb } from './seed-data';
+import { runSeedDb, seedPresetDemoEvents } from './seed-data';
 
 async function main() {
   const pool = new Pool({ connectionString: 
@@ -17,7 +17,7 @@ process.env.DATABASE_URL });
   console.log(':seedling: Seeding database...');
   const didSeed = await runSeedDb(db);
   if (!didSeed) {
-    console.log('  :track_next:  Database already has data. Skipping.');
+    console.log('  :track_next:  Database already has data. Skipping base seed.');
   } else {
     console.log('  ✓ Roles, users, user_roles');
     console.log(
@@ -25,7 +25,19 @@ process.env.DATABASE_URL });
     );
     console.log('  ✓ Table seats and bus seats auto-generated');
     console.log('  ✓ Sample tickets and seat assignments');
-    console.log(':white_check_mark: Seed completed.');
+    console.log(':white_check_mark: Base seed completed.');
+  }
+
+  const preset = await seedPresetDemoEvents(db);
+  if (preset.inserted > 0) {
+    console.log(
+      `  ✓ Inserted ${preset.inserted} preset demo event(s) (paid/free, table/bus mix + image URLs).`,
+    );
+  }
+  if (preset.skipped > 0) {
+    console.log(
+      `  ✓ Preset events already present (${preset.skipped} skipped by name).`,
+    );
   }
   await pool.end();
 }

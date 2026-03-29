@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from './database.service';
-import { runSeedDb } from '../db/seed-data';
+import { runSeedDb, seedPresetDemoEvents } from '../db/seed-data';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
@@ -11,7 +11,13 @@ export class SeedService implements OnModuleInit {
     try {
       const didSeed = await runSeedDb(this.dbService.db);
       if (didSeed) {
-        console.log('✅ Startup seed completed (RUN_SEED=true).');
+        console.log('✅ Startup base seed completed (RUN_SEED=true).');
+      }
+      const preset = await seedPresetDemoEvents(this.dbService.db);
+      if (preset.inserted > 0) {
+        console.log(
+          `✅ Startup: added ${preset.inserted} preset demo event(s).`,
+        );
       }
     } catch (err) {
       console.error('❌ Startup seed failed:', err);

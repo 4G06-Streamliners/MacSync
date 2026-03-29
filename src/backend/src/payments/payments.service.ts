@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 import { DatabaseService } from '../database/database.service';
-import { payments, users } from '../db/schema';
+import { AuthorizationService } from '../users/authorization.service';
+import { payments } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 export interface CreateCheckoutSessionParams {
@@ -26,7 +27,10 @@ export interface PaymentData {
 export class PaymentsService {
   private stripe: Stripe | null = null;
 
-  constructor(private readonly dbService: DatabaseService) {
+  constructor(
+    private readonly dbService: DatabaseService,
+    private readonly authorizationService: AuthorizationService,
+  ) {
     const key = process.env.STRIPE_SECRET_KEY;
     if (key) this.stripe = new Stripe(key);
   }
@@ -213,18 +217,6 @@ export class PaymentsService {
     adminUserId: number,
     partialAmount?: number,
   ): Promise<{ success?: boolean; error?: string }> {
-    // Check if requesting user is a system admin
-    const adminRows = await this.dbService.db
-      .select()
-      .from(users)
-      .where(eq(users.id, adminUserId))
-      .limit(1);
-    const admin = adminRows[0];
-    if (!admin || !admin.isSystemAdmin) {
-      return { error: 'Unauthorized: Admin access required' };
-    }
-
-    // Get payment record
     const paymentRows = await this.dbService.db
       .select()
       .from(payments)
@@ -233,6 +225,15 @@ export class PaymentsService {
     const payment = paymentRows[0];
     if (!payment) {
       return { error: 'Payment not found' };
+    }
+
+    try {
+      await this.authorizationService.assertCanManageEvent(
+        adminUserId,
+        payment.eventId,
+      );
+    } catch {
+      return { error: 'Unauthorized: Admin access required' };
     }
 
     if (payment.status === 'refunded') {

@@ -25,9 +25,9 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
     return false; // already seeded
   }
 
-  const [roleAdmin, roleMember] = await db
+  const [roleAdmin, roleMember, roleMesAdmin] = await db
     .insert(roles)
-    .values([{ name: 'Admin' }, { name: 'Member' }])
+    .values([{ name: 'Admin' }, { name: 'Member' }, { name: 'MES_ADMIN' }])
     .returning();
 
   const [user1, user2, user3] = await db
@@ -73,6 +73,7 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
   await db.insert(userRoles).values([
     { userId: user1.id, roleId: roleAdmin.id },
     { userId: user2.id, roleId: roleMember.id },
+    { userId: user2.id, roleId: roleMesAdmin.id },
     { userId: user3.id, roleId: roleMember.id },
   ]);
 
@@ -112,6 +113,19 @@ export async function runSeedDb(db: SeedDb): Promise<boolean> {
     ])
     .returning();
   if (!event1 || !event2) throw new Error('Event insert failed');
+
+  // Option A (role-based scoping):
+  // - Annual Gala managed by global Admin role
+  // - Tech Meetup managed by MES_ADMIN role
+  await db
+    .update(events)
+    .set({ managingRoleId: roleAdmin.id, updatedAt: new Date() })
+    .where(eq(events.id, event1.id));
+
+  await db
+    .update(events)
+    .set({ managingRoleId: roleMesAdmin.id, updatedAt: new Date() })
+    .where(eq(events.id, event2.id));
 
   const tableSeatRows: Array<{
     eventId: number;
@@ -372,4 +386,177 @@ export async function createBusSeatsForEvent(
   busCapacity: number,
 ): Promise<void> {
   await ensureBusSeatsForEvent(db, eventId, busCount, busCapacity);
+}
+
+/** Stable name prefix so we can re-run seed idempotently on VPS / CI. */
+export const PRESET_EVENT_NAME_PREFIX = 'MacSync Preset:';
+
+/**
+ * Ensures 4 demo events exist (mixed paid/free, table/bus/none). Safe to run on every
+ * `npm run db:seed` — skips any preset whose name already exists.
+ */
+export async function seedPresetDemoEvents(db: SeedDb): Promise<{
+  inserted: number;
+  skipped: number;
+}> {
+  let inserted = 0;
+  let skipped = 0;
+
+  const adminRoleRow = await db
+    .select({ id: roles.id })
+    .from(roles)
+    .where(eq(roles.name, 'Admin'))
+    .limit(1);
+  const mesAdminRoleRow = await db
+    .select({ id: roles.id })
+    .from(roles)
+    .where(eq(roles.name, 'MES_ADMIN'))
+    .limit(1);
+  const adminRoleId = adminRoleRow[0]?.id ?? null;
+  const mesAdminRoleId = mesAdminRoleRow[0]?.id ?? null;
+
+  const presets: Array<{
+    name: string;
+    description: string;
+    date: Date;
+    location: string;
+    capacity: number;
+    imageUrl: string;
+    price: number;
+    requiresTableSignup: boolean;
+    requiresBusSignup: boolean;
+    tableCount: number | null;
+    seatsPerTable: number | null;
+    busCount: number | null;
+    busCapacity: number | null;
+  }> = [
+    {
+      name: `${PRESET_EVENT_NAME_PREFIX} Riverfront Gala`,
+      description:
+        'Paid dinner: assigned tables and charter bus from campus. Table and bus seat counts match capacity.',
+      date: new Date('2026-06-20T18:00:00Z'),
+      location: 'Riverfront Convention Center',
+      capacity: 36,
+      imageUrl:
+        'https://images.unsplash.com/photo-1540575467063-027aef3d3087?auto=format&fit=crop&w=1200&q=80',
+      price: 4500,
+      requiresTableSignup: true,
+      requiresBusSignup: true,
+      tableCount: 6,
+      seatsPerTable: 6,
+      busCount: 2,
+      busCapacity: 18,
+    },
+    {
+      name: `${PRESET_EVENT_NAME_PREFIX} Engineering Workshop`,
+      description:
+        'Paid hands-on workshop; pick a table seat. No bus — attendees make their own way.',
+      date: new Date('2026-07-08T14:00:00Z'),
+      location: 'JHE Annex Lab',
+      capacity: 20,
+      imageUrl:
+        'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80',
+      price: 2999,
+      requiresTableSignup: true,
+      requiresBusSignup: false,
+      tableCount: 5,
+      seatsPerTable: 4,
+      busCount: 0,
+      busCapacity: 0,
+    },
+    {
+      name: `${PRESET_EVENT_NAME_PREFIX} Campus Shuttle Day`,
+      description:
+        'Free open day; bus seats auto-assigned. No table selection.',
+      date: new Date('2026-08-15T10:00:00Z'),
+      location: 'Main Campus Loop',
+      capacity: 48,
+      imageUrl:
+        'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=80',
+      price: 0,
+      requiresTableSignup: false,
+      requiresBusSignup: true,
+      tableCount: 0,
+      seatsPerTable: 0,
+      busCount: 2,
+      busCapacity: 24,
+    },
+    {
+      name: `${PRESET_EVENT_NAME_PREFIX} Fall Open House`,
+      description:
+        'Free general admission — no table or bus signup. First come, first served.',
+      date: new Date('2026-09-05T16:00:00Z'),
+      location: 'Student Centre Great Hall',
+      capacity: 150,
+      imageUrl:
+        'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1200&q=80',
+      price: 0,
+      requiresTableSignup: false,
+      requiresBusSignup: false,
+      tableCount: 0,
+      seatsPerTable: 0,
+      busCount: 0,
+      busCapacity: 0,
+    },
+  ];
+
+  for (const preset of presets) {
+    const existing = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(eq(events.name, preset.name))
+      .limit(1);
+    if (existing[0]) {
+      skipped++;
+      continue;
+    }
+
+    const [row] = await db
+      .insert(events)
+      .values({
+        name: preset.name,
+        description: preset.description,
+        date: preset.date,
+        location: preset.location,
+        capacity: preset.capacity,
+        imageUrl: preset.imageUrl,
+        price: preset.price,
+        stripePriceId: null,
+        stripeProductId: null,
+        requiresTableSignup: preset.requiresTableSignup,
+        requiresBusSignup: preset.requiresBusSignup,
+        tableCount: preset.tableCount,
+        seatsPerTable: preset.seatsPerTable,
+        busCount: preset.busCount,
+        busCapacity: preset.busCapacity,
+        managingRoleId:
+          preset.name.includes('Engineering Workshop') &&
+          mesAdminRoleId != null
+            ? mesAdminRoleId
+            : adminRoleId,
+      })
+      .returning();
+
+    if (!row) continue;
+    inserted++;
+
+    if (row.requiresTableSignup && row.tableCount && row.seatsPerTable) {
+      await ensureTableSeatsForEvent(
+        db,
+        row.id,
+        row.tableCount,
+        row.seatsPerTable,
+      );
+    }
+    if (row.requiresBusSignup && row.busCount && row.busCapacity) {
+      await ensureBusSeatsForEvent(
+        db,
+        row.id,
+        row.busCount,
+        row.busCapacity,
+      );
+    }
+  }
+
+  return { inserted, skipped };
 }
