@@ -74,6 +74,12 @@ export function EventDateTimeFields({
           className: `w-full px-4 py-3 border border-gray-300 rounded-xl text-sm ${
             disabled ? "bg-gray-100 text-gray-500" : "bg-white text-gray-900"
           }`,
+          // DOM inputs often ignore Tailwind text color; force readable values.
+          style: {
+            width: "100%",
+            color: disabled ? "#6b7280" : "#111827",
+            backgroundColor: disabled ? "#f3f4f6" : "#ffffff",
+          },
         } as Record<string, unknown>)}
       </View>
     );
@@ -123,7 +129,7 @@ export function EventDateTimeFields({
             animationType="fade"
             onRequestClose={() => setShowDate(false)}
           >
-            <View className="flex-1 justify-end">
+            <View style={{ flex: 1 }} className="justify-end">
               <Pressable
                 className="absolute inset-0 bg-black/40"
                 onPress={() => setShowDate(false)}
@@ -134,6 +140,8 @@ export function EventDateTimeFields({
                   mode="date"
                   display="spinner"
                   minimumDate={minimumDate}
+                  themeVariant="light"
+                  textColor="#111827"
                   onChange={(_, d) => d && mergeDate(d)}
                 />
                 <Pressable
@@ -184,7 +192,7 @@ export function EventDateTimeFields({
             animationType="fade"
             onRequestClose={() => setShowTime(false)}
           >
-            <View className="flex-1 justify-end">
+            <View style={{ flex: 1 }} className="justify-end">
               <Pressable
                 className="absolute inset-0 bg-black/40"
                 onPress={() => setShowTime(false)}
@@ -195,6 +203,8 @@ export function EventDateTimeFields({
                   mode="time"
                   display="spinner"
                   is24Hour={false}
+                  themeVariant="light"
+                  textColor="#111827"
                   onChange={(_, d) => d && mergeTime(d)}
                 />
                 <Pressable

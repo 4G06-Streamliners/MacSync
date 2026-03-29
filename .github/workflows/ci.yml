@@ -37,6 +37,10 @@ jobs:
         working-directory: src/backend
         run: npm ci
 
+      - name: Install Python PDF dependencies (venue reports)
+        working-directory: src/backend
+        run: npm run setup:pdf
+
       - name: Create backend .env
         working-directory: src/backend
         run: |
@@ -78,6 +82,10 @@ jobs:
       - name: Install backend dependencies
         working-directory: src/backend
         run: npm ci
+
+      - name: Install Python PDF dependencies (venue reports)
+        working-directory: src/backend
+        run: npm run setup:pdf
 
       - name: Install test dependencies
         working-directory: test

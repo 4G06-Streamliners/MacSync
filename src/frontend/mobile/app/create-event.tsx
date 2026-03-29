@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,13 @@ import { EventDateTimeFields } from "./components/EventDateTimeFields";
 
 export default function CreateEventScreen() {
   const router = useRouter();
+  const leaveEditor = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, [router]);
   const [saving, setSaving] = useState(false);
   const insets = useSafeAreaInsets();
 
@@ -90,7 +97,7 @@ export default function CreateEventScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => goBackOrHome(router)}>
+        <Pressable onPress={leaveEditor}>
           <Text className="text-base text-maroon font-medium">Cancel</Text>
         </Pressable>
         <Text className="text-lg font-bold text-gray-900">

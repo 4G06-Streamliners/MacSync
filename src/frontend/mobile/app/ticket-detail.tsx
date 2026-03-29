@@ -12,18 +12,25 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { getUserTickets, createRefundRequest, cancelSignup, type Ticket } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
-import { goBackOrHome } from "./_lib/navigation";
-
 export default function TicketDetailScreen() {
+  const router = useRouter();
   const { ticketId } = useLocalSearchParams<{ ticketId: string }>();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+
+  const leaveScreen = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, [router]);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -125,7 +132,7 @@ export default function TicketDetailScreen() {
       if (result.error) {
         Alert.alert("Error", result.error);
       } else {
-        goBackOrHome(router);
+        leaveScreen();
       }
     } catch (err: any) {
       Alert.alert("Error", err?.message || "Failed to cancel ticket");
@@ -149,7 +156,7 @@ export default function TicketDetailScreen() {
           className="bg-white border-b border-gray-200 px-4 pb-4"
           style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
         >
-          <Pressable onPress={() => goBackOrHome(router)}>
+          <Pressable onPress={leaveScreen}>
             <Text className="text-base text-maroon font-medium">
               ← Back to My Tickets
             </Text>
@@ -172,7 +179,7 @@ export default function TicketDetailScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => goBackOrHome(router)}>
+        <Pressable onPress={leaveScreen}>
           <Text className="text-base text-maroon font-medium">
             ← Back to My Tickets
           </Text>

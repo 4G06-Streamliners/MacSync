@@ -107,9 +107,13 @@ export class VenueReportPdfService {
       child.on('close', (code) => {
         if (code !== 0) {
           const errText = Buffer.concat(stderrChunks).toString('utf8').trim();
+          const hint =
+            /ModuleNotFoundError|No module named ['"]reportlab/i.test(errText)
+              ? ' Install Python deps: from src/backend run `npm run setup:pdf`.'
+              : '';
           reject(
             new InternalServerErrorException(
-              `Venue PDF script exited with ${code}${errText ? `: ${errText}` : ''}`,
+              `Venue PDF script exited with ${code}${errText ? `: ${errText}` : ''}${hint}`,
             ),
           );
           return;

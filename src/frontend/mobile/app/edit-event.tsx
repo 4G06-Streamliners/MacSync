@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -29,6 +29,15 @@ export default function EditEventScreen() {
   const router = useRouter();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const insets = useSafeAreaInsets();
+
+  /** Pop stack or go to tabs; must use useCallback here (not a shared import) for Expo Web. */
+  const leaveEditor = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, [router]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -123,7 +132,7 @@ export default function EditEventScreen() {
 
       await updateEvent(+eventId, payload);
       showAlert("Success", "Event updated successfully.");
-      goBackOrHome(router);
+      leaveEditor();
     } catch (err: any) {
       showAlert("Error", err.message || "Failed to update event");
     } finally {
@@ -151,7 +160,7 @@ export default function EditEventScreen() {
           </Text>
           <Text className="text-sm text-red-600 mt-1">{error}</Text>
           <Pressable
-            onPress={() => goBackOrHome(router)}
+            onPress={leaveEditor}
             className="mt-4 py-2.5 bg-maroon rounded-xl active:bg-maroon-dark"
           >
             <Text className="text-center text-sm font-semibold text-white">
@@ -267,7 +276,7 @@ export default function EditEventScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => goBackOrHome(router)}>
+        <Pressable onPress={leaveEditor}>
           <Text className="text-base text-maroon font-medium">Cancel</Text>
         </Pressable>
         <Text className="text-lg font-bold text-gray-900">Edit Event</Text>

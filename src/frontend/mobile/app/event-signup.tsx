@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,6 @@ import {
   type EventItem,
 } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
-import { goBackOrHome } from "./_lib/navigation";
 
 type NotificationType = "success" | "error" | "info";
 
@@ -37,6 +36,14 @@ export default function EventSignupScreen() {
   const { eventId } = useLocalSearchParams();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+
+  const leaveScreen = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)");
+    }
+  }, [router]);
 
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +99,7 @@ export default function EventSignupScreen() {
     } catch (err) {
       console.error("Failed to load event:", err);
       showNotification("error", "Error", "Failed to load event details");
-      setTimeout(() => goBackOrHome(router), 2000);
+      setTimeout(() => leaveScreen(), 2000);
     } finally {
       setLoading(false);
     }
@@ -330,7 +337,7 @@ export default function EventSignupScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => goBackOrHome(router)}>
+        <Pressable onPress={leaveScreen}>
           <Text className="text-base text-maroon font-medium">
             ← Back to Events
           </Text>
@@ -424,7 +431,7 @@ export default function EventSignupScreen() {
         <View className="flex-row gap-3">
           {isRegistered ? (
             <Pressable
-              onPress={() => goBackOrHome(router)}
+              onPress={leaveScreen}
               className="flex-1 py-3 bg-maroon rounded-xl active:bg-maroon-dark"
             >
               <Text className="text-center text-sm font-semibold text-white">
@@ -434,7 +441,7 @@ export default function EventSignupScreen() {
           ) : (
             <>
               <Pressable
-                onPress={() => goBackOrHome(router)}
+                onPress={leaveScreen}
                 className="flex-1 py-3 border border-gray-300 rounded-xl active:bg-gray-50"
               >
                 <Text className="text-center text-sm font-medium text-gray-700">

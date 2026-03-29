@@ -1,4 +1,11 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -14,6 +21,7 @@ import {
   type NativeScrollEvent,
 } from "react-native";
 import { router, usePathname } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   getUserTickets,
   getMyRefundRequests,
@@ -74,6 +82,35 @@ export default function MyTickets() {
     void loadAll();
   }, [user, pathname, loadAll]);
 
+  /** Always start on Current when returning to this screen (e.g. back from ticket detail). */
+  const resetToCurrentTab = useCallback(() => {
+    pageRef.current = 0;
+    setPage(0);
+    scrollX.setValue(0);
+    requestAnimationFrame(() => {
+      pagerRef.current?.scrollTo({ x: 0, animated: false });
+    });
+  }, [scrollX]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      resetToCurrentTab();
+    }, [user, resetToCurrentTab]),
+  );
+
+  /** After the full-screen load, the horizontal pager remounts — force offset + bubble to Current. */
+  const prevLoading = useRef(loading);
+  useLayoutEffect(() => {
+    if (prevLoading.current && !loading && user) {
+      scrollX.setValue(0);
+      requestAnimationFrame(() => {
+        pagerRef.current?.scrollTo({ x: 0, animated: false });
+      });
+    }
+    prevLoading.current = loading;
+  }, [loading, user, scrollX]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadAll();
@@ -117,8 +154,11 @@ export default function MyTickets() {
 
   const goToPage = (p: number) => {
     pageRef.current = p;
-    pagerRef.current?.scrollTo({ x: p * windowWidth, animated: true });
     setPage(p);
+    const x = p * windowWidth;
+    requestAnimationFrame(() => {
+      pagerRef.current?.scrollTo({ x, animated: true });
+    });
   };
 
   const onPagerScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
