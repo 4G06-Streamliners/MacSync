@@ -41,7 +41,7 @@ describe('RefundRequestsService', () => {
     service = new RefundRequestsService(
       { db: mockDb } as any,
       mockPaymentsService,
-      {} as any,
+      { createNotification: jest.fn() } as any,
     );
   });
 
@@ -148,7 +148,8 @@ describe('RefundRequestsService', () => {
 
       mockDb.select
         .mockReturnValueOnce(createDbChain([admin]))
-        .mockReturnValueOnce(createDbChain([request]));
+        .mockReturnValueOnce(createDbChain([request]))
+        .mockReturnValueOnce(createDbChain([{ name: 'Test Event' }])); // event name for notification
 
       mockPaymentsService.refundPayment.mockResolvedValue({ success: true });
       mockDb.update.mockReturnValue(createDbChain());
@@ -207,9 +208,10 @@ describe('RefundRequestsService', () => {
         )
         .mockReturnValueOnce(
           createDbChain([
-            { id: 10, ticketId: 5, paymentId: null, status: 'pending' },
+            { id: 10, ticketId: 5, paymentId: null, status: 'pending', userId: 5, eventId: 1 },
           ]),
-        );
+        )
+        .mockReturnValueOnce(createDbChain([{ name: 'Free Event' }])); // event name for notification
 
       mockDb.update.mockReturnValue(createDbChain());
       mockDb.delete.mockReturnValue(createDbChain());

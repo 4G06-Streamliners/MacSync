@@ -43,7 +43,7 @@ describe('EventsService', () => {
       createCheckoutSession: jest.fn(),
       recordPayment: jest.fn(),
     };
-    service = new EventsService({ db: mockDb } as any, mockPaymentsService, {} as any);
+    service = new EventsService({ db: mockDb } as any, mockPaymentsService, { createNotification: jest.fn() } as any);
   });
 
   afterEach(() => jest.clearAllMocks());
