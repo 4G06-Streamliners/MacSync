@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { createRole, getMe, getRoles, type RoleRow, type User } from "../_lib/api";
+import {
+  createRole,
+  deleteRole,
+  getMe,
+  getRoles,
+  type RoleRow,
+  type User,
+} from "../_lib/api";
 
 export default function ManageRolesPage() {
   const [me, setMe] = useState<User | null>(null);
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [deletingRoleId, setDeletingRoleId] = useState<number | null>(null);
   const [newRoleName, setNewRoleName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +56,27 @@ export default function ManageRolesPage() {
       setError(e instanceof Error ? e.message : "Failed to create role.");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function handleDeleteRole(role: RoleRow) {
+    if (role.name === "Member") return;
+    const confirmed = window.confirm(
+      `Delete role "${role.name}"?\n\nUsers with this role will lose it, and events managed by this role will become unassigned.`,
+    );
+    if (!confirmed) return;
+    setDeletingRoleId(role.id);
+    setError(null);
+    try {
+      const result = await deleteRole(role.id);
+      setRoles((prev) => prev.filter((r) => r.id !== role.id));
+      window.alert(
+        `Deleted ${result.deletedRoleName}. Affected users: ${result.affectedUsers}. Affected events: ${result.affectedEvents}.`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete role.");
+    } finally {
+      setDeletingRoleId(null);
     }
   }
 
@@ -103,17 +132,36 @@ export default function ManageRolesPage() {
           {roles.length === 0 ? (
             <p className="text-gray-500">No roles found.</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {roles
                 .slice()
-                .sort((a, b) => a.name.localeCompare(b.name))
+                .sort((a, b) => {
+                  if (a.name === "Member" && b.name !== "Member") return -1;
+                  if (b.name === "Member" && a.name !== "Member") return 1;
+                  return a.name.localeCompare(b.name);
+                })
                 .map((r) => (
-                  <span
+                  <div
                     key={r.id}
-                    className="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold"
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
                   >
-                    {r.name}
-                  </span>
+                    <span className="text-sm font-semibold text-gray-700">
+                      {r.name}
+                    </span>
+                    {r.name !== "Member" ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRole(r)}
+                        disabled={deletingRoleId === r.id}
+                        className="rounded-md border border-red-300 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
+                        title={`Delete role ${r.name}`}
+                      >
+                        {deletingRoleId === r.id ? "Deleting..." : "Delete role"}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-500">Protected</span>
+                    )}
+                  </div>
                 ))}
             </div>
           )}

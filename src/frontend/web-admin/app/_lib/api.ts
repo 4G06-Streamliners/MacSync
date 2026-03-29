@@ -153,6 +153,20 @@ export function createRole(name: string): Promise<RoleRow> {
   });
 }
 
+export function deleteRole(
+  id: number,
+): Promise<{
+  ok: boolean;
+  deletedRoleId: number;
+  deletedRoleName: string;
+  affectedUsers: number;
+  affectedEvents: number;
+}> {
+  return apiFetch(`/roles/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export function getUsers(): Promise<User[]> {
   return apiFetch("/users");
 }
