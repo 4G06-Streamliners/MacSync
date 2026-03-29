@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import * as crypto from 'crypto';
 import { DatabaseService } from '../database/database.service';
 import { PaymentsService } from '../payments/payments.service';
@@ -239,9 +243,17 @@ export class EventsService {
   }
 
   async create(event: NewEvent) {
+    if (
+      !event.location ||
+      typeof event.location !== 'string' ||
+      !event.location.trim()
+    ) {
+      throw new BadRequestException('Location is required');
+    }
     // Ensure date is a Date object (JSON sends it as a string)
     const values = {
       ...event,
+      location: event.location.trim(),
       date: new Date(event.date as string | Date),
     };
 
@@ -305,6 +317,12 @@ export class EventsService {
   }
 
   async update(id: number, event: Partial<NewEvent>) {
+    if ('location' in event && event.location !== undefined) {
+      if (typeof event.location !== 'string' || !event.location.trim()) {
+        throw new BadRequestException('Location is required');
+      }
+      event = { ...event, location: event.location.trim() };
+    }
     // If price is being updated and the new price is > 0, create/update Stripe product/price
     if (event.price !== undefined && event.price > 0) {
       // Get the event name (either from update payload or existing event)
@@ -348,7 +366,13 @@ export class EventsService {
   }
 
   async delete(id: number) {
-    await this.dbService.db.delete(events).where(eq(events.id, id));
+    const removed = await this.dbService.db
+      .delete(events)
+      .where(eq(events.id, id))
+      .returning({ id: events.id });
+    if (removed.length === 0) {
+      throw new NotFoundException('Event not found');
+    }
     return { deleted: true };
   }
 

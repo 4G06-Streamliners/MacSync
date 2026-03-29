@@ -18,6 +18,7 @@ import {
   type EventItem,
   type CreateEventPayload,
 } from "./_lib/api";
+import { goBackOrHome } from "./_lib/navigation";
 
 function toDateStr(iso: string): string {
   const d = new Date(iso);
@@ -97,8 +98,17 @@ export default function EditEventScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.date || !form.time || !form.capacity) {
-      showAlert("Error", "Name, date, time, and capacity are required.");
+    if (
+      !form.name ||
+      !form.date ||
+      !form.time ||
+      !form.capacity ||
+      !form.location.trim()
+    ) {
+      showAlert(
+        "Error",
+        "Name, date, time, location, and capacity are required.",
+      );
       return;
     }
 
@@ -110,7 +120,7 @@ export default function EditEventScreen() {
         name: form.name,
         description: form.description || undefined,
         date: new Date(dateStr).toISOString(),
-        location: form.location || undefined,
+        location: form.location.trim(),
         capacity: parseInt(form.capacity),
         price: Math.round(priceDollars * 100),
         imageUrl: form.imageUrl || undefined,
@@ -128,7 +138,7 @@ export default function EditEventScreen() {
 
       await updateEvent(+eventId, payload);
       showAlert("Success", "Event updated successfully.");
-      router.back();
+      goBackOrHome(router);
     } catch (err: any) {
       showAlert("Error", err.message || "Failed to update event");
     } finally {
@@ -156,7 +166,7 @@ export default function EditEventScreen() {
           </Text>
           <Text className="text-sm text-red-600 mt-1">{error}</Text>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => goBackOrHome(router)}
             className="mt-4 py-2.5 bg-maroon rounded-xl active:bg-maroon-dark"
           >
             <Text className="text-center text-sm font-semibold text-white">
@@ -175,7 +185,7 @@ export default function EditEventScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => goBackOrHome(router)}>
           <Text className="text-base text-maroon font-medium">Cancel</Text>
         </Pressable>
         <Text className="text-lg font-bold text-gray-900">Edit Event</Text>
@@ -257,7 +267,7 @@ export default function EditEventScreen() {
           {/* Location */}
           <View>
             <Text className="text-sm font-medium text-gray-700 mb-1.5">
-              Location
+              Location <Text className="text-red-500">*</Text>
             </Text>
             <TextInput
               value={form.location}

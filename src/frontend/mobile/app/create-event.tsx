@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createEvent, type CreateEventPayload } from "./_lib/api";
+import { goBackOrHome } from "./_lib/navigation";
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -41,8 +42,17 @@ export default function CreateEventScreen() {
     setSaving(true);
 
     try {
-      if (!form.name || !form.date || !form.time || !form.capacity) {
-        Alert.alert("Error", "Name, date, time, and capacity are required.");
+      if (
+        !form.name ||
+        !form.date ||
+        !form.time ||
+        !form.capacity ||
+        !form.location.trim()
+      ) {
+        Alert.alert(
+          "Error",
+          "Name, date, time, location, and capacity are required.",
+        );
         setSaving(false);
         return;
       }
@@ -53,7 +63,7 @@ export default function CreateEventScreen() {
         name: form.name,
         description: form.description || undefined,
         date: new Date(dateStr).toISOString(),
-        location: form.location || undefined,
+        location: form.location.trim(),
         capacity: parseInt(form.capacity),
         price: Math.round(priceDollars * 100), // store in cents (Stripe price created automatically)
         imageUrl: form.imageUrl || undefined,
@@ -85,7 +95,7 @@ export default function CreateEventScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4 flex-row items-center justify-between"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => goBackOrHome(router)}>
           <Text className="text-base text-maroon font-medium">Cancel</Text>
         </Pressable>
         <Text className="text-lg font-bold text-gray-900">
@@ -169,7 +179,7 @@ export default function CreateEventScreen() {
           {/* Location */}
           <View>
             <Text className="text-sm font-medium text-gray-700 mb-1.5">
-              Location
+              Location <Text className="text-red-500">*</Text>
             </Text>
             <TextInput
               value={form.location}

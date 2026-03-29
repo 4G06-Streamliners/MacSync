@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { getUserTickets, createRefundRequest, cancelSignup, type Ticket } from "./_lib/api";
 import { useAuth } from "./_context/AuthContext";
+import { goBackOrHome } from "./_lib/navigation";
 
 export default function TicketDetailScreen() {
   const { ticketId } = useLocalSearchParams<{ ticketId: string }>();
@@ -121,7 +122,7 @@ export default function TicketDetailScreen() {
       if (result.error) {
         Alert.alert("Error", result.error);
       } else {
-        router.back();
+        goBackOrHome(router);
       }
     } catch (err: any) {
       Alert.alert("Error", err?.message || "Failed to cancel ticket");
@@ -145,7 +146,7 @@ export default function TicketDetailScreen() {
           className="bg-white border-b border-gray-200 px-4 pb-4"
           style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
         >
-          <Pressable onPress={() => router.back()}>
+          <Pressable onPress={() => goBackOrHome(router)}>
             <Text className="text-base text-maroon font-medium">
               ← Back to My Tickets
             </Text>
@@ -168,7 +169,7 @@ export default function TicketDetailScreen() {
         className="bg-white border-b border-gray-200 px-4 pb-4"
         style={{ paddingTop: Math.max(insets.top, 16) + 8 }}
       >
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => goBackOrHome(router)}>
           <Text className="text-base text-maroon font-medium">
             ← Back to My Tickets
           </Text>
