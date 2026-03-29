@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -186,10 +187,24 @@ export default function EditEventScreen() {
           <View style={{ width: 56 }} />
         </View>
 
-        <ScrollView
+        <KeyboardAvoidingView
           className="flex-1"
-          contentContainerClassName="px-4 py-5 pb-10"
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={
+            Platform.OS === "ios" ? Math.max(insets.top, 16) + 52 : 0
+          }
         >
+          <ScrollView
+            className="flex-1"
+            contentContainerClassName="px-4 py-5"
+            contentContainerStyle={{
+              paddingBottom: Math.max(insets.bottom, 16) + 120,
+            }}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+          >
           <View className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
             <Text className="text-amber-900 text-sm font-medium">
               This event has ended. Editing is no longer available.
@@ -264,7 +279,8 @@ export default function EditEventScreen() {
               </Text>
             </View>
           </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     );
   }
@@ -291,11 +307,25 @@ export default function EditEventScreen() {
         </Pressable>
       </View>
 
-      <ScrollView
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerClassName="px-4 py-5 pb-10"
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={
+          Platform.OS === "ios" ? Math.max(insets.top, 16) + 52 : 0
+        }
       >
-        <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 gap-4">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-4 py-5"
+          contentContainerStyle={{
+            paddingBottom: Math.max(insets.bottom, 16) + 260,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 gap-4">
           {/* Name */}
           <View>
             <Text className="text-sm font-medium text-gray-700 mb-1.5">
@@ -474,7 +504,8 @@ export default function EditEventScreen() {
             )}
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

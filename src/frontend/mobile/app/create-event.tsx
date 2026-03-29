@@ -7,6 +7,8 @@ import {
   Pressable,
   Switch,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -114,10 +116,24 @@ export default function CreateEventScreen() {
         </Pressable>
       </View>
 
-      <ScrollView
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerClassName="px-4 py-5 pb-10"
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={
+          Platform.OS === "ios" ? Math.max(insets.top, 16) + 52 : 0
+        }
       >
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-4 py-5"
+          contentContainerStyle={{
+            paddingBottom: Math.max(insets.bottom, 16) + 260,
+          }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
         <View className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 gap-4">
           {/* Name */}
           <View>
@@ -297,7 +313,8 @@ export default function CreateEventScreen() {
             )}
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

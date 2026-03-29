@@ -10,6 +10,8 @@ import {
   Alert,
   Keyboard,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -345,13 +347,25 @@ export default function RefundRequestsScreen() {
         animationType="slide"
         onRequestClose={() => setShowModal(false)}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
+        >
           <View className="flex-1 bg-black/50 justify-end">
-            <TouchableWithoutFeedback>
-              <View
-                className="bg-white rounded-t-3xl p-6"
-                style={{ paddingBottom: insets.bottom + 24 }}
-              >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+              <View className="flex-1" />
+            </TouchableWithoutFeedback>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              bounces={false}
+              contentContainerStyle={{
+                paddingBottom: Math.max(insets.bottom, 12) + 16,
+              }}
+              showsVerticalScrollIndicator={false}
+            >
+              <View className="bg-white rounded-t-3xl p-6">
                 <Text className="text-xl font-bold text-gray-900 mb-2">
                   {modalType === "approve" ? "Approve Refund" : "Deny Refund"}
                 </Text>
@@ -444,9 +458,9 @@ export default function RefundRequestsScreen() {
                   </Pressable>
                 </View>
               </View>
-            </TouchableWithoutFeedback>
+            </ScrollView>
           </View>
-        </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

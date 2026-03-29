@@ -11,6 +11,8 @@ import {
   Alert,
   Keyboard,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -422,10 +424,25 @@ export default function TicketDetailScreen() {
         animationType="slide"
         onRequestClose={() => setShowRefundModal(false)}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
+        >
           <View className="flex-1 bg-black/50 justify-end">
-            <TouchableWithoutFeedback>
-              <View className="bg-white rounded-t-3xl p-6" style={{ paddingBottom: insets.bottom + 24 }}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+              <View className="flex-1" />
+            </TouchableWithoutFeedback>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="interactive"
+              bounces={false}
+              contentContainerStyle={{
+                paddingBottom: Math.max(insets.bottom, 12) + 16,
+              }}
+              showsVerticalScrollIndicator={false}
+            >
+              <View className="bg-white rounded-t-3xl p-6">
                 <Text className="text-xl font-bold text-gray-900 mb-2">
                   Request Refund
                 </Text>
@@ -437,6 +454,7 @@ export default function TicketDetailScreen() {
                   value={refundReason}
                   onChangeText={setRefundReason}
                   placeholder="Reason for refund (required)"
+                  placeholderTextColor="#9CA3AF"
                   multiline
                   numberOfLines={4}
                   className="border border-gray-300 rounded-xl p-4 text-base mb-4 min-h-[100px]"
@@ -471,9 +489,9 @@ export default function TicketDetailScreen() {
                   </Pressable>
                 </View>
               </View>
-            </TouchableWithoutFeedback>
+            </ScrollView>
           </View>
-        </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Cancel Confirmation Modal */}
