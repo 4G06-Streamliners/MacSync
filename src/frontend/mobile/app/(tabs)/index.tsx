@@ -27,14 +27,14 @@ import { useAuth } from "../_context/AuthContext";
 function EventCard({
   event,
   isSignedUp,
-  isAdmin,
+  canEditEvent,
   onSignUp,
   onCancel,
   onEdit,
 }: {
   event: EventItem;
   isSignedUp: boolean;
-  isAdmin: boolean;
+  canEditEvent: boolean;
   onSignUp: (id: number) => void;
   onCancel: (id: number) => void;
   onEdit: (id: number) => void;
@@ -169,7 +169,7 @@ function EventCard({
           </Pressable>
         )}
 
-        {isAdmin && !isPast && (
+        {canEditEvent && !isPast && (
           <Pressable
             onPress={() => onEdit(event.id)}
             className="w-full py-3 mt-2 rounded-xl border border-maroon active:bg-maroon/10"
@@ -185,7 +185,7 @@ function EventCard({
 }
 
 export default function EventsScreen() {
-  const { user, isAdmin, status } = useAuth();
+  const { user, canCreateEvents, canEditEvent, status } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -337,7 +337,7 @@ export default function EventsScreen() {
               Discover and register for events
             </Text>
           </View>
-          {isAdmin && (
+          {canCreateEvents && (
             <Pressable
               onPress={() => router.push("/create-event")}
               className="flex-row items-center gap-1.5 px-4 py-2.5 bg-maroon rounded-xl active:bg-maroon-dark"
@@ -391,7 +391,7 @@ export default function EventsScreen() {
                 <EventCard
                   event={event}
                   isSignedUp={signedUpEventIds.has(event.id)}
-                  isAdmin={isAdmin}
+                  canEditEvent={canEditEvent(event.id)}
                   onSignUp={handleSignUp}
                   onCancel={handleCancel}
                   onEdit={(id) => router.push(`/edit-event?eventId=${id}`)}

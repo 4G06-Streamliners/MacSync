@@ -25,10 +25,19 @@ import {
   startOfToday,
 } from "./_lib/datetime";
 import { EventDateTimeFields } from "./components/EventDateTimeFields";
+import { useAuth } from "./_context/AuthContext";
 
 export default function EditEventScreen() {
   const router = useRouter();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { user, canEditEvent, status } = useAuth();
+
+  useEffect(() => {
+    if (!eventId || status !== "authenticated" || !user) return;
+    if (!canEditEvent(+eventId)) {
+      router.replace("/(tabs)");
+    }
+  }, [eventId, user, canEditEvent, status, router]);
   const insets = useSafeAreaInsets();
 
   /** Pop stack or go to tabs; must use useCallback here (not a shared import) for Expo Web. */

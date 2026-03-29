@@ -1,9 +1,10 @@
-import { Injectable, ForbiddenException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { PaymentsService } from '../payments/payments.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuthorizationService } from '../users/authorization.service';
 import { refundRequests, users, tickets, events, payments } from '../db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, inArray, sql } from 'drizzle-orm';
 
 @Injectable()
 export class RefundRequestsService {
@@ -11,6 +12,7 @@ export class RefundRequestsService {
     private readonly dbService: DatabaseService,
     private readonly paymentsService: PaymentsService,
     private readonly notificationsService: NotificationsService,
+    private readonly authorizationService: AuthorizationService,
   ) {}
 
   /**
@@ -91,21 +93,19 @@ export class RefundRequestsService {
   }
 
   /**
-   * Get all refund requests (admin only)
+   * Get refund requests visible to this staff user (scoped by managed events).
    */
   async getAllRefundRequests(adminUserId: number) {
-    // Check if user is admin
-    const adminRows = await this.dbService.db
-      .select()
-      .from(users)
-      .where(eq(users.id, adminUserId))
-      .limit(1);
-
-    if (!adminRows[0] || !adminRows[0].isSystemAdmin) {
-      throw new ForbiddenException('Admin access required');
+    const access = await this.authorizationService.getStaffAccess(adminUserId);
+    if (!access.isGlobalAdmin && access.managedEventIds.length === 0) {
+      // Team admins without mapped events should see an empty list, not a hard 403.
+      return [];
     }
 
-    // Get all refund requests with user, event, payment amount, and ticket info
+    const eventFilter = this.authorizationService.eventIdFilterForScopedAccess(
+      access,
+    );
+
     const requests = await this.dbService.db
       .select({
         id: refundRequests.id,
@@ -129,6 +129,11 @@ export class RefundRequestsService {
       .leftJoin(users, eq(refundRequests.userId, users.id))
       .leftJoin(events, eq(refundRequests.eventId, events.id))
       .leftJoin(payments, eq(refundRequests.paymentId, payments.id))
+      .where(
+        eventFilter === null
+          ? sql`true`
+          : inArray(refundRequests.eventId, eventFilter),
+      )
       .orderBy(desc(refundRequests.createdAt));
 
     return requests;
@@ -170,17 +175,6 @@ export class RefundRequestsService {
     adminUserId: number,
     adminResponse?: string,
   ): Promise<{ success?: boolean; error?: string }> {
-    // Check if user is admin
-    const adminRows = await this.dbService.db
-      .select()
-      .from(users)
-      .where(eq(users.id, adminUserId))
-      .limit(1);
-
-    if (!adminRows[0] || !adminRows[0].isSystemAdmin) {
-      return { error: 'Admin access required' };
-    }
-
     // Get refund request
     const requestRows = await this.dbService.db
       .select()
@@ -193,6 +187,15 @@ export class RefundRequestsService {
     }
 
     const request = requestRows[0];
+
+    try {
+      await this.authorizationService.assertCanManageEvent(
+        adminUserId,
+        request.eventId,
+      );
+    } catch {
+      return { error: 'Admin access required' };
+    }
 
     if (request.status !== 'pending') {
       return { error: 'Refund request has already been processed' };
@@ -254,17 +257,6 @@ export class RefundRequestsService {
     adminUserId: number,
     adminResponse?: string,
   ): Promise<{ success?: boolean; error?: string }> {
-    // Check if user is admin
-    const adminRows = await this.dbService.db
-      .select()
-      .from(users)
-      .where(eq(users.id, adminUserId))
-      .limit(1);
-
-    if (!adminRows[0] || !adminRows[0].isSystemAdmin) {
-      return { error: 'Admin access required' };
-    }
-
     // Get refund request
     const requestRows = await this.dbService.db
       .select()
@@ -277,6 +269,15 @@ export class RefundRequestsService {
     }
 
     const request = requestRows[0];
+
+    try {
+      await this.authorizationService.assertCanManageEvent(
+        adminUserId,
+        request.eventId,
+      );
+    } catch {
+      return { error: 'Admin access required' };
+    }
 
     if (request.status !== 'pending') {
       return { error: 'Refund request has already been processed' };

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,9 +19,18 @@ import {
   startOfToday,
 } from "./_lib/datetime";
 import { EventDateTimeFields } from "./components/EventDateTimeFields";
+import { useAuth } from "./_context/AuthContext";
 
 export default function CreateEventScreen() {
   const router = useRouter();
+  const { user, canCreateEvents, status } = useAuth();
+
+  useEffect(() => {
+    if (status !== "authenticated" || !user) return;
+    if (!canCreateEvents) {
+      router.replace("/(tabs)");
+    }
+  }, [user, canCreateEvents, status, router]);
   const leaveEditor = useCallback(() => {
     if (router.canGoBack()) {
       router.back();

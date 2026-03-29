@@ -3,11 +3,12 @@ import { DatabaseModule } from '../database/database.module';
 import { StatsController } from './stats.controller';
 import { StatsService } from './stats.service';
 import { UsersModule } from '../users/users.module';
-import { RolesGuard } from '../auth/roles.guard';
+import { StaffGuard } from '../auth/staff.guard';
+
 @Module({
   imports: [DatabaseModule, UsersModule],
   controllers: [StatsController],
-  providers: [StatsService, RolesGuard],
+  providers: [StatsService, StaffGuard],
   exports: [StatsService],
 })
 export class StatsModule {}

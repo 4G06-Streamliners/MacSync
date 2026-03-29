@@ -8,6 +8,36 @@ const getBaseUrl = (): string => {
   return "http://localhost:3000";
 };
 
+function extractApiMessage(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  try {
+    const parsed = JSON.parse(trimmed) as {
+      message?: string | string[];
+      error?: string;
+      statusCode?: number;
+    };
+    if (Array.isArray(parsed.message) && parsed.message.length > 0) {
+      return parsed.message.join(". ");
+    }
+    if (typeof parsed.message === "string" && parsed.message.trim()) {
+      return parsed.message;
+    }
+    if (typeof parsed.error === "string" && parsed.error.trim()) {
+      return parsed.error;
+    }
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+export function isAccessDeniedError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return msg.includes("access denied") || msg.includes("forbidden");
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl();
   const url = `${base}${path}`;
@@ -41,7 +71,8 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     const text = await res.text();
 
     if (!res.ok) {
-      throw new Error(text || `API error: ${res.status} ${res.statusText}`);
+      const extracted = extractApiMessage(text);
+      throw new Error(extracted || `API error: ${res.status} ${res.statusText}`);
     }
 
     if (!text.trim()) {
@@ -100,8 +131,26 @@ export interface User {
   program: string | null;
   isSystemAdmin: boolean;
   roles?: string[];
+  managedEventIds?: number[];
   createdAt: string;
   updatedAt: string;
+}
+
+// ---------- Roles ----------
+export interface RoleRow {
+  id: number;
+  name: string;
+}
+
+export function getRoles(): Promise<RoleRow[]> {
+  return apiFetch("/roles");
+}
+
+export function createRole(name: string): Promise<RoleRow> {
+  return apiFetch("/roles", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
 }
 
 export function getUsers(): Promise<User[]> {
@@ -151,6 +200,8 @@ export interface EventItem {
   busCapacity: number | null;
   registeredCount: number;
   createdBy: number | null;
+  managingRoleId?: number | null;
+  managingRoleName?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -217,6 +268,16 @@ export function updateEvent(
 
 export function deleteEvent(id: number): Promise<{ deleted: boolean }> {
   return apiFetch(`/events/${id}`, { method: "DELETE" });
+}
+
+export function setEventManagingRole(
+  eventId: number,
+  roleName: string | null,
+): Promise<{ ok: boolean }> {
+  return apiFetch(`/events/${eventId}/managing-role`, {
+    method: "PATCH",
+    body: JSON.stringify({ roleName }),
+  });
 }
 
 /** Admin: venue order PDF (reportlab via backend). */

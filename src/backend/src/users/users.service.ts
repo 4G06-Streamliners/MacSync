@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
-import { users, userRoles, roles } from '../db/schema';
+import { events, users, userRoles, roles } from '../db/schema';
 import type { NewUser } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 @Injectable()
 export class UsersService {
@@ -38,14 +38,26 @@ export class UsersService {
     if (!user[0]) return null;
 
     const userRoleRows = await this.dbService.db
-      .select({ roleName: roles.name })
+      .select({ roleId: roles.id, roleName: roles.name })
       .from(userRoles)
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
       .where(eq(userRoles.userId, id));
 
+    const roleIds = userRoleRows.map((r) => r.roleId);
+
+    let managedEventIds: number[] = [];
+    if (roleIds.length > 0) {
+      const managedRows = await this.dbService.db
+        .select({ eventId: events.id })
+        .from(events)
+        .where(inArray(events.managingRoleId, roleIds));
+      managedEventIds = managedRows.map((r) => r.eventId);
+    }
+
     return this.stripSensitive({
       ...user[0],
       roles: userRoleRows.map((r) => r.roleName),
+      managedEventIds,
     });
   }
 

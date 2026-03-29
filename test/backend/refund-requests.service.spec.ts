@@ -20,6 +20,7 @@ jest.mock('../../src/backend/src/db/schema', () => ({
   payments: { id: 'payments.id', ticketId: 'payments.ticketId' },
 }));
 
+import { ForbiddenException } from '@nestjs/common';
 import { RefundRequestsService } from '../../src/backend/src/refund-requests/refund-requests.service';
 import { createDbChain } from './helpers/db-chain';
 
@@ -30,6 +31,11 @@ describe('RefundRequestsService', () => {
   let service: RefundRequestsService;
   let mockDb: any;
   let mockPaymentsService: any;
+  let mockAuthorizationService: {
+    getStaffAccess: jest.Mock;
+    assertCanManageEvent: jest.Mock;
+    eventIdFilterForScopedAccess: jest.Mock;
+  };
 
   beforeEach(() => {
     mockDb = {
@@ -41,10 +47,22 @@ describe('RefundRequestsService', () => {
     mockPaymentsService = {
       refundPayment: jest.fn(),
     };
+    mockAuthorizationService = {
+      getStaffAccess: jest.fn().mockResolvedValue({
+        isSystemAdmin: true,
+        isGlobalAdmin: true,
+        managedEventIds: [],
+      }),
+      assertCanManageEvent: jest.fn().mockResolvedValue(undefined),
+      eventIdFilterForScopedAccess: jest.fn((access: { isGlobalAdmin: boolean; managedEventIds: number[] }) =>
+        access.isGlobalAdmin ? null : access.managedEventIds,
+      ),
+    };
     service = new RefundRequestsService(
       { db: mockDb } as any,
       mockPaymentsService,
       { createNotification: jest.fn() } as any,
+      mockAuthorizationService as any,
     );
   });
 
@@ -122,25 +140,24 @@ describe('RefundRequestsService', () => {
   });
 
   describe('getAllRefundRequests', () => {
-    it('returns all refund requests for admin user', async () => {
-      const adminUser = { id: 1, isSystemAdmin: true };
+    it('returns all refund requests for global admin', async () => {
       const requests = [
         { id: 1, status: 'pending' },
         { id: 2, status: 'approved' },
       ];
 
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([adminUser]))
-        .mockReturnValueOnce(createDbChain(requests));
+      mockDb.select.mockReturnValueOnce(createDbChain(requests));
 
       const result = await service.getAllRefundRequests(1);
       expect(result).toEqual(requests);
     });
 
-    it('throws error for non-admin user', async () => {
-      mockDb.select.mockReturnValue(
-        createDbChain([{ id: 2, isSystemAdmin: false }]),
-      );
+    it('throws error for user with no staff access', async () => {
+      mockAuthorizationService.getStaffAccess.mockResolvedValueOnce({
+        isSystemAdmin: false,
+        isGlobalAdmin: false,
+        managedEventIds: [],
+      });
 
       await expect(service.getAllRefundRequests(2)).rejects.toThrow(
         'Admin access required',
@@ -150,16 +167,16 @@ describe('RefundRequestsService', () => {
 
   describe('approveRefundRequest', () => {
     it('approves refund, processes payment, and deletes ticket', async () => {
-      const admin = { id: 1, isSystemAdmin: true };
       const request = {
         id: 10,
         ticketId: 5,
         paymentId: 100,
         status: 'pending',
+        eventId: 1,
+        userId: 5,
       };
 
       mockDb.select
-        .mockReturnValueOnce(createDbChain([admin]))
         .mockReturnValueOnce(createDbChain([request]))
         .mockReturnValueOnce(createDbChain([{ name: 'Test Event' }])); // event name for notification
 
@@ -175,18 +192,15 @@ describe('RefundRequestsService', () => {
 
       expect(result).toEqual({ success: true });
       expect(mockPaymentsService.refundPayment).toHaveBeenCalledWith(100, 1);
+      expect(mockAuthorizationService.assertCanManageEvent).toHaveBeenCalledWith(1, 1);
       expect(mockDb.update).toHaveBeenCalled();
       expect(mockDb.delete).toHaveBeenCalled();
     });
 
     it('returns error if request already processed', async () => {
-      mockDb.select
-        .mockReturnValueOnce(
-          createDbChain([{ id: 1, isSystemAdmin: true }]),
-        )
-        .mockReturnValueOnce(
-          createDbChain([{ id: 10, status: 'approved' }]),
-        );
+      mockDb.select.mockReturnValueOnce(
+        createDbChain([{ id: 10, status: 'approved', eventId: 1 }]),
+      );
 
       const result = await service.approveRefundRequest(10, 1);
       expect(result).toEqual({
@@ -195,15 +209,18 @@ describe('RefundRequestsService', () => {
     });
 
     it('returns error if Stripe refund fails', async () => {
-      mockDb.select
-        .mockReturnValueOnce(
-          createDbChain([{ id: 1, isSystemAdmin: true }]),
-        )
-        .mockReturnValueOnce(
-          createDbChain([
-            { id: 10, ticketId: 5, paymentId: 100, status: 'pending' },
-          ]),
-        );
+      mockDb.select.mockReturnValueOnce(
+        createDbChain([
+          {
+            id: 10,
+            ticketId: 5,
+            paymentId: 100,
+            status: 'pending',
+            eventId: 1,
+            userId: 5,
+          },
+        ]),
+      );
 
       mockPaymentsService.refundPayment.mockResolvedValue({
         error: 'Refund failed',
@@ -216,11 +233,15 @@ describe('RefundRequestsService', () => {
     it('handles free event refund (no payment)', async () => {
       mockDb.select
         .mockReturnValueOnce(
-          createDbChain([{ id: 1, isSystemAdmin: true }]),
-        )
-        .mockReturnValueOnce(
           createDbChain([
-            { id: 10, ticketId: 5, paymentId: null, status: 'pending', userId: 5, eventId: 1 },
+            {
+              id: 10,
+              ticketId: 5,
+              paymentId: null,
+              status: 'pending',
+              userId: 5,
+              eventId: 1,
+            },
           ]),
         )
         .mockReturnValueOnce(createDbChain([{ name: 'Free Event' }])); // event name for notification
@@ -236,13 +257,9 @@ describe('RefundRequestsService', () => {
 
   describe('denyRefundRequest', () => {
     it('denies refund request with admin response', async () => {
-      mockDb.select
-        .mockReturnValueOnce(
-          createDbChain([{ id: 1, isSystemAdmin: true }]),
-        )
-        .mockReturnValueOnce(
-          createDbChain([{ id: 10, status: 'pending' }]),
-        );
+      mockDb.select.mockReturnValueOnce(
+        createDbChain([{ id: 10, status: 'pending', eventId: 1 }]),
+      );
 
       mockDb.update.mockReturnValue(createDbChain());
 
@@ -256,9 +273,12 @@ describe('RefundRequestsService', () => {
       expect(mockDb.update).toHaveBeenCalled();
     });
 
-    it('returns error if not admin', async () => {
-      mockDb.select.mockReturnValue(
-        createDbChain([{ id: 2, isSystemAdmin: false }]),
+    it('returns error if not allowed to manage event', async () => {
+      mockDb.select.mockReturnValueOnce(
+        createDbChain([{ id: 10, status: 'pending', eventId: 1 }]),
+      );
+      mockAuthorizationService.assertCanManageEvent.mockRejectedValueOnce(
+        new ForbiddenException(),
       );
 
       const result = await service.denyRefundRequest(10, 2, 'Denied');
@@ -266,13 +286,9 @@ describe('RefundRequestsService', () => {
     });
 
     it('returns error if request already processed', async () => {
-      mockDb.select
-        .mockReturnValueOnce(
-          createDbChain([{ id: 1, isSystemAdmin: true }]),
-        )
-        .mockReturnValueOnce(
-          createDbChain([{ id: 10, status: 'denied' }]),
-        );
+      mockDb.select.mockReturnValueOnce(
+        createDbChain([{ id: 10, status: 'denied', eventId: 1 }]),
+      );
 
       const result = await service.denyRefundRequest(10, 1, 'Already done');
       expect(result).toEqual({

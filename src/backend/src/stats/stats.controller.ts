@@ -1,30 +1,33 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import {
   StatsService,
   type DashboardStats,
   type RecentSignupDto,
 } from './stats.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Roles } from '../auth/roles.decorator';
+import { StaffGuard } from '../auth/staff.guard';
+
+interface RequestWithUser extends Request {
+  user: { sub: number; email: string };
+}
 
 @Controller('admin')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, StaffGuard)
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 
   @Get('stats')
-  @Roles('Admin')
-  getDashboardStats(): Promise<DashboardStats> {
-    return this.statsService.getDashboardStats();
+  getDashboardStats(@Req() req: RequestWithUser): Promise<DashboardStats> {
+    return this.statsService.getDashboardStats(req.user.sub);
   }
 
   @Get('recent-signups')
-  @Roles('Admin')
   getRecentSignups(
+    @Req() req: RequestWithUser,
     @Query('limit') limitStr?: string,
   ): Promise<RecentSignupDto[]> {
     const parsed = limitStr !== undefined ? parseInt(limitStr, 10) : 10;
     const limit = Number.isFinite(parsed) ? parsed : 10;
-    return this.statsService.getRecentSignups(limit);
+    return this.statsService.getRecentSignups(req.user.sub, limit);
   }
 }

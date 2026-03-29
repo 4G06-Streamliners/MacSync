@@ -7,9 +7,13 @@ import {
   getUser,
   getUserTickets,
   getMe,
+  getRoles,
   updateUser,
+  updateUserRoles,
+  type RoleRow,
   type Ticket,
   type User,
+  isAccessDeniedError,
 } from "../../_lib/api";
 
 function formatDate(dateStr: string): string {
@@ -45,20 +49,33 @@ export default function UserProfilePage() {
   );
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<RoleRow[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [savingRoles, setSavingRoles] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(userId)) return;
     async function load() {
       try {
         setError(null);
-        const [me, u, t] = await Promise.all([
-          getMe(),
-          getUser(userId),
-          getUserTickets(userId),
-        ]);
+        const [me, u] = await Promise.all([getMe(), getUser(userId)]);
         setCurrentUser(me);
         setUser(u);
-        setTickets(t);
+        try {
+          const t = await getUserTickets(userId);
+          setTickets(t);
+        } catch (ticketErr) {
+          if (isAccessDeniedError(ticketErr)) {
+            setTickets([]);
+          } else {
+            throw ticketErr;
+          }
+        }
+        setSelectedRoles(u.roles ?? []);
+        if (me.isSystemAdmin) {
+          const rolesList = await getRoles();
+          setAvailableRoles(rolesList);
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load user");
       } finally {
@@ -126,6 +143,25 @@ export default function UserProfilePage() {
       setPasswordError(friendly);
     } finally {
       setSavingRole(false);
+    }
+  }
+
+  function toggleRole(name: string) {
+    setSelectedRoles((prev) => {
+      if (prev.includes(name)) return prev.filter((r) => r !== name);
+      return [...prev, name];
+    });
+  }
+
+  async function submitRolesUpdate() {
+    if (!user) return;
+    setSavingRoles(true);
+    try {
+      const updated = await updateUserRoles(user.id, selectedRoles);
+      setUser(updated);
+      setSelectedRoles(updated.roles ?? []);
+    } finally {
+      setSavingRoles(false);
     }
   }
 
@@ -333,6 +369,51 @@ export default function UserProfilePage() {
               />
             </button>
           </div>
+
+          {currentUser?.isSystemAdmin && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Roles</p>
+                <p className="text-xs text-gray-500">
+                  Assign any role. Roles control which events this staff user can
+                  manage.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {availableRoles.length === 0 ? (
+                  <span className="text-sm text-gray-500">Loading roles…</span>
+                ) : (
+                  availableRoles.map((r) => (
+                    <label
+                      key={r.id}
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedRoles.includes(r.name)}
+                        onChange={() => toggleRole(r.name)}
+                      />
+                      <span className="text-sm font-semibold text-gray-700">
+                        {r.name}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={submitRolesUpdate}
+                  disabled={savingRoles || availableRoles.length === 0}
+                  className="px-4 py-1.5 rounded-lg bg-maroon text-white text-sm font-semibold hover:bg-maroon-dark disabled:opacity-60"
+                >
+                  {savingRoles ? "Saving…" : "Save roles"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <hr className="border-gray-200" />
 

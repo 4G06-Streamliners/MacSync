@@ -4,11 +4,13 @@ import { RefundRequestsService } from './refund-requests.service';
 import { DatabaseModule } from '../database/database.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { UsersModule } from '../users/users.module';
+import { StaffGuard } from '../auth/staff.guard';
 
 @Module({
-  imports: [DatabaseModule, PaymentsModule, NotificationsModule],
+  imports: [DatabaseModule, PaymentsModule, NotificationsModule, UsersModule],
   controllers: [RefundRequestsController],
-  providers: [RefundRequestsService],
+  providers: [RefundRequestsService, StaffGuard],
   exports: [RefundRequestsService],
 })
 export class RefundRequestsModule {}

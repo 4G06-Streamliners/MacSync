@@ -7,6 +7,7 @@ jest.mock('../../src/backend/src/db/schema', () => ({
   users: { id: 'users.id', email: 'users.email', passwordHash: 'users.passwordHash' },
   userRoles: { userId: 'userRoles.userId', roleId: 'userRoles.roleId' },
   roles: { id: 'roles.id', name: 'roles.name' },
+  eventAdmins: { userId: 'eventAdmins.userId', eventId: 'eventAdmins.eventId' },
 }));
 
 import { UsersService } from '../../src/backend/src/users/users.service';
@@ -40,7 +41,8 @@ describe('UsersService', () => {
 
       mockDb.select
         .mockReturnValueOnce(createDbChain([user]))
-        .mockReturnValueOnce(createDbChain(roleRows));
+        .mockReturnValueOnce(createDbChain(roleRows))
+        .mockReturnValueOnce(createDbChain([]));
 
       const result = await service.findOneWithRoles(1);
 
@@ -49,6 +51,7 @@ describe('UsersService', () => {
         email: 'admin@mcmaster.ca',
         name: 'Admin',
         roles: ['Admin', 'Member'],
+        managedEventIds: [],
       });
     });
 
@@ -61,6 +64,7 @@ describe('UsersService', () => {
 
       mockDb.select
         .mockReturnValueOnce(createDbChain([user]))
+        .mockReturnValueOnce(createDbChain([]))
         .mockReturnValueOnce(createDbChain([]));
 
       const result = await service.findOneWithRoles(1);
@@ -81,11 +85,12 @@ describe('UsersService', () => {
 
       mockDb.select
         .mockReturnValueOnce(createDbChain([user]))
+        .mockReturnValueOnce(createDbChain([]))
         .mockReturnValueOnce(createDbChain([]));
 
       const result = await service.findOneWithRoles(2);
 
-      expect(result).toMatchObject({ id: 2, roles: [] });
+      expect(result).toMatchObject({ id: 2, roles: [], managedEventIds: [] });
     });
   });
 
@@ -111,10 +116,11 @@ describe('UsersService', () => {
       );
       // select user roles
       mockDb.select.mockReturnValueOnce(createDbChain([{ roleName: 'Member' }]));
+      mockDb.select.mockReturnValueOnce(createDbChain([]));
 
       const result = await service.replaceRoles(5, ['Member']);
 
-      expect(result).toMatchObject({ id: 5, roles: ['Member'] });
+      expect(result).toMatchObject({ id: 5, roles: ['Member'], managedEventIds: [] });
       expect(mockDb.delete).toHaveBeenCalled();
       expect(mockDb.insert).toHaveBeenCalled();
     });
@@ -145,10 +151,11 @@ describe('UsersService', () => {
         createDbChain([{ id: 5, email: 'alice@mcmaster.ca', passwordHash: null }]),
       );
       mockDb.select.mockReturnValueOnce(createDbChain([]));
+      mockDb.select.mockReturnValueOnce(createDbChain([]));
 
       const result = await service.replaceRoles(5, []);
 
-      expect(result).toMatchObject({ id: 5, roles: [] });
+      expect(result).toMatchObject({ id: 5, roles: [], managedEventIds: [] });
       expect(mockDb.delete).toHaveBeenCalled();
       expect(mockDb.insert).not.toHaveBeenCalled();
     });
@@ -169,12 +176,14 @@ describe('UsersService', () => {
       mockDb.select.mockReturnValueOnce(
         createDbChain([{ roleName: 'Admin' }, { roleName: 'Member' }]),
       );
+      mockDb.select.mockReturnValueOnce(createDbChain([]));
 
       const result = await service.replaceRoles(3, ['Admin', 'Member']);
 
       expect(result).toMatchObject({
         id: 3,
         roles: ['Admin', 'Member'],
+        managedEventIds: [],
       });
       expect(result).not.toHaveProperty('passwordHash');
     });

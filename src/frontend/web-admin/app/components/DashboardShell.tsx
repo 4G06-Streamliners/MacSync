@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearToken } from "../_lib/auth";
+import { useEffect, useState } from "react";
+import { getMe } from "../_lib/api";
 
 const navItems = [
   { href: "/", label: "Dashboard" },
   { href: "/events", label: "Events" },
+  { href: "/manage-roles", label: "Manage roles" },
   { href: "/users", label: "Users" },
   { href: "/notifications", label: "Notifications" },
 ];
@@ -18,6 +21,33 @@ export default function DashboardShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
+  const [canCreateEvents, setCanCreateEvents] = useState(false);
+
+  useEffect(() => {
+    if (pathname === "/login") {
+      return;
+    }
+    let cancelled = false;
+    getMe()
+      .then((me) => {
+        if (!cancelled) {
+          setIsSystemAdmin(!!me.isSystemAdmin);
+          setCanCreateEvents(
+            !!me.isSystemAdmin || (me.roles ?? []).includes("Admin"),
+          );
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setIsSystemAdmin(false);
+          setCanCreateEvents(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   // Don't render the shell on the login page
   if (pathname === "/login") {
@@ -49,7 +79,9 @@ export default function DashboardShell({
           </div>
         </div>
         <nav className="flex-1 p-3 space-y-0.5">
-          {navItems.map(({ href, label }) => {
+          {navItems
+            .filter((item) => item.href !== "/manage-roles" || isSystemAdmin)
+            .map(({ href, label }) => {
             const isActive =
               href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
@@ -98,12 +130,14 @@ export default function DashboardShell({
         <header className="h-14 flex-shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-6">
           <div />
           <div className="flex items-center gap-4">
-            <Link
-              href="/events/create"
-              className="px-4 py-2 bg-maroon hover:bg-maroon-dark text-white text-sm font-semibold rounded-xl transition-colors"
-            >
-              Create event
-            </Link>
+            {canCreateEvents && (
+              <Link
+                href="/events/create"
+                className="px-4 py-2 bg-maroon hover:bg-maroon-dark text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                Create event
+              </Link>
+            )}
             <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
               <span className="text-xs font-bold text-gray-600">A</span>
             </div>

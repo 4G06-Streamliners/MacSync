@@ -3,9 +3,6 @@ import 'reflect-metadata';
 jest.mock('../../src/backend/src/events/events.service', () => ({
   EventsService: jest.fn(),
 }));
-jest.mock('../../src/backend/src/users/users.service', () => ({
-  UsersService: jest.fn(),
-}));
 jest.mock('../../src/backend/src/auth/jwt-auth.guard', () => ({
   JwtAuthGuard: class {
     canActivate() {
@@ -24,7 +21,11 @@ import { EventsController } from '../../src/backend/src/events/events.controller
 describe('EventsController', () => {
   let controller: EventsController;
   let mockEventsService: any;
-  let mockUsersService: any;
+  let mockAuthorizationService: {
+    getStaffAccess: jest.Mock;
+    assertCanManageEvent: jest.Mock;
+    setEventAdminsForEvent: jest.Mock;
+  };
   let mockVenueReportPdfService: { generateBuffer: jest.Mock };
 
   beforeEach(() => {
@@ -37,15 +38,20 @@ describe('EventsController', () => {
       signup: jest.fn(),
       cancelSignup: jest.fn(),
       getTicketsForUser: jest.fn(),
+      getTicketsForUserScoped: jest.fn(),
       createCheckoutSession: jest.fn(),
       releaseReservation: jest.fn(),
       checkInTicket: jest.fn(),
     };
-    mockUsersService = { findOneWithRoles: jest.fn() };
+    mockAuthorizationService = {
+      getStaffAccess: jest.fn(),
+      assertCanManageEvent: jest.fn().mockResolvedValue(undefined),
+      setEventAdminsForEvent: jest.fn().mockResolvedValue(undefined),
+    };
     mockVenueReportPdfService = { generateBuffer: jest.fn() };
     controller = new EventsController(
       mockEventsService,
-      mockUsersService,
+      mockAuthorizationService as any,
       mockVenueReportPdfService as any,
     );
   });
@@ -75,12 +81,17 @@ describe('EventsController', () => {
     expect(result).toEqual({ id: 1, ...data });
   });
 
-  it('update and delete delegate to service', async () => {
+  it('update and delete assert access then delegate to service', async () => {
+    const req = { user: { sub: 1 } } as any;
     mockEventsService.update.mockResolvedValue({ id: 1, name: 'Updated' });
-    expect(await controller.update('1', { name: 'Updated' } as any)).toEqual({ id: 1, name: 'Updated' });
+    expect(await controller.update('1', { name: 'Updated' } as any, req)).toEqual({
+      id: 1,
+      name: 'Updated',
+    });
+    expect(mockAuthorizationService.assertCanManageEvent).toHaveBeenCalledWith(1, 1);
 
     mockEventsService.delete.mockResolvedValue({ deleted: true });
-    expect(await controller.delete('1')).toEqual({ deleted: true });
+    expect(await controller.delete('1', req)).toEqual({ deleted: true });
   });
 
   it('signup passes user id and optional table, rethrows errors', async () => {
@@ -102,20 +113,34 @@ describe('EventsController', () => {
     expect(await controller.cancelSignup('1', req)).toEqual({ cancelled: true });
   });
 
-  it('getUserTickets allows own access and admin access, denies non-admin', async () => {
+  it('getUserTickets allows own access, global admin, and scoped staff; denies others', async () => {
     mockEventsService.getTicketsForUser.mockResolvedValue([{ ticketId: 1 }]);
 
     const ownReq = { user: { sub: 5 } } as any;
     expect(await controller.getUserTickets('5', ownReq)).toEqual([{ ticketId: 1 }]);
 
-    mockUsersService.findOneWithRoles.mockResolvedValue({
-      id: 1, isSystemAdmin: true, roles: ['Admin'],
+    mockAuthorizationService.getStaffAccess.mockResolvedValue({
+      isSystemAdmin: true,
+      isGlobalAdmin: true,
+      managedEventIds: [],
     });
     const adminReq = { user: { sub: 1 } } as any;
     expect(await controller.getUserTickets('5', adminReq)).toEqual([{ ticketId: 1 }]);
+    expect(mockEventsService.getTicketsForUser).toHaveBeenCalledWith(5);
 
-    mockUsersService.findOneWithRoles.mockResolvedValue({
-      id: 2, isSystemAdmin: false, roles: [],
+    mockEventsService.getTicketsForUserScoped.mockResolvedValue([{ ticketId: 2 }]);
+    mockAuthorizationService.getStaffAccess.mockResolvedValue({
+      isSystemAdmin: false,
+      isGlobalAdmin: false,
+      managedEventIds: [3],
+    });
+    expect(await controller.getUserTickets('7', adminReq)).toEqual([{ ticketId: 2 }]);
+    expect(mockEventsService.getTicketsForUserScoped).toHaveBeenCalled();
+
+    mockAuthorizationService.getStaffAccess.mockResolvedValue({
+      isSystemAdmin: false,
+      isGlobalAdmin: false,
+      managedEventIds: [],
     });
     const userReq = { user: { sub: 2 } } as any;
     await expect(controller.getUserTickets('5', userReq)).rejects.toThrow('Access denied.');
@@ -171,7 +196,7 @@ describe('EventsController', () => {
     consoleLogSpy.mockRestore();
   });
 
-  it('checkIn passes qrCodeData to service and returns result', async () => {
+  it('checkIn passes qrCodeData and admin user id to service', async () => {
     const qrData = '1:5:10:abc123valid';
     const result = {
       success: true,
@@ -183,15 +208,17 @@ describe('EventsController', () => {
       },
     };
     mockEventsService.checkInTicket.mockResolvedValue(result);
+    const req = { user: { sub: 42 } } as any;
 
-    expect(await controller.checkIn(qrData)).toEqual(result);
-    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith(qrData);
+    expect(await controller.checkIn(qrData, req)).toEqual(result);
+    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith(qrData, 42);
   });
 
   it('checkIn passes empty string when qrCodeData is undefined', async () => {
     mockEventsService.checkInTicket.mockResolvedValue({ success: false, error: 'Invalid QR code data' });
+    const req = { user: { sub: 1 } } as any;
 
-    await controller.checkIn(undefined as any);
-    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith('');
+    await controller.checkIn(undefined as any, req);
+    expect(mockEventsService.checkInTicket).toHaveBeenCalledWith('', 1);
   });
 });

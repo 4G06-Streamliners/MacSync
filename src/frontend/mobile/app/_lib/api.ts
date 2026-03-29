@@ -127,6 +127,8 @@ export interface User {
   program: string | null;
   isSystemAdmin: boolean;
   roles?: string[];
+  /** Events this user may administer (non-global admins). Super/global admins may have []. */
+  managedEventIds?: number[];
   createdAt: string;
   updatedAt: string;
 }

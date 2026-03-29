@@ -6,12 +6,18 @@ import Link from "next/link";
 import {
   getEvent,
   getEventAttendees,
+  getMe,
+  getRoles,
   updateEvent,
   deleteEvent,
   downloadVenueReportPdf,
+  setEventManagingRole,
   type EventItem,
   type EventAttendee,
   type CreateEventPayload,
+  type RoleRow,
+  type User,
+  isAccessDeniedError,
 } from "../../_lib/api";
 import { datetimeLocalValueToIsoUtc } from "../../_lib/datetime";
 import { EventAttendeesSection } from "../../components/events/EventAttendeesSection";
@@ -45,6 +51,11 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<EventItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [me, setMe] = useState<User | null>(null);
+  const [roles, setRoles] = useState<RoleRow[]>([]);
+  const [managingRoleLoading, setManagingRoleLoading] = useState(false);
+  const [managingRoleError, setManagingRoleError] = useState<string | null>(null);
 
   const [attendees, setAttendees] = useState<EventAttendee[]>([]);
   const [attendeesLoading, setAttendeesLoading] = useState(true);
@@ -87,6 +98,29 @@ export default function EventDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const isGlobalAdmin = !!me && (me.isSystemAdmin || (me.roles ?? []).includes("Admin"));
+  const canManageThisEvent =
+    !!event &&
+    !!me &&
+    (isGlobalAdmin || (me.managedEventIds ?? []).includes(event.id));
+
+  useEffect(() => {
+    async function loadMeAndRoles() {
+      try {
+        const meRes = await getMe();
+        setMe(meRes);
+        if (meRes.isSystemAdmin) {
+          const rolesRes = await getRoles();
+          setRoles(rolesRes);
+        }
+      } catch (e) {
+        // Keep event page usable even if roles cannot be loaded.
+        console.error("Failed to load admin context:", e);
+      }
+    }
+    loadMeAndRoles();
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setAttendeesLoading(true);
@@ -97,9 +131,14 @@ export default function EventDetailPage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          setAttendeesError(
-            e instanceof Error ? e.message : "Failed to load attendees",
-          );
+          if (isAccessDeniedError(e)) {
+            setAttendees([]);
+            setAttendeesError(null);
+          } else {
+            setAttendeesError(
+              e instanceof Error ? e.message : "Failed to load attendees",
+            );
+          }
         }
       })
       .finally(() => {
@@ -216,6 +255,23 @@ export default function EventDetailPage() {
     }
   }
 
+  async function handleSetManagingRole(roleName: string | null) {
+    setManagingRoleError(null);
+    setManagingRoleLoading(true);
+    try {
+      await setEventManagingRole(+id, roleName);
+      const updated = await getEvent(+id);
+      setEvent(updated);
+      populateForm(updated);
+    } catch (e) {
+      setManagingRoleError(
+        e instanceof Error ? e.message : "Failed to update managing role",
+      );
+    } finally {
+      setManagingRoleLoading(false);
+    }
+  }
+
   async function handleDelete() {
     setDeleteError(null);
     try {
@@ -310,7 +366,7 @@ export default function EventDetailPage() {
           </h1>
           <p className="text-gray-500 mt-1">{formatDate(event.date)}</p>
         </div>
-        {!editing && (
+        {!editing && canManageThisEvent && (
           <div className="flex flex-wrap items-center gap-2 flex-shrink-0 justify-end">
             <button
               type="button"
@@ -386,12 +442,60 @@ export default function EventDetailPage() {
             </div>
           )}
 
-          <EventAttendeesSection
-            event={event}
-            attendees={attendees}
-            loading={attendeesLoading}
-            error={attendeesError}
-          />
+          {me?.isSystemAdmin && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Managing role (RBAC)
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Users with this role can administer this event.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-maroon"
+                  value={
+                    event.managingRoleId != null
+                      ? String(event.managingRoleId)
+                      : "unset"
+                  }
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const roleName = raw === "unset" ? null : (roles.find(r => String(r.id) === raw)?.name ?? null);
+                    void handleSetManagingRole(roleName);
+                  }}
+                  disabled={managingRoleLoading || roles.length === 0}
+                >
+                  <option value="unset">Unset</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={String(r.id)}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+                {managingRoleLoading && (
+                  <span className="text-sm text-gray-500">Saving…</span>
+                )}
+              </div>
+
+              {managingRoleError && (
+                <p className="text-sm text-red-600">{managingRoleError}</p>
+              )}
+            </div>
+          )}
+
+          {canManageThisEvent && (
+            <EventAttendeesSection
+              event={event}
+              attendees={attendees}
+              loading={attendeesLoading}
+              error={attendeesError}
+            />
+          )}
         </div>
       )}
 

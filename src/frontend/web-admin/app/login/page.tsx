@@ -21,10 +21,16 @@ export default function LoginPage() {
       const { token, user } = await login(email, password);
 
       const roles = user.roles ?? [];
-      const isAdmin = user.isSystemAdmin || roles.includes("Admin");
+      const managed = user.managedEventIds ?? [];
+      const isStaff =
+        user.isSystemAdmin ||
+        roles.includes("Admin") ||
+        managed.length > 0;
 
-      if (!isAdmin) {
-        setError("Access denied. Only system administrators can sign in.");
+      if (!isStaff) {
+        setError(
+          "Access denied. Sign in with a system administrator or event staff account.",
+        );
         setLoading(false);
         return;
       }

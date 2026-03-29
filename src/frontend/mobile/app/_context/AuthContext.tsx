@@ -18,7 +18,12 @@ interface AuthContextType {
   status: AuthStatus;
   user: User | null;
   pendingEmail: string | null;
+  /** Any staff: global admin or scoped event admin. */
   isAdmin: boolean;
+  isGlobalAdmin: boolean;
+  managedEventIds: number[];
+  canCreateEvents: boolean;
+  canEditEvent: (eventId: number) => boolean;
   checkEmail: (email: string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<void>;
   requestCode: (email: string) => Promise<void>;
@@ -41,6 +46,10 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   pendingEmail: null,
   isAdmin: false,
+  isGlobalAdmin: false,
+  managedEventIds: [],
+  canCreateEvents: false,
+  canEditEvent: () => false,
   checkEmail: async () => false,
   login: async () => {},
   requestCode: async () => {},
@@ -146,8 +155,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus('unauthenticated');
   };
 
-  const isAdmin =
+  const isGlobalAdmin =
     user?.isSystemAdmin === true || (user?.roles?.includes('Admin') ?? false);
+  const managedEventIds = user?.managedEventIds ?? [];
+  const isAdmin = isGlobalAdmin || managedEventIds.length > 0;
+  const canCreateEvents = isGlobalAdmin;
+  const canEditEvent = (eventId: number) =>
+    isGlobalAdmin || managedEventIds.includes(eventId);
 
   return (
     <AuthContext.Provider
@@ -156,6 +170,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         pendingEmail,
         isAdmin,
+        isGlobalAdmin,
+        managedEventIds,
+        canCreateEvents,
+        canEditEvent,
         checkEmail: checkEmailStatus,
         login,
         requestCode,

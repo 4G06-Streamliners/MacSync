@@ -1,6 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { count, sum, sql, gte, eq, desc, and, inArray, max } from 'drizzle-orm';
+import {
+  count,
+  sum,
+  sql,
+  gte,
+  eq,
+  desc,
+  and,
+  inArray,
+  max,
+} from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
+import { AuthorizationService } from '../users/authorization.service';
 import { users, events, tickets, payments } from '../db/schema';
 
 export interface RecentSignupDto {
@@ -27,13 +38,45 @@ export interface DashboardStats {
 
 @Injectable()
 export class StatsService {
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(
+    private readonly dbService: DatabaseService,
+    private readonly authorizationService: AuthorizationService,
+  ) {}
 
-  async getDashboardStats(): Promise<DashboardStats> {
+  async getDashboardStats(staffUserId: number): Promise<DashboardStats> {
+    const access = await this.authorizationService.getStaffAccess(staffUserId);
+    const ids = this.authorizationService.eventIdFilterForScopedAccess(access);
     const db = this.dbService.db;
 
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+
+    if (ids !== null && ids.length === 0) {
+      return {
+        userCount: 0,
+        eventCount: 0,
+        upcomingEventCount: 0,
+        ticketsSold: 0,
+        totalCapacity: 0,
+        totalRevenue: 0,
+        conversionRate: 0,
+      };
+    }
+
+    const eventWhere =
+      ids === null ? sql`true` : inArray(events.id, ids);
+    const ticketWhere =
+      ids === null ? sql`true` : inArray(tickets.eventId, ids);
+
+    const userCountPromise =
+      ids === null
+        ? db.select({ value: count() }).from(users)
+        : db
+            .select({
+              value: sql<number>`COUNT(DISTINCT ${tickets.userId})::int`,
+            })
+            .from(tickets)
+            .where(inArray(tickets.eventId, ids));
 
     const [
       userCountResult,
@@ -43,18 +86,30 @@ export class StatsService {
       capacityResult,
       revenueResult,
     ] = await Promise.all([
-      db.select({ value: count() }).from(users),
-      db.select({ value: count() }).from(events),
-      db.select({ value: count() }).from(events).where(gte(events.date, today)),
-      db.select({ value: count() }).from(tickets),
-      db.select({ value: sum(events.capacity) }).from(events),
-      // Calculate revenue from tickets × event price (covers tickets without payment records)
+      userCountPromise,
+      db
+        .select({ value: count() })
+        .from(events)
+        .where(eventWhere),
+      db
+        .select({ value: count() })
+        .from(events)
+        .where(and(gte(events.date, today), eventWhere)),
+      db
+        .select({ value: count() })
+        .from(tickets)
+        .where(ticketWhere),
+      db
+        .select({ value: sum(events.capacity) })
+        .from(events)
+        .where(eventWhere),
       db
         .select({
           value: sql<number>`COALESCE(SUM(${events.price}), 0)::int`,
         })
         .from(tickets)
-        .innerJoin(events, eq(tickets.eventId, events.id)),
+        .innerJoin(events, eq(tickets.eventId, events.id))
+        .where(ticketWhere),
     ]);
 
     const userCount = Number(userCountResult[0]?.value ?? 0);
@@ -83,9 +138,21 @@ export class StatsService {
   /**
    * Recent event signups (one row per ticket), including free events without a payment row.
    */
-  async getRecentSignups(limit: number): Promise<RecentSignupDto[]> {
+  async getRecentSignups(
+    staffUserId: number,
+    limit: number,
+  ): Promise<RecentSignupDto[]> {
+    const access = await this.authorizationService.getStaffAccess(staffUserId);
+    const ids = this.authorizationService.eventIdFilterForScopedAccess(access);
     const db = this.dbService.db;
     const capped = Math.min(Math.max(Number(limit) || 10, 1), 100);
+
+    if (ids !== null && ids.length === 0) {
+      return [];
+    }
+
+    const ticketScope =
+      ids === null ? sql`true` : inArray(tickets.eventId, ids);
 
     const rows = await db
       .select({
@@ -108,6 +175,7 @@ export class StatsService {
           inArray(payments.status, ['succeeded', 'partially_refunded'] as const),
         ),
       )
+      .where(ticketScope)
       .groupBy(
         tickets.id,
         tickets.userId,

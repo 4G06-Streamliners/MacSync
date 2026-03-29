@@ -18,9 +18,9 @@ jest.mock('../../src/backend/src/db/schema', () => ({
     refundedAmount: 'payments.refundedAmount',
     paymentDate: 'payments.paymentDate',
   },
-  users: { id: 'users.id', isSystemAdmin: 'users.isSystemAdmin' },
 }));
 
+import { ForbiddenException } from '@nestjs/common';
 import { PaymentsService } from '../../src/backend/src/payments/payments.service';
 
 const MockStripe = require('stripe');
@@ -50,6 +50,7 @@ function createDbChain(result: any = []) {
 describe('PaymentsService', () => {
   let service: PaymentsService;
   let mockDb: any;
+  let mockAuthz: { assertCanManageEvent: jest.Mock };
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -62,7 +63,10 @@ describe('PaymentsService', () => {
       insert: jest.fn(),
       update: jest.fn(),
     };
-    service = new PaymentsService({ db: mockDb } as any);
+    mockAuthz = {
+      assertCanManageEvent: jest.fn().mockResolvedValue(undefined),
+    };
+    service = new PaymentsService({ db: mockDb } as any, mockAuthz as any);
   });
 
   afterEach(() => {
@@ -80,7 +84,10 @@ describe('PaymentsService', () => {
 
     it('returns error when price is zero or negative', async () => {
       process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-      const serviceWithStripe = new PaymentsService({ db: mockDb } as any);
+      const serviceWithStripe = new PaymentsService(
+        { db: mockDb } as any,
+        mockAuthz as any,
+      );
 
       expect(await serviceWithStripe.createProductAndPrice('E', 1, 0)).toEqual({
         error: 'Price must be greater than 0',
@@ -150,44 +157,46 @@ describe('PaymentsService', () => {
   });
 
   describe('refundPayment', () => {
-    it('returns error when user is not admin', async () => {
-      mockDb.select.mockReturnValue(createDbChain([]));
-
-      const result = await service.refundPayment(1, 99);
-
-      expect(result).toEqual({ error: 'Unauthorized: Admin access required' });
-    });
-
-    it('returns error when user is not system admin', async () => {
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 99, isSystemAdmin: false }]));
-
-      const result = await service.refundPayment(1, 99);
-
-      expect(result).toEqual({ error: 'Unauthorized: Admin access required' });
-    });
+    const basePayment = {
+      eventId: 10,
+      status: 'succeeded',
+      stripePaymentIntentId: 'pi_1',
+      stripeChargeId: 'ch_1',
+      amountPaid: 5000,
+      refundedAmount: 0,
+    };
 
     it('returns error when payment not found', async () => {
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([]));
+      mockDb.select.mockReturnValueOnce(createDbChain([]));
 
       const result = await service.refundPayment(999, 1);
 
       expect(result).toEqual({ error: 'Payment not found' });
     });
 
+    it('returns error when user cannot manage event', async () => {
+      mockDb.select.mockReturnValueOnce(
+        createDbChain([{ id: 1, ...basePayment }]),
+      );
+      mockAuthz.assertCanManageEvent.mockRejectedValueOnce(
+        new ForbiddenException(),
+      );
+
+      const result = await service.refundPayment(1, 99);
+
+      expect(result).toEqual({ error: 'Unauthorized: Admin access required' });
+    });
+
     it('returns error when payment already fully refunded', async () => {
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'refunded',
         stripePaymentIntentId: 'pi_1',
         amountPaid: 5000,
         refundedAmount: 5000,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
 
       const result = await service.refundPayment(1, 1);
 
@@ -197,15 +206,14 @@ describe('PaymentsService', () => {
     it('returns error when no Stripe charge or payment intent on payment', async () => {
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'succeeded',
         stripePaymentIntentId: null,
         stripeChargeId: null,
         amountPaid: 5000,
         refundedAmount: 0,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
 
       const result = await service.refundPayment(1, 1);
 
@@ -217,15 +225,14 @@ describe('PaymentsService', () => {
     it('returns error when Stripe is not configured', async () => {
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'succeeded',
         stripePaymentIntentId: 'pi_1',
         stripeChargeId: 'ch_1',
         amountPaid: 5000,
         refundedAmount: 0,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
 
       const result = await service.refundPayment(1, 1);
 
@@ -234,18 +241,20 @@ describe('PaymentsService', () => {
 
     it('returns error when no amount left to refund', async () => {
       process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-      const serviceWithStripe = new PaymentsService({ db: mockDb } as any);
+      const serviceWithStripe = new PaymentsService(
+        { db: mockDb } as any,
+        mockAuthz as any,
+      );
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'succeeded',
         stripePaymentIntentId: 'pi_1',
         stripeChargeId: 'ch_1',
         amountPaid: 5000,
         refundedAmount: 5000,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
 
       const result = await serviceWithStripe.refundPayment(1, 1);
 
@@ -254,24 +263,27 @@ describe('PaymentsService', () => {
 
     it('issues full refund and updates payment when Stripe succeeds', async () => {
       process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-      const serviceWithStripe = new PaymentsService({ db: mockDb } as any);
+      const serviceWithStripe = new PaymentsService(
+        { db: mockDb } as any,
+        mockAuthz as any,
+      );
 
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'succeeded',
         stripePaymentIntentId: 'pi_1',
         stripeChargeId: 'ch_1',
         amountPaid: 5000,
         refundedAmount: 0,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
       mockDb.update.mockReturnValue(createDbChain());
 
       const result = await serviceWithStripe.refundPayment(1, 1);
 
       expect(result).toEqual({ success: true });
+      expect(mockAuthz.assertCanManageEvent).toHaveBeenCalledWith(1, 10);
       expect(mockRefundsCreate).toHaveBeenCalledWith({
         payment_intent: 'pi_1',
         amount: 5000,
@@ -281,20 +293,22 @@ describe('PaymentsService', () => {
 
     it('returns error when Stripe refund status is not succeeded', async () => {
       process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-      const serviceWithStripe = new PaymentsService({ db: mockDb } as any);
+      const serviceWithStripe = new PaymentsService(
+        { db: mockDb } as any,
+        mockAuthz as any,
+      );
       mockRefundsCreate.mockResolvedValueOnce({ status: 'failed' });
 
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'succeeded',
         stripePaymentIntentId: 'pi_1',
         stripeChargeId: 'ch_1',
         amountPaid: 5000,
         refundedAmount: 0,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
 
       const result = await serviceWithStripe.refundPayment(1, 1);
 
@@ -304,20 +318,22 @@ describe('PaymentsService', () => {
 
     it('returns error when Stripe refund throws', async () => {
       process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-      const serviceWithStripe = new PaymentsService({ db: mockDb } as any);
+      const serviceWithStripe = new PaymentsService(
+        { db: mockDb } as any,
+        mockAuthz as any,
+      );
       mockRefundsCreate.mockRejectedValueOnce(new Error('Stripe API error'));
 
       const payment = {
         id: 1,
+        eventId: 10,
         status: 'succeeded',
         stripePaymentIntentId: 'pi_1',
         stripeChargeId: 'ch_1',
         amountPaid: 5000,
         refundedAmount: 0,
       };
-      mockDb.select
-        .mockReturnValueOnce(createDbChain([{ id: 1, isSystemAdmin: true }]))
-        .mockReturnValueOnce(createDbChain([payment]));
+      mockDb.select.mockReturnValueOnce(createDbChain([payment]));
 
       const result = await serviceWithStripe.refundPayment(1, 1);
 
