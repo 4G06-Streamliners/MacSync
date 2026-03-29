@@ -428,7 +428,7 @@ export default function EventDetailPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <select
-                  className="rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-maroon"
                   value={
                     event.managingRoleId != null
                       ? String(event.managingRoleId)
@@ -439,7 +439,7 @@ export default function EventDetailPage() {
                     const roleName = raw === "unset" ? null : (roles.find(r => String(r.id) === raw)?.name ?? null);
                     void handleSetManagingRole(roleName);
                   }}
-                  disabled
+                  disabled={managingRoleLoading || roles.length === 0}
                 >
                   <option value="unset">Unset</option>
                   {roles.map((r) => (
@@ -448,9 +448,9 @@ export default function EventDetailPage() {
                     </option>
                   ))}
                 </select>
-                <span className="text-xs text-gray-500">
-                  Read-only in edit policy.
-                </span>
+                {managingRoleLoading && (
+                  <span className="text-sm text-gray-500">Saving…</span>
+                )}
               </div>
 
               {managingRoleError && (
