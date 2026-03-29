@@ -14,6 +14,22 @@ interface RequestWithUrlAndRawBody {
   rawBody?: Buffer;
 }
 
+/** Comma-separated list in CORS_ORIGINS, e.g. https://admin.macsync.org,http://localhost:3001 */
+function corsOriginOption(): boolean | string[] {
+  const raw = process.env.CORS_ORIGINS?.trim();
+  if (!raw) {
+    return true;
+  }
+  const list = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (list.length === 0) {
+    return true;
+  }
+  return list;
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -44,12 +60,19 @@ async function bootstrap() {
     },
   );
 
-  // Enable CORS for all origins, including non-GET methods used by the admin panel
+  // CORS: set CORS_ORIGINS on the VPS (e.g. https://admin.macsync.org). If unset, all origins are allowed (dev).
   await app.register(cors, {
-    origin: true, // Allow all origins (dev)
+    origin: corsOriginOption(),
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    maxAge: 86_400,
   });
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
