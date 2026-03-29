@@ -41,6 +41,7 @@ describe('RefundRequestsService', () => {
     service = new RefundRequestsService(
       { db: mockDb } as any,
       mockPaymentsService,
+      {} as any,
     );
   });
 

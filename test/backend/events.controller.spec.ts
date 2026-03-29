@@ -64,7 +64,8 @@ describe('EventsController', () => {
   it('create delegates to service', async () => {
     const data = { name: 'New Event', capacity: 100 };
     mockEventsService.create.mockResolvedValue({ id: 1, ...data });
-    const result = await controller.create(data as any);
+    const req = { user: { sub: 1 } } as any;
+    const result = await controller.create(data as any, req);
     expect(result).toEqual({ id: 1, ...data });
   });
 
