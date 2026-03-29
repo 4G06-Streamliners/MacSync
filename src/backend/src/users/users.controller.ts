@@ -27,6 +27,15 @@ interface RequestWithUser extends Request {
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  private async assertSystemAdmin(userId: number) {
+    const me = await this.usersService.findOne(userId);
+    if (!me?.isSystemAdmin) {
+      throw new UnauthorizedException(
+        'Only super admins can perform this action.',
+      );
+    }
+  }
+
   @Get()
   @Roles('Admin')
   findAll() {
@@ -83,7 +92,11 @@ export class UsersController {
 
   @Delete(':id')
   @Roles('Admin')
-  delete(@Param('id') id: string) {
+  async delete(@Param('id') id: string, @Req() req: RequestWithUser) {
+    await this.assertSystemAdmin(req.user.sub);
+    if (req.user.sub === +id) {
+      throw new BadRequestException('Super admin cannot delete their own account.');
+    }
     return this.usersService.delete(+id);
   }
 }

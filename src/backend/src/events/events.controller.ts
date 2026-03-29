@@ -152,24 +152,29 @@ export class EventsController {
     @Req() req: RequestWithUser,
   ) {
     await this.authorizationService.assertCanManageEvent(req.user.sub, +id);
-
-    // Only global admins may modify the event's managing role.
-    const access = await this.authorizationService.getStaffAccess(req.user.sub);
-    if (
-      Object.prototype.hasOwnProperty.call(event, 'managingRoleId') &&
-      (event as Partial<NewEvent>).managingRoleId !== undefined &&
-      !access.isGlobalAdmin
-    ) {
-      throw new ForbiddenException('Only super admins can modify event admin role.');
+    // Edit policy: only name/date/description are mutable via generic update.
+    const allowedKeys = new Set(['name', 'date', 'description']);
+    const providedKeys = Object.keys(event ?? {});
+    const disallowed = providedKeys.filter((k) => !allowedKeys.has(k));
+    if (disallowed.length > 0) {
+      throw new ForbiddenException(
+        `Only name, date, and description can be edited. Blocked fields: ${disallowed.join(', ')}`,
+      );
     }
-    return this.eventsService.update(+id, event);
+
+    const updatePayload: Partial<NewEvent> = {
+      name: event.name,
+      date: event.date,
+      description: event.description,
+    };
+    return this.eventsService.update(+id, updatePayload);
   }
 
   @Delete(':id')
   @UseGuards(StaffGuard)
   async delete(@Param('id') id: string, @Req() req: RequestWithUser) {
     await this.authorizationService.assertCanManageEvent(req.user.sub, +id);
-    return this.eventsService.delete(+id);
+    return this.eventsService.delete(+id, req.user.sub);
   }
 
   /** Global admins only: assign which users may administer this event. */

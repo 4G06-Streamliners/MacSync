@@ -181,6 +181,12 @@ export function updateUserRoles(
   });
 }
 
+export function deleteUser(id: number): Promise<{ deleted: boolean }> {
+  return apiFetch(`/users/${id}`, {
+    method: "DELETE",
+  });
+}
+
 // ---------- Events ----------
 export interface EventItem {
   id: number;

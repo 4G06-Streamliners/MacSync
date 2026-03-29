@@ -189,39 +189,10 @@ export default function EventDetailPage() {
       setFormError("Date is required");
       return;
     }
-    if (!form.location.trim()) {
-      setFormError("Location is required");
-      return;
-    }
-    const capacity = Number(form.capacity);
-    if (!Number.isFinite(capacity) || capacity <= 0) {
-      setFormError("Capacity must be a positive number");
-      return;
-    }
-    const priceDollars = form.priceDollars.trim()
-      ? Number(form.priceDollars)
-      : 0;
-    if (!Number.isFinite(priceDollars) || priceDollars < 0) {
-      setFormError("Price must be a non-negative number");
-      return;
-    }
-
     const payload: Partial<CreateEventPayload> = {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       date: datetimeLocalValueToIsoUtc(form.date),
-      location: form.location.trim() || undefined,
-      capacity,
-      price: Math.round(priceDollars * 100),
-      imageUrl: form.imageUrl.trim() || undefined,
-      requiresTableSignup: form.requiresTableSignup,
-      requiresBusSignup: form.requiresBusSignup,
-      tableCount: form.tableCount ? parseInt(form.tableCount) : undefined,
-      seatsPerTable: form.seatsPerTable
-        ? parseInt(form.seatsPerTable)
-        : undefined,
-      busCount: form.busCount ? parseInt(form.busCount) : undefined,
-      busCapacity: form.busCapacity ? parseInt(form.busCapacity) : undefined,
     };
 
     try {
@@ -457,7 +428,7 @@ export default function EventDetailPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <select
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-maroon"
+                  className="rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                   value={
                     event.managingRoleId != null
                       ? String(event.managingRoleId)
@@ -468,7 +439,7 @@ export default function EventDetailPage() {
                     const roleName = raw === "unset" ? null : (roles.find(r => String(r.id) === raw)?.name ?? null);
                     void handleSetManagingRole(roleName);
                   }}
-                  disabled={managingRoleLoading || roles.length === 0}
+                  disabled
                 >
                   <option value="unset">Unset</option>
                   {roles.map((r) => (
@@ -477,9 +448,9 @@ export default function EventDetailPage() {
                     </option>
                   ))}
                 </select>
-                {managingRoleLoading && (
-                  <span className="text-sm text-gray-500">Saving…</span>
-                )}
+                <span className="text-xs text-gray-500">
+                  Read-only in edit policy.
+                </span>
               </div>
 
               {managingRoleError && (
@@ -541,10 +512,10 @@ export default function EventDetailPage() {
               <input
                 type="number"
                 min={1}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                 value={form.capacity}
                 onChange={(e) => update("capacity", e.target.value)}
-                required
+              disabled
               />
             </Field>
           </div>
@@ -552,10 +523,10 @@ export default function EventDetailPage() {
           <Field label="Location" required>
             <input
               type="text"
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
               value={form.location}
               onChange={(e) => update("location", e.target.value)}
-              required
+              disabled
             />
           </Field>
 
@@ -565,9 +536,10 @@ export default function EventDetailPage() {
                 type="number"
                 min={0}
                 step="0.01"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+                className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                 value={form.priceDollars}
                 onChange={(e) => update("priceDollars", e.target.value)}
+                disabled
               />
               <p className="mt-1 text-xs text-gray-500">
                 Leave empty or 0 for a free event.
@@ -576,9 +548,10 @@ export default function EventDetailPage() {
             <Field label="Image URL">
               <input
                 type="url"
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+                className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                 value={form.imageUrl}
                 onChange={(e) => update("imageUrl", e.target.value)}
+                disabled
               />
             </Field>
           </div>
@@ -596,6 +569,7 @@ export default function EventDetailPage() {
                 onChange={(e) =>
                   update("requiresTableSignup", e.target.checked)
                 }
+                disabled
               />
             </label>
             {form.requiresTableSignup && (
@@ -605,9 +579,10 @@ export default function EventDetailPage() {
                   <input
                     type="number"
                     min={0}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                     value={form.tableCount}
                     onChange={(e) => update("tableCount", e.target.value)}
+                    disabled
                   />
                 </div>
                 <div>
@@ -615,9 +590,10 @@ export default function EventDetailPage() {
                   <input
                     type="number"
                     min={0}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                     value={form.seatsPerTable}
                     onChange={(e) => update("seatsPerTable", e.target.value)}
+                    disabled
                   />
                 </div>
               </div>
@@ -637,6 +613,7 @@ export default function EventDetailPage() {
                 onChange={(e) =>
                   update("requiresBusSignup", e.target.checked)
                 }
+                disabled
               />
             </label>
             {form.requiresBusSignup && (
@@ -646,9 +623,10 @@ export default function EventDetailPage() {
                   <input
                     type="number"
                     min={0}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                     value={form.busCount}
                     onChange={(e) => update("busCount", e.target.value)}
+                    disabled
                   />
                 </div>
                 <div>
@@ -656,9 +634,10 @@ export default function EventDetailPage() {
                   <input
                     type="number"
                     min={0}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-maroon"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-gray-100 text-gray-500 px-3 py-2 text-sm"
                     value={form.busCapacity}
                     onChange={(e) => update("busCapacity", e.target.value)}
+                    disabled
                   />
                 </div>
               </div>

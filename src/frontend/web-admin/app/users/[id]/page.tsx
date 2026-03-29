@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
+  deleteUser,
   getUser,
   getUserTickets,
   getMe,
@@ -52,6 +53,7 @@ export default function UserProfilePage() {
   const [availableRoles, setAvailableRoles] = useState<RoleRow[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [savingRoles, setSavingRoles] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   useEffect(() => {
     if (!Number.isFinite(userId)) return;
@@ -167,6 +169,25 @@ export default function UserProfilePage() {
 
   function onConfirmYes() {
     setRoleConfirmStep("password");
+  }
+
+  async function handleDeleteUser() {
+    if (!user || !currentUser?.isSystemAdmin) return;
+    const confirmed = window.confirm(
+      `Delete ${user.name} (${user.email})? This cannot be undone.`,
+    );
+    if (!confirmed) return;
+    try {
+      setDeletingUser(true);
+      await deleteUser(user.id);
+      window.alert("User deleted.");
+      window.location.assign("/users");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to delete user.";
+      window.alert(msg);
+    } finally {
+      setDeletingUser(false);
+    }
   }
 
   if (loading) {
@@ -418,7 +439,8 @@ export default function UserProfilePage() {
           <hr className="border-gray-200" />
 
           {/* Delete user */}
-          <div className="flex items-center justify-between">
+          {currentUser?.isSystemAdmin && (
+            <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-900">Delete user</p>
               <p className="text-xs text-gray-500">
@@ -428,11 +450,14 @@ export default function UserProfilePage() {
             </div>
             <button
               type="button"
+              onClick={handleDeleteUser}
+              disabled={deletingUser}
               className="rounded-lg border border-red-600 px-4 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
             >
-              Delete user
+              {deletingUser ? "Deleting..." : "Delete user"}
             </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
 

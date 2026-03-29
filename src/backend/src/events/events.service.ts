@@ -14,11 +14,12 @@ import {
   busSeats,
   seatReservations,
   refundRequests,
+  payments,
   users,
   roles,
 } from '../db/schema';
 import type { NewEvent } from '../db/schema';
-import { eq, sql, and, asc, inArray } from 'drizzle-orm';
+import { eq, sql, and, asc, inArray, ne } from 'drizzle-orm';
 import type { StaffAccess } from '../users/authorization.types';
 import { AuthorizationService } from '../users/authorization.service';
 import type { SeedDb } from '../db/seed-data';
@@ -411,7 +412,33 @@ export class EventsService {
     return updated;
   }
 
-  async delete(id: number) {
+  async delete(id: number, adminUserId: number) {
+    // Refund all paid tickets for this event before deleting it.
+    const eventPayments = await this.dbService.db
+      .select({
+        paymentId: payments.id,
+      })
+      .from(payments)
+      .where(
+        and(
+          eq(payments.eventId, id),
+          ne(payments.status, 'refunded'),
+          sql`${payments.amountPaid} > 0`,
+        ),
+      );
+
+    for (const row of eventPayments) {
+      const result = await this.paymentsService.refundPayment(
+        row.paymentId,
+        adminUserId,
+      );
+      if (result.error) {
+        throw new BadRequestException(
+          `Failed to refund payment ${row.paymentId}: ${result.error}`,
+        );
+      }
+    }
+
     const removed = await this.dbService.db
       .delete(events)
       .where(eq(events.id, id))

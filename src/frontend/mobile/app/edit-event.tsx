@@ -112,32 +112,17 @@ export default function EditEventScreen() {
 
   const handleSubmit = async () => {
     if (eventEnded) return;
-    if (!form.name || !form.capacity) {
-      showAlert("Error", "Name and capacity are required.");
+    if (!form.name) {
+      showAlert("Error", "Name is required.");
       return;
     }
 
     setSaving(true);
     try {
-      const priceDollars = form.price ? parseFloat(form.price) : 0;
       const payload: Partial<CreateEventPayload> = {
         name: form.name,
         description: form.description || undefined,
         date: localDateToIsoUtc(eventAt),
-        location: form.location || undefined,
-        capacity: parseInt(form.capacity),
-        price: Math.round(priceDollars * 100),
-        imageUrl: form.imageUrl || undefined,
-        requiresTableSignup: form.requiresTableSignup,
-        requiresBusSignup: form.requiresBusSignup,
-        tableCount: form.tableCount ? parseInt(form.tableCount) : undefined,
-        seatsPerTable: form.seatsPerTable
-          ? parseInt(form.seatsPerTable)
-          : undefined,
-        busCount: form.busCount ? parseInt(form.busCount) : undefined,
-        busCapacity: form.busCapacity
-          ? parseInt(form.busCapacity)
-          : undefined,
       };
 
       await updateEvent(+eventId, payload);
@@ -383,7 +368,8 @@ export default function EditEventScreen() {
               onChangeText={(v) => set("location", v)}
               placeholder="e.g. Grand Ballroom"
               placeholderTextColor="#9CA3AF"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
+              editable={false}
+              className="w-full px-4 py-3 border border-gray-200 bg-gray-100 rounded-xl text-sm text-gray-500"
             />
           </View>
 
@@ -399,7 +385,8 @@ export default function EditEventScreen() {
                 placeholder="e.g. 100"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="number-pad"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
+                editable={false}
+                className="w-full px-4 py-3 border border-gray-200 bg-gray-100 rounded-xl text-sm text-gray-500"
               />
             </View>
             <View className="flex-1">
@@ -412,7 +399,8 @@ export default function EditEventScreen() {
                 placeholder="0 (leave empty for free)"
                 placeholderTextColor="#9CA3AF"
                 keyboardType="decimal-pad"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
+                editable={false}
+                className="w-full px-4 py-3 border border-gray-200 bg-gray-100 rounded-xl text-sm text-gray-500"
               />
             </View>
           </View>
@@ -429,7 +417,8 @@ export default function EditEventScreen() {
               placeholderTextColor="#9CA3AF"
               autoCapitalize="none"
               keyboardType="url"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900"
+              editable={false}
+              className="w-full px-4 py-3 border border-gray-200 bg-gray-100 rounded-xl text-sm text-gray-500"
             />
           </View>
 
@@ -443,6 +432,7 @@ export default function EditEventScreen() {
                 value={form.requiresTableSignup}
                 onValueChange={(v) => set("requiresTableSignup", v)}
                 trackColor={{ true: "#7A1F3E" }}
+                disabled
               />
             </View>
             {form.requiresTableSignup && (
@@ -455,7 +445,8 @@ export default function EditEventScreen() {
                     value={form.tableCount}
                     onChangeText={(v) => set("tableCount", v)}
                     keyboardType="number-pad"
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900"
+                    editable={false}
+                    className="px-3 py-2.5 border border-gray-200 bg-gray-100 rounded-lg text-sm text-gray-500"
                   />
                 </View>
                 <View className="flex-1">
@@ -466,7 +457,8 @@ export default function EditEventScreen() {
                     value={form.seatsPerTable}
                     onChangeText={(v) => set("seatsPerTable", v)}
                     keyboardType="number-pad"
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900"
+                    editable={false}
+                    className="px-3 py-2.5 border border-gray-200 bg-gray-100 rounded-lg text-sm text-gray-500"
                   />
                 </View>
               </View>
@@ -483,6 +475,7 @@ export default function EditEventScreen() {
                 value={form.requiresBusSignup}
                 onValueChange={(v) => set("requiresBusSignup", v)}
                 trackColor={{ true: "#7A1F3E" }}
+                disabled
               />
             </View>
             {form.requiresBusSignup && (
@@ -495,7 +488,8 @@ export default function EditEventScreen() {
                     value={form.busCount}
                     onChangeText={(v) => set("busCount", v)}
                     keyboardType="number-pad"
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900"
+                    editable={false}
+                    className="px-3 py-2.5 border border-gray-200 bg-gray-100 rounded-lg text-sm text-gray-500"
                   />
                 </View>
                 <View className="flex-1">
@@ -506,7 +500,8 @@ export default function EditEventScreen() {
                     value={form.busCapacity}
                     onChangeText={(v) => set("busCapacity", v)}
                     keyboardType="number-pad"
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900"
+                    editable={false}
+                    className="px-3 py-2.5 border border-gray-200 bg-gray-100 rounded-lg text-sm text-gray-500"
                   />
                 </View>
               </View>
