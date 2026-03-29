@@ -3,6 +3,7 @@ import { Stack, Redirect } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator } from "react-native";
 import { AuthProvider, useAuth } from "./_context/AuthContext";
+import { NotificationsProvider } from "./_context/NotificationsContext";
 
 function RootNavigator() {
   const { status } = useAuth();
@@ -83,7 +84,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootNavigator />
+        <NotificationsProvider>
+          <RootNavigator />
+        </NotificationsProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

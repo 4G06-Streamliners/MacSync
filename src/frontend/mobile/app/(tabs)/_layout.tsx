@@ -2,8 +2,7 @@ import { Tabs, useRouter } from "expo-router";
 import { View, Text, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../_context/AuthContext";
-import { useState, useCallback, useEffect } from "react";
-import { getMyNotifications } from "../_lib/api";
+import { useNotifications } from "../_context/NotificationsContext";
 
 function HeaderRight() {
   const { user, logout } = useAuth();
@@ -54,20 +53,7 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const bottomPadding = Math.max(insets.bottom, 8);
   const { isAdmin } = useAuth();
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  const refreshBadge = useCallback(() => {
-    getMyNotifications()
-      .then((notifs) => setUnreadCount(notifs.filter((n) => !n.read).length))
-      .catch(() => {});
-  }, []);
-
-  // Poll every 30s so badge stays fresh without needing focus events on the layout
-  useEffect(() => {
-    refreshBadge();
-    const interval = setInterval(refreshBadge, 30000);
-    return () => clearInterval(interval);
-  }, [refreshBadge]);
+  const { unreadCount } = useNotifications();
 
   return (
     <Tabs

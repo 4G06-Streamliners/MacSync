@@ -7,7 +7,6 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  Switch,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
@@ -260,13 +259,18 @@ export default function ProfileScreen() {
                     Receive confirmations, reminders, and updates
                   </Text>
                 </View>
-                <Switch
-                  value={notifInApp}
-                  onValueChange={handleToggleNotif}
-                  disabled={savingNotif}
-                  trackColor={{ false: "#D1D5DB", true: "#7A1F3E" }}
-                  thumbColor="#fff"
-                />
+                <Pressable
+                  onPress={() => !savingNotif && handleToggleNotif(!notifInApp)}
+                  className={`w-12 h-7 rounded-full justify-center px-0.5 ${
+                    notifInApp ? "bg-maroon" : "bg-gray-300"
+                  } ${savingNotif ? "opacity-50" : ""}`}
+                >
+                  <View
+                    className={`w-6 h-6 rounded-full bg-white shadow-sm ${
+                      notifInApp ? "self-end" : "self-start"
+                    }`}
+                  />
+                </Pressable>
               </View>
             </View>
 

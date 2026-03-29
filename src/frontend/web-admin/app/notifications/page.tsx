@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getMyAdminEvents, sendBlast, type AdminEvent } from "../_lib/api";
+import { getToken } from "../_lib/auth";
 
 export default function NotificationsPage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
@@ -12,7 +13,7 @@ export default function NotificationsPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  // cooldown: track last blast time per eventId
+  const [attendeeCount, setAttendeeCount] = useState<number | null>(null);
   const [lastBlast, setLastBlast] = useState<Record<number, number>>({});
 
   useEffect(() => {
@@ -21,6 +22,17 @@ export default function NotificationsPage() {
       .catch(() => setError("Failed to load your events."))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!selectedEventId) { setAttendeeCount(null); return; }
+    const token = getToken();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000"}/events/${selectedEventId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((ev) => setAttendeeCount(ev.registeredCount ?? 0))
+      .catch(() => setAttendeeCount(null));
+  }, [selectedEventId]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
@@ -94,6 +106,11 @@ export default function NotificationsPage() {
                 </option>
               ))}
             </select>
+            {selectedEventId && attendeeCount !== null && (
+              <p className="text-xs text-gray-500 mt-1.5">
+                {attendeeCount} attendee{attendeeCount === 1 ? "" : "s"} will be notified
+              </p>
+            )}
           </div>
 
           {/* Custom message */}
@@ -123,8 +140,11 @@ export default function NotificationsPage() {
           {confirming ? (
             <div className="rounded-lg border border-maroon/30 bg-maroon/5 p-4 space-y-3">
               <p className="text-sm font-medium text-gray-900">
-                Send notification to all attendees of{" "}
-                <span className="font-bold">{selectedEvent?.name}</span>?
+                Send notification to{" "}
+                <span className="font-bold">
+                  {attendeeCount ?? "all"} attendee{attendeeCount === 1 ? "" : "s"}
+                </span>{" "}
+                of <span className="font-bold">{selectedEvent?.name}</span>?
               </p>
               <div className="flex gap-3">
                 <button

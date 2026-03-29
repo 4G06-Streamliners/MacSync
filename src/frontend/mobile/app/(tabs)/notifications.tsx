@@ -1,4 +1,3 @@
-import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,12 +5,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import {
-  getMyNotifications,
-  markNotificationRead,
-  type AppNotification,
-} from "../_lib/api";
+import { useNotifications } from "../_context/NotificationsContext";
 
 const TYPE_ICON: Record<string, string> = {
   confirmation: "✅",
@@ -30,32 +24,9 @@ function timeAgo(dateStr: string) {
 }
 
 export default function NotificationsScreen() {
-  const [notifs, setNotifs] = useState<AppNotification[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notifs, unreadCount, loading, markRead, markAllRead } = useNotifications();
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await getMyNotifications();
-      setNotifs(data);
-    } catch {
-      // silently fail — empty state shown
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useFocusEffect(load);
-
-  const handlePress = async (notif: AppNotification) => {
-    if (notif.read) return;
-    await markNotificationRead(notif.id);
-    setNotifs((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
-    );
-  };
-
-  if (loading) {
+  if (loading && notifs.length === 0) {
     return (
       <View className="flex-1 items-center justify-center bg-[#F5F5F7]">
         <ActivityIndicator size="large" color="#7A1F3E" />
@@ -69,11 +40,19 @@ export default function NotificationsScreen() {
         className="flex-1"
         contentContainerClassName="px-4 py-6 pb-8"
       >
-        <View className="mb-5">
-          <Text className="text-2xl font-bold text-gray-900">Notifications</Text>
-          <Text className="text-gray-500 mt-1">
-            {notifs.filter((n) => !n.read).length} unread
-          </Text>
+        <View className="flex-row items-center justify-between mb-5">
+          <View>
+            <Text className="text-2xl font-bold text-gray-900">Notifications</Text>
+            <Text className="text-gray-500 mt-1">{unreadCount} unread</Text>
+          </View>
+          {unreadCount > 0 && (
+            <Pressable
+              onPress={markAllRead}
+              className="px-4 py-2 bg-maroon rounded-xl active:bg-maroon-dark"
+            >
+              <Text className="text-xs font-semibold text-white">Mark All Read</Text>
+            </Pressable>
+          )}
         </View>
 
         {notifs.length === 0 ? (
@@ -91,7 +70,7 @@ export default function NotificationsScreen() {
             {notifs.map((notif) => (
               <Pressable
                 key={notif.id}
-                onPress={() => handlePress(notif)}
+                onPress={() => markRead(notif.id)}
                 className={`rounded-2xl p-4 border ${
                   notif.read
                     ? "bg-white border-gray-100"
@@ -105,7 +84,9 @@ export default function NotificationsScreen() {
                   <View className="flex-1">
                     <Text
                       className={`text-sm leading-snug ${
-                        notif.read ? "text-gray-600" : "text-gray-900 font-medium"
+                        notif.read
+                          ? "text-gray-600"
+                          : "text-gray-900 font-medium"
                       }`}
                     >
                       {notif.message}

@@ -32,6 +32,11 @@ export class NotificationsController {
     return this.notificationsService.markRead(+id, req.user.sub);
   }
 
+  @Patch('read-all')
+  markAllRead(@Req() req: RequestWithUser) {
+    return this.notificationsService.markAllRead(req.user.sub);
+  }
+
   @Patch('preferences')
   updatePreferences(
     @Req() req: RequestWithUser,

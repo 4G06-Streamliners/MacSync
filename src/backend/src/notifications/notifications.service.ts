@@ -51,6 +51,14 @@ export class NotificationsService {
     return { success: true };
   }
 
+  async markAllRead(userId: number) {
+    await this.dbService.db
+      .update(notifications)
+      .set({ read: true })
+      .where(eq(notifications.userId, userId));
+    return { success: true };
+  }
+
   async updatePreference(userId: number, notifInApp: boolean) {
     await this.dbService.db
       .update(users)

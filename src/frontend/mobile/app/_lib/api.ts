@@ -369,7 +369,17 @@ export function getMyNotifications(): Promise<AppNotification[]> {
 }
 
 export function markNotificationRead(id: number): Promise<{ success: boolean }> {
-  return apiFetch(`/notifications/${id}/read`, { method: 'PATCH' });
+  return apiFetch(`/notifications/${id}/read`, {
+    method: 'PATCH',
+    body: JSON.stringify({}),
+  });
+}
+
+export function markAllNotificationsRead(): Promise<{ success: boolean }> {
+  return apiFetch('/notifications/read-all', {
+    method: 'PATCH',
+    body: JSON.stringify({}),
+  });
 }
 
 export function updateNotifPreferences(notifInApp: boolean): Promise<{ success: boolean }> {

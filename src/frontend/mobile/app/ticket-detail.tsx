@@ -121,11 +121,7 @@ export default function TicketDetailScreen() {
       if (result.error) {
         Alert.alert("Error", result.error);
       } else {
-        Alert.alert(
-          "Ticket Cancelled",
-          "Your ticket has been cancelled successfully.",
-          [{ text: "OK", onPress: () => router.back() }]
-        );
+        router.back();
       }
     } catch (err: any) {
       Alert.alert("Error", err?.message || "Failed to cancel ticket");
