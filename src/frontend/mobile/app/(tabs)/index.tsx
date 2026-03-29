@@ -201,6 +201,13 @@ export default function EventsScreen() {
   const stripeSessionId =
     typeof stripeSessionIdRaw === "string" ? stripeSessionIdRaw : null;
   const { width } = useWindowDimensions();
+  const roles = user?.roles ?? [];
+  const mobileCanCreateEvents =
+    canCreateEvents ||
+    !!user?.isSystemAdmin ||
+    roles.includes("Admin") ||
+    roles.some((r) => r !== "Member" && r !== "Admin") ||
+    (user?.managedEventIds?.length ?? 0) > 0;
 
   // Responsive: 1 col on small, 2 on medium, 3 on large
   const numColumns = width >= 1024 ? 3 : width >= 640 ? 2 : 1;
@@ -337,7 +344,7 @@ export default function EventsScreen() {
               Discover and register for events
             </Text>
           </View>
-          {canCreateEvents && (
+          {mobileCanCreateEvents && (
             <Pressable
               onPress={() => router.push("/create-event")}
               className="flex-row items-center gap-1.5 px-4 py-2.5 bg-maroon rounded-xl active:bg-maroon-dark"

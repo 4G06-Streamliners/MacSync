@@ -22,9 +22,13 @@ export default function LoginPage() {
 
       const roles = user.roles ?? [];
       const managed = user.managedEventIds ?? [];
+      const hasTeamAdminRole = roles.some(
+        (role) => role !== "Member" && role !== "Admin",
+      );
       const isStaff =
         user.isSystemAdmin ||
         roles.includes("Admin") ||
+        hasTeamAdminRole ||
         managed.length > 0;
 
       if (!isStaff) {

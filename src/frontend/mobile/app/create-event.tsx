@@ -23,14 +23,21 @@ import { useAuth } from "./_context/AuthContext";
 
 export default function CreateEventScreen() {
   const router = useRouter();
-  const { user, canCreateEvents, status } = useAuth();
+  const { user, canCreateEvents, status, refreshUser } = useAuth();
+  const roles = user?.roles ?? [];
+  const mobileCanCreateEvents =
+    canCreateEvents ||
+    !!user?.isSystemAdmin ||
+    roles.includes("Admin") ||
+    roles.some((r) => r !== "Member" && r !== "Admin") ||
+    (user?.managedEventIds?.length ?? 0) > 0;
 
   useEffect(() => {
     if (status !== "authenticated" || !user) return;
-    if (!canCreateEvents) {
+    if (!mobileCanCreateEvents) {
       router.replace("/(tabs)");
     }
-  }, [user, canCreateEvents, status, router]);
+  }, [user, mobileCanCreateEvents, status, router]);
   const leaveEditor = useCallback(() => {
     if (router.canGoBack()) {
       router.back();
@@ -93,6 +100,9 @@ export default function CreateEventScreen() {
       };
 
       await createEvent(payload);
+      // Refresh managedEventIds immediately so edit controls are correct
+      // when the user returns to the events list.
+      await refreshUser();
       router.replace("/event-created");
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to create event");

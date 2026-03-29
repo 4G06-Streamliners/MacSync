@@ -24,7 +24,12 @@ import type { FastifyReply } from 'fastify';
 import { VenueReportPdfService } from './venue-report-pdf.service';
 import { DatabaseService } from '../database/database.service';
 import { eq } from 'drizzle-orm';
-import { events as eventsTable, roles as rolesTable, users as usersTable } from '../db/schema';
+import {
+  events as eventsTable,
+  roles as rolesTable,
+  userRoles as userRolesTable,
+  users as usersTable,
+} from '../db/schema';
 
 interface RequestWithUser extends Request {
   user: { sub: number; email: string };
@@ -108,9 +113,34 @@ export class EventsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles('Admin')
-  create(@Body() event: NewEvent, @Req() req: RequestWithUser) {
+  @UseGuards(StaffGuard)
+  async create(@Body() event: NewEvent, @Req() req: RequestWithUser) {
+    const access = await this.authorizationService.getStaffAccess(req.user.sub);
+
+    // Team admins may create events, but the managing role is forced to one of
+    // their own team roles so they cannot assign another team's scope.
+    if (!access.isGlobalAdmin) {
+      const roleRows = await this.dbService.db
+        .select({ roleId: rolesTable.id, roleName: rolesTable.name })
+        .from(userRolesTable)
+        .innerJoin(rolesTable, eq(userRolesTable.roleId, rolesTable.id))
+        .where(eq(userRolesTable.userId, req.user.sub));
+
+      const teamRoles = roleRows.filter(
+        (r) => r.roleName !== 'Admin' && r.roleName !== 'Member',
+      );
+
+      if (teamRoles.length === 0) {
+        throw new ForbiddenException('Only staff admins can create events.');
+      }
+
+      return this.eventsService.create({
+        ...event,
+        createdBy: req.user.sub,
+        managingRoleId: teamRoles[0].roleId,
+      });
+    }
+
     return this.eventsService.create({ ...event, createdBy: req.user.sub });
   }
 

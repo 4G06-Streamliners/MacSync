@@ -157,9 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isGlobalAdmin =
     user?.isSystemAdmin === true || (user?.roles?.includes('Admin') ?? false);
+  const hasTeamAdminRole =
+    (user?.roles ?? []).some((role) => role !== 'Member' && role !== 'Admin');
   const managedEventIds = user?.managedEventIds ?? [];
   const isAdmin = isGlobalAdmin || managedEventIds.length > 0;
-  const canCreateEvents = isGlobalAdmin;
+  const canCreateEvents =
+    isGlobalAdmin || hasTeamAdminRole || managedEventIds.length > 0;
   const canEditEvent = (eventId: number) =>
     isGlobalAdmin || managedEventIds.includes(eventId);
 

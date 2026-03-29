@@ -33,8 +33,15 @@ export default function DashboardShell({
       .then((me) => {
         if (!cancelled) {
           setIsSystemAdmin(!!me.isSystemAdmin);
+          const hasTeamAdminRole = (me.roles ?? []).some(
+            (role) => role !== "Member" && role !== "Admin",
+          );
+          const hasScopedEvents = (me.managedEventIds ?? []).length > 0;
           setCanCreateEvents(
-            !!me.isSystemAdmin || (me.roles ?? []).includes("Admin"),
+            !!me.isSystemAdmin ||
+              (me.roles ?? []).includes("Admin") ||
+              hasTeamAdminRole ||
+              hasScopedEvents,
           );
         }
       })
