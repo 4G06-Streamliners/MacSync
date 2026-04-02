@@ -39,3 +39,6 @@ MacSync/ \
 ├── src/ # Source code\
 ├── test/ # Test cases\
 ├── etc/ # Miscellaneous files and configuration
+
+## Disclaimer
+AI Disclosure: Portions of this project were built with the assistance of AI tools (e.g. GitHub Copilot, Claude). All code has been reviewed, tested, and validated by the author.
