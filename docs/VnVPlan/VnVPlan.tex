@@ -52,14 +52,32 @@
 
 \section{Symbols, Abbreviations, and Acronyms}
 
+% TA feedback: expanded symbols/acronyms table (was generic ``T'' placeholder only); improves navigability and removes underdeveloped template row.
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{l l} 
+\begin{tabularx}{\textwidth}{l X} 
   \toprule		
-  \textbf{symbol} & \textbf{description}\\
+  \textbf{Symbol / Acronym} & \textbf{Description}\\
   \midrule 
-  T & Test\\
+  T & Prefix used in system test identifiers (e.g., FR1-\textbf{T}01-1).\\
+  V\&V & Verification and Validation.\\
+  SRS & Software Requirements Specification for the Large Event Management Platform.\\
+  HA & Hazard Analysis document associated with the project.\\
+  MIS & Module Interface Specification; defines module inputs, outputs, and responsibilities.\\
+  MES & McMaster Engineering Society (project client and stakeholder).\\
+  FR / NFR & Functional / Non-functional requirement identifiers as used in the SRS (e.g., FR1, NFR1).\\
+  RBAC / FBAC & Role-based / Feature-based access control.\\
+  API & Application Programming Interface (NestJS HTTP endpoints).\\
+  REST & Representational state transfer style used by backend APIs.\\
+  CI/CD & Continuous integration and continuous delivery (e.g., GitHub Actions pipelines).\\
+  E2E & End-to-end test spanning frontend, backend, and integrations.\\
+  UI & User interface (web and mobile-web views under test).\\
+  ORM & Object--relational mapper (Drizzle ORM with PostgreSQL).\\
+  JWT & JSON Web Token used for authenticated API requests in tests.\\
+  QR & Quick response code used for ticket check-in workflows.\\
+  DB & Relational database (PostgreSQL) backing MacSync.\\
+  LEMS & Large Event Management System (alternative name used in this plan for the platform).\\
   \bottomrule
-\end{tabular}\\
+\end{tabularx}\\
 
 
 
@@ -77,15 +95,17 @@ The software being tested is the \textbf{Large Event Management Platform}, a com
 
 The platform enables event organizers to create and manage events, process ticket payments, collect waivers, manage RSVP and table sign-ups, and monitor live event analytics through an administrative dashboard. Attendees can register, make payments, sign digital waivers, and check in at events using QR codes. The system enforces role-based and feature-based access control to ensure that different user types (e.g., admins, volunteers, attendees) have appropriate permissions.
 
-The platform is being developed using a \textbf{Vite + TanStack Router + TanStack Create} frontend stack paired with a \textbf{NestJS} backend and a \textbf{PostgreSQL} database. Verification and validation will ensure that all components function correctly, maintain data integrity, and deliver a consistent, user-friendly experience for MES event operations.
+% TA feedback: Summary closing sentence aligned with rubric on testable wording (replaced broad ``function correctly / user-friendly'' phrasing tied to vague quality claims).
+The platform is being developed using a \textbf{Vite + TanStack Router + TanStack Create} frontend stack paired with a \textbf{NestJS} backend and a \textbf{PostgreSQL} database. Verification and validation will confirm that behaviour matches the SRS and hazard mitigations, preserve data integrity, and support efficient completion of the workflows defined for MES event operations.
 
 \subsection{Objectives}
 This Verification and validation plan intends to accomplish the objective of ensuring the Large Event Management Platform for the McMaster Engineering Society meets its mission critical qualities that are most important as defined by the Software Requirements Specification (SRS) and Hazard Analysis (HA).
 
+% TA feedback: replaced vague ``operate correctly and reliably'' with SRS-testable wording; defined ``unexpected load'' as concrete concurrent/burst scenarios aligned with NFR load tests (not undefined multiples).
 The mission critical qualities intended to be accomplished as part of the objective are as follows:
 \begin{itemize}
-    \item \textbf{Functional Correctness:} The core system components and functionalities outlined in the SRS such as the payment system, role-based and feature-based access control and RSVP/Bus/Table signups should operate correctly and reliably to support the event operation of the platform for both admins and users.
-    \item \textbf{System Reliability:} The platform remains stable and responsive under expected and unexpected load conditions and supports users and admins to accomplish their tasks without hindrance.
+    \item \textbf{Functional Correctness:} Each core workflow in the SRS---payment and ticket issuance, RBAC/FBAC enforcement, RSVP, bus and table sign-ups, waivers, and organizer tooling---passes the system and unit tests traced to those requirements, with outcomes matching the expected inputs/outputs stated in the SRS and the test cases in this plan (including error paths and boundary conditions).
+    \item \textbf{System Reliability:} Under \emph{expected load}, the system meets the latency targets given in the Performance (NFR1) system tests later in this plan (e.g., single-user registration and RSVP timings). Under \emph{elevated load}, defined as controlled concurrency at least as high as the stress cases already specified in this plan (e.g., 200 concurrent registration workflows, 100 concurrent RSVP submissions, and concurrent purchase attempts up to ticket sell-out), the system remains available, completes requests within the stated performance bounds where applicable, and does not crash; short traffic spikes beyond these figures are out of scope unless the SRS is revised to add explicit targets.
     \item \textbf{Safety and Security:} The platform must comply with security requirements documented in the HA relating to protection of payment information and personal user data as well as proper enforcement of role and feature based access controls.    
 \end{itemize}
 
@@ -101,7 +121,8 @@ Out of scope objectives due to project scope and resource limitations include:
 This project includes several approved extras designed to enhance the quality, usability, and long-term sustainability of the system beyond its core functional requirements. These activities aim to ensure that the final product is user-friendly, maintainable, and well-documented for future MES teams.
 
 \begin{itemize}
-    \item \textbf{Usability Testing:} The team will conduct structured usability sessions with MES organizers and student participants to evaluate workflow clarity and overall user experience. Feedback from these sessions will guide interface refinements and ensure the system remains intuitive for both attendees and administrators.
+    % TA feedback: removed subjective ``intuitive''; tied usability extra to measurable NFR3 criteria (task completion, times, recovery).
+    \item \textbf{Usability Testing:} The team will conduct structured usability sessions with MES organizers and student participants using predefined tasks (e.g., full registration, locating common screens, recovering from validation errors). Sessions will record task-completion rate, time-on-task against the thresholds in Test Case NFR3-T01, and think-aloud or short structured feedback; results will drive interface refinements against those same observable criteria rather than informal impressions of ``ease.''
     \item \textbf{User Documentation:} Comprehensive user and administrator documentation will be prepared to support onboarding, maintenance, and future development. This documentation will include setup instructions, feature overviews, and troubleshooting guidelines to help future MES teams effectively operate and extend the platform.
 \end{itemize}
 
@@ -121,8 +142,8 @@ By including these extras, the project emphasizes usability, maintainability, an
 
 \section{Plan}
 
-\wss{Introduce this section.  You can provide a roadmap of the sections to
-  come.}
+% TA feedback: removed instructor template note (\wss, shown as magenta in source builds); replaced with an explicit roadmap of this section.
+This section explains how MacSync will be verified and validated: who performs each activity, how the SRS and design documents are reviewed, how implementation and tools support ongoing checks, how the plan itself is audited, and how stakeholder validation is organized. It leads directly into the system-level tests in the next major section and defers detailed per-module unit-test enumerations until the MIS is finalized, as summarized below and in Section ``Unit Test Description.''
 
 \subsection{Verification and Validation Team}
 
@@ -133,7 +154,8 @@ The Verification and Validation (V\&V) process for the \textbf{Large Event Manag
 \hline
 \textbf{Members} & \textbf{V\&V Focus Area} & \textbf{Responsibilities} \\ \hline
 \textbf{Mahad Ahmed, Farhan Rahman} & Backend and Integration Verification & Collaboratively design and maintain automated unit and integration tests using Jest and Supertest. Verify database operations and API endpoints for correctness, reliability, and adherence to data constraints. Perform end-to-end verification to confirm consistent data flow between backend, database, and frontend layers, ensuring transactional integrity and performance under load. \\ \hline
-\textbf{Abyan Jaigirdar, Ali Zia} & Frontend and Usability Verification & Conduct verification of user interfaces and workflows using Vitest and React Testing Library. Evaluate user experience, input validation, and navigation logic for consistency with SRS-defined behaviours. Lead task-based usability walkthroughs with MES stakeholders to validate functional clarity and intuitive interaction across web and mobile views. \\ \hline
+% TA feedback: same usability criterion as elsewhere---removed subjective ``intuitive interaction'' in favour of NFR3 metrics.
+\textbf{Abyan Jaigirdar, Ali Zia} & Frontend and Usability Verification & Conduct verification of user interfaces and workflows using Vitest and React Testing Library. Evaluate user experience, input validation, and navigation logic for consistency with SRS-defined behaviours. Lead task-based usability walkthroughs with MES stakeholders to validate task success, time-on-task, error recovery, and alignment with the NFR3 usability tests in this plan across web and mobile views. \\ \hline
 \textbf{Prerna Prabhu} & System Validation and Documentation Verification & Manage structured reviews of the SRS, V\&V Plan, and associated documentation through checklist-based inspections. Maintain the requirements traceability matrix and coordinate stakeholder validation meetings. Consolidate feedback from both functional and usability testing to ensure all requirements are met and fully validated against MES operational objectives. \\ \hline
 \textbf{Luke} & External Supervisor / Reviewer & Provides independent oversight of verification completeness and validates that all implemented features align with MES event-management goals. Participates in post-demo validation reviews and confirms system readiness for production testing. \\ \hline
 \end{tabular}
@@ -290,7 +312,8 @@ Continuous Integration (CI) will be managed using \textbf{GitHub Actions}. Each 
 These tools, configurations, and automation strategies are consistent with the team’s \textbf{Development Plan} and will evolve alongside implementation progress to support scalable and maintainable verification.
 
 \subsection{Software Validation}
-The software validation process will mainly be focussed on confirming the system is correctly achieving its objectives and addresses stakeholder needs and aligns with functional requirements identified in the SRS. For instance, verifying features such as the payment system, role and feature based access control and RSVP/Bus/Table sign-ups are implemented, and perform correctly. 
+% TA feedback: tightened vague ``perform correctly'' to traceable validation against SRS acceptance and demonstrations.
+The software validation process will mainly be focused on confirming that the implemented system meets the measurable criteria and scenarios in the SRS and that stakeholder needs are satisfied through structured task walkthroughs. For instance, validation sessions will check the payment flow, role and feature-based access control, and RSVP/Bus/Table sign-ups against the same pass/fail expectations documented in the SRS and in the system tests earlier in this plan. 
 
 Since the Large Event Management Platform is a new undertaking of event organization, there are no external data sources that can be used for validating if results align with intended real-world use cases or behaviors. Therefore the need arises to engage stakeholders such as club executives and event organizers in a structured review session to check that the SRS captures the requirements needed for their needs and goals. The approach taken for this can be task based inspection in which the stakeholders are focused on verifying compliance of the requirements document to their needs and assessing risk by focusing on already defined functions. Additionally, following the Rev 0 demo, a dedicated validation meeting will be done with the external supervisor of the team in which the team will demonstrate each core feature through task based inspection. The aim of the inspection is to allow the supervisor to observe and provide critique on critical workflows and functions as defined in the SRS such as creating events, processing payments, verifying access permissions and managing sign-ups. Validating these workflows, will aim to confirm their operational and functional expectations align with the SRS defined requirements focused on delivering functional requirements to the stakeholders. The combination of both stakeholder and technical validation through MES executives and the external supervisor will ensure that both system alignment to needs and practical utility is achieved
 
@@ -931,6 +954,7 @@ How test will be performed: Perform admin edit, check references.
 \paragraph{Test Case NFR3-T01: App Usage}
 
 \begin{enumerate}
+% TA feedback: usability NFR3 output used subjective ``relatively easy''; replaced with a defined Likert threshold aligned with Appendix usability subsection.
 \item{NFR3-T01-1\\}
 
 Type: Dynamic, Manual, Usability
@@ -939,9 +963,9 @@ Initial State: 10 representative users with no prior experience using MacSync.
 
 Input/Condition: Each user completes the full registration and ticket purchase workflow without assistance.
 
-Output/Result: $\geq$ 99\% task completion rate. Average completion time $\leq$ 3 minutes. Users report that the process to register is relatively easy on a post-test survey.
+Output/Result: $\geq$ 99\% task completion rate. Average completion time $\leq$ 3 minutes. On a 5-point Likert item ``Registering for an event was straightforward for me'' (1\,=\,strongly disagree, 5\,=\,strongly agree), the mean score across participants is $\geq 4.0$.
 
-How test will be performed: Conduct a post-test survey to identify how users like the registration process. Collect register time and completion rate.
+How test will be performed: Run the timed task, then collect the Likert response and any brief written comment; store completion rate, wall-clock completion time, and scores for analysis.
 
 \item{NFR3-T01-2\\}
 
@@ -1119,128 +1143,42 @@ NFR6 & Auditability. Ensures all registration, payment, and event actions are lo
 
 \section{Unit Test Description}
 
-\wss{This section should not be filled in until after the MIS (detailed design
-  document) has been completed.}
+% TA feedback: removed all instructor \wss{} template prompts (magenta in PDF); replaced with project-specific content and explicit statement that per-module enumerations follow the MIS---``if not yet developed, inform in the doc'' per rubric.
+Detailed, module-by-module unit test listings require stable interface names and access programs from the MIS. Until the MIS is approved, this section documents selection philosophy, scope, and traceability expectations; subsections organized by \textbf{MIS module name} will be added in a later revision so each test ID, initial state, input, and output can cite a specific exported routine or service described in that document. This aligns with the \emph{Implementation Verification} discussion earlier in this document, which already states that unit suites expand after detailed design is fixed.
 
-\wss{Reference your MIS (detailed design document) and explain your overall
-philosophy for test case selection.}  
+\subsection{Overall philosophy for unit test selection}
 
-\wss{To save space and time, it may be an option to provide less detail in this section.  
-For the unit tests you can potentially layout your testing strategy here.  That is, you 
-can explain how tests will be selected for each module.  For instance, your test building 
-approach could be test cases for each access program, including one test for normal behaviour 
-and as many tests as needed for edge cases.  Rather than create the details of the input 
-and output here, you could point to the unit testing code.  For this to work, you code 
-needs to be well-documented, with meaningful names for all of the tests.}
+Verification of internal components will rely primarily on \textbf{automated} tests. Backend units will use \textbf{Jest} with \textbf{Supertest} or direct service calls against a test database; frontend units will use \textbf{Vitest} with \textbf{React Testing Library}. For each MIS-defined access program (public routine, controller handler, or React hook with stable contract), the team will add:
+\begin{itemize}
+    \item at least one \textbf{nominal} case matching the MIS pre/post-conditions;
+    \item \textbf{boundary and invalid-input} cases derived from type ranges, missing fields, and HTTP error paths; and
+    \item where logic is non-trivial, \textbf{branch-focused} cases informed by coverage review (``white box'' rationale documented briefly in the test name or adjacent comment in code).
+\end{itemize}
+Black-box expectations are taken from the SRS behaviours traced to that module; white-box additions close gaps found during review. Rather than duplicate long input/output tables here while interfaces are still moving, the repository will hold the authoritative tuples, and this document will gain one subsection per MIS module listing test file paths and identifiers when the MIS revision is merged.
 
 \subsection{Unit Testing Scope}
 
-\wss{What modules are outside of the scope.  If there are modules that are
-  developed by someone else, then you would say here if you aren't planning on
-  verifying them.  There may also be modules that are part of your software, but
-  have a lower priority for verification than others.  If this is the case,
-  explain your rationale for the ranking of module importance.}
+\textbf{In scope:} All MacSync modules implemented by the Streamliners team that appear in the MIS and contain non-trivial logic (authentication/session handling, authorization guards, registration and ticketing services, payment orchestration, waiver storage, notifications, and organizer workflows).
+
+\textbf{Out of scope (not verified by this team):} Behaviour inside third-party SaaS components (e.g., hosted payment network behaviour) beyond the integration surface already covered by SRS-linked tests; operating-system or cloud infrastructure failures; and hardware-only issues.
+
+\textbf{Lower priority until core paths are stable:} Purely presentational UI modules with no branching logic may initially rely on snapshot or smoke tests only, with rationale recorded in GitHub Issues if coverage is deferred.
 
 \subsection{Tests for Functional Requirements}
 
-\wss{Most of the verification will be through automated unit testing.  If
-  appropriate specific modules can be verified by a non-testing based
-  technique.  That can also be documented in this section.}
+Most functional verification at unit level will be \textbf{automatic}. Manual walkthroughs remain reserved for cross-cutting UX and NFR validation elsewhere in this plan. If a MIS module is simple enough that inspection or linting is sufficient, the team will note that exception in the traceability table entry for that module rather than inventing redundant tests.
 
-\subsubsection{Module 1}
+\subsubsection{Planned coverage by module (to be named in MIS)}
 
-\wss{Include a blurb here to explain why the subsections below cover the module.
-  References to the MIS would be good.  You will want tests from a black box
-  perspective and from a white box perspective.  Explain to the reader how the
-  tests were selected.}
-
-\begin{enumerate}
-
-\item{test-id1\\}
-
-Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
-  be automatic}
-					
-Initial State: 
-					
-Input: 
-					
-Output: \wss{The expected result for the given inputs}
-
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-
-How test will be performed: 
-					
-\item{test-id2\\}
-
-Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
-  be automatic}
-					
-Initial State: 
-					
-Input: 
-					
-Output: \wss{The expected result for the given inputs}
-
-Test Case Derivation: \wss{Justify the expected value given in the Output field}
-
-How test will be performed: 
-
-\item{...\\}
-    
-\end{enumerate}
-
-\subsubsection{Module 2}
-
-...
+After the MIS names concrete modules, this document will include one numbered subsection per module (for example, authentication service, event repository, registration workflow). Each such subsection will summarize: responsibilities per MIS, representative black-box cases tied to SRS FR identifiers, and pointers to \texttt{*.spec.ts} / \texttt{*.test.tsx} files. Until then, no placeholder \texttt{test-id} rows are listed so the PDF does not contain empty instructor shells.
 
 \subsection{Tests for Nonfunctional Requirements}
 
-\wss{If there is a module that needs to be independently assessed for
-  performance, those test cases can go here.  In some projects, planning for
-  nonfunctional tests of units will not be that relevant.}
-
-\wss{These tests may involve collecting performance data from previously
-  mentioned functional tests.}
-
-\subsubsection{Module ?}
-		
-\begin{enumerate}
-
-\item{test-id1\\}
-
-Type: \wss{Functional, Dynamic, Manual, Automatic, Static etc. Most will
-  be automatic}
-					
-Initial State: 
-					
-Input/Condition: 
-					
-Output/Result: 
-					
-How test will be performed: 
-					
-\item{test-id2\\}
-
-Type: Functional, Dynamic, Manual, Static etc.
-					
-Initial State: 
-					
-Input: 
-					
-Output: 
-					
-How test will be performed: 
-
-\end{enumerate}
-
-\subsubsection{Module ?}
-
-...
+Most non-functional attributes (latency under load, end-to-end usability) are exercised in \textbf{system tests} earlier in this plan. At unit level, only NFRs that map cleanly to a single component need dedicated cases---for example, ensuring password hashes never appear in logs, or that a rate-limiter rejects excess calls with a deterministic status code. Where unit-level NFR checks would duplicate system metrics without adding diagnostic value, the team will rely on the aggregated NFR tests and record that decision in the traceability mapping.
 
 \subsection{Traceability Between Test Cases and Modules}
 
-\wss{Provide evidence that all of the modules have been considered.}
+Once the MIS is available, the team will maintain a matrix or GitHub Project column linking each MIS module to the set of automated test files that exercise it, and vice versa. Spot checks during each sprint will confirm that every MIS module with logic carries at least the nominal SRS-linked case unless explicitly exempted under ``Unit Testing Scope.'' That artifact satisfies the evidence requirement that all in-scope modules have been considered.
 				
 \bibliographystyle{plainnat}
 
@@ -1250,16 +1188,36 @@ How test will be performed:
 
 \section{Appendix}
 
-This is where you can place additional information.
+% TA feedback: removed generic template sentence; appendix now states what it contains (supporting constants and usability survey status).
+This appendix holds symbolic parameters reused across multiple test descriptions so numeric assumptions stay consistent, and documents whether optional survey material will accompany the NFR3 usability sessions.
 
 \subsection{Symbolic Parameters}
 
-The definition of the test cases will call for SYMBOLIC\_CONSTANTS.
-Their values are defined in this section for easy maintenance.
+% TA feedback: replaced SYMBOLIC\_CONSTANTS placeholder text with concrete parameters drawn from this plan's NFR load and timing tests; values can be revised in one place if the SRS changes.
+The following symbolic names refer to quantities used in system tests elsewhere in this document. They are not free-form template constants: they centralize the workload and timing figures already written into the NFR1--NFR3 cases.
 
-\subsection{Usability Survey Questions?}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l p{9cm}}
+  \toprule
+  \textbf{Name} & \textbf{Definition (current baseline)} \\
+  \midrule
+  $\mathit{REG}_{\mathrm{conc}}$ & Maximum concurrent full registration workflows in the load/stress registration test (200 users; see NFR1-T01-2). \\
+  $\mathit{RSVP}_{\mathrm{conc}}$ & Maximum concurrent RSVP/sign-up submissions in the stress case (100 users; see NFR1-T02-2). \\
+  $\mathit{RegTime}_{\mathrm{single}}$ & Upper bound on end-to-end registration latency for a single user (2.0\,s peak, 1.5\,s average; see NFR1-T01-1). \\
+  $\mathit{RegTime}_{\mathrm{bulk}}$ & Upper bound on average end-to-end registration latency under $\mathit{REG}_{\mathrm{conc}}$ (3.0\,s; see NFR1-T01-2). \\
+  $\mathit{RSVP}_{\mathrm{single}}$ & Upper bound on RSVP/sign-up operation time for one user (1.0\,s; see NFR1-T02-1). \\
+  $\mathit{RSVP}_{\mathrm{bulk}}$ & Upper bound on average RSVP time under $\mathit{RSVP}_{\mathrm{conc}}$ (1.5\,s; see NFR1-T02-2). \\
+  $\mathit{CheckIn}_{\max}$ & Upper bound on QR check-in API latency (0.30\,s; see NFR1-T03-1 and NFR1-T03-2). \\
+  $\mathit{Oversell}_{\mathrm{extra}}$ & Concurrent purchasers attempting to claim the last remaining seats when capacity is nearly exhausted (120 users for 20 remaining seats; see NFR2-T02-1). \\
+  $\mathit{TaskTime}_{\mathrm{reg}}$ & Target upper bound on wall-clock time for novice users to complete the full registration task in moderated usability testing (3 minutes; see NFR3-T01-1). \\
+  $\mathit{NavTime}_{\max}$ & Target upper bound for locating each of the three common features in the navigation task (15 seconds per feature; see NFR3-T01-2). \\
+  \bottomrule
+\end{tabular}
 
-\wss{This is a section that would be appropriate for some projects.}
+\subsection{Usability Survey Questions}
+
+% TA feedback: removed instructor \wss{} note; clarified whether this subsection is used (rubric: if not developed, state status in the doc).
+Usability validation for this project is driven primarily by the task-completion, timing, and error-recovery criteria in Test Case NFR3-T01. A separate Likert-style questionnaire is \textbf{optional}: if supervisors or MES stakeholders request a standardized post-session form, short items aligned to the same criteria (task success, perceived difficulty on a 1--5 scale, and whether error text was understandable) will be added here in a future revision. Until such a request is made, no additional survey text is required beyond the structured observation protocol already specified in NFR3-T01.
 
 \newpage{}
 \section*{Appendix --- Reflection}
