@@ -143,7 +143,7 @@ By including these extras, the project emphasizes usability, maintainability, an
 \section{Plan}
 
 % TA feedback: removed instructor template note (\wss, shown as magenta in source builds); replaced with an explicit roadmap of this section.
-This section explains how MacSync will be verified and validated: who performs each activity, how the SRS and design documents are reviewed, how implementation and tools support ongoing checks, how the plan itself is audited, and how stakeholder validation is organized. It leads directly into the system-level tests in the next major section and defers detailed per-module unit-test enumerations until the MIS is finalized, as summarized below and in Section ``Unit Test Description.''
+This section explains how MacSync will be verified and validated: who performs each activity, how the SRS and design documents are reviewed, how implementation and tools support ongoing checks, how the plan itself is audited, and how stakeholder validation is organized. It leads into the system-level tests in the next major section; module-level unit tests are specified against the Module Interface Specification (MIS) \citet{SL-MIS} in Section ``Unit Test Description.''
 
 \subsection{Verification and Validation Team}
 
@@ -247,7 +247,7 @@ $\square$ Review feedback mechanism established via GitHub Issues \\
 \subsection{Implementation Verification}
 
 The implementation verification phase ensures that the developed system correctly satisfies both its functional and non-functional requirements as specified in the SRS document. Verification activities during implementation will be conducted through a combination of automated testing, static analysis, code reviews, and post-deployment validation.\\
-\noindent \newline This section provides an overview of how implementation verification will be achieved, how it connects to the defined system-level tests (Section 4.1 and 4.2), and how the forthcoming unit testing phase will integrate once the detailed design (MIS) document is finalized.
+\noindent \newline This section provides an overview of how implementation verification will be achieved, how it connects to the defined system-level tests (Section 4.1 and 4.2), and how \textbf{unit testing} aligns with the Module Interface Specification (MIS) \citet{SL-MIS}, which defines modules M1--M8 and their exported access programs.
 
 \paragraph{Scope and Approach}
 \noindent \newline
@@ -265,7 +265,7 @@ The implementation verification phase ensures that the developed system correctl
 \noindent \newline
 Verification of the implementation will rely on the following artifacts:
 \begin{itemize}
-    \item \textbf{Automated Unit and Integration Tests:} To verify module-level correctness and interface behavior (to be completed post-MIS design stage).
+    \item \textbf{Automated Unit and Integration Tests:} To verify module-level correctness and interface behaviour against the MIS access programs for M1--M8 (see Section ``Unit Test Description'').
     \item \textbf{System Test Suite:} The detailed test cases documented in Sections 4.1 and 4.2 for both functional and non-functional requirements.
     \item \textbf{Static Code Reviews:} Manual and tool-assisted code reviews to identify defects early in the development process.
     \item \textbf{Traceability Matrix:} A mapping of all SRS requirements to corresponding test cases will ensure that all implementation aspects have been verified.
@@ -281,20 +281,13 @@ Implementation verification will leverage automated testing frameworks to ensure
     \item \textbf{Continuous Integration:} GitHub Actions for automated builds, test execution, and code coverage reporting.
 \end{itemize}
 
-\paragraph{Unit Testing Placeholder and Future Work}
+\paragraph{Unit Testing and MIS Alignment}
 \noindent \newline
-Unit testing for individual modules (e.g., authentication, database operations, and payment processing) will be developed following the completion of the MIS (Module Interface Specification) document. At that stage, each module will have:
-\begin{itemize}
-    \item Defined input/output specifications.
-    \item A corresponding suite of automated unit tests.
-    \item Documentation describing test coverage and expected behavior.
-\end{itemize}
-
-\noindent Since the MIS defines the internal structure of each module, the unit test plan will be appended to this document once design finalization occurs. The unit testing phase will ensure that each software component behaves correctly in isolation before being integrated into the full system.
+The MIS \citet{SL-MIS} decomposes MacSync into eight modules (M1 Payment Processing, M2 RBAC/FBAC Access Control, M3 Sign-Up, M4 Payment Configuration, M5 Access Control Service, M6 Registration Rules, M7 Notification Handling, M8 User Authorization), each with exported access programs and stated exceptions. Unit and focused integration tests are planned per access program: nominal paths, exception paths named in the MIS, and---where local functions exist---helpers such as \texttt{validateSignupData} (M3) or \texttt{decodeToken} (M8). Section ``Unit Test Description'' lists representative unit test cases by module; the repository remains the source of truth for exact test names and assertions.
 
 \paragraph{Summary}
 \noindent \newline
-In summary, implementation verification combines automated testing, static analysis, and structured validation against the SRS. The test cases defined in Section 4.1 and Section 4.2 will serve as the primary basis for verification. Future unit testing will build upon this foundation once the design phase (MIS) is complete, ensuring comprehensive validation of both high-level and component-level system behavior.
+In summary, implementation verification combines automated testing, static analysis, and structured validation against the SRS. The test cases defined in Section 4.1 and Section 4.2 provide system-level verification; Section ``Unit Test Description'' ties component-level verification to the MIS modules M1--M8.
 
 
 \subsection{Automated Testing and Verification Tools}
@@ -1143,42 +1136,309 @@ NFR6 & Auditability. Ensures all registration, payment, and event actions are lo
 
 \section{Unit Test Description}
 
-% TA feedback: removed all instructor \wss{} template prompts (magenta in PDF); replaced with project-specific content and explicit statement that per-module enumerations follow the MIS---``if not yet developed, inform in the doc'' per rubric.
-Detailed, module-by-module unit test listings require stable interface names and access programs from the MIS. Until the MIS is approved, this section documents selection philosophy, scope, and traceability expectations; subsections organized by \textbf{MIS module name} will be added in a later revision so each test ID, initial state, input, and output can cite a specific exported routine or service described in that document. This aligns with the \emph{Implementation Verification} discussion earlier in this document, which already states that unit suites expand after detailed design is fixed.
+% Populated from MIS (docs/Design/SoftDetailedDes/MIS.tex): modules M1--M8, exported access programs, and exceptions; aligns with \citet{SL-MIS}.
+This section specifies unit-level verification against the Module Interface Specification \citet{SL-MIS}. Module identifiers, routine names, and exception types below match that document. Detailed assertions and fixtures remain in the repository (\texttt{*.spec.ts}, \texttt{*.test.ts}, \texttt{*.test.tsx}).
 
 \subsection{Overall philosophy for unit test selection}
 
-Verification of internal components will rely primarily on \textbf{automated} tests. Backend units will use \textbf{Jest} with \textbf{Supertest} or direct service calls against a test database; frontend units will use \textbf{Vitest} with \textbf{React Testing Library}. For each MIS-defined access program (public routine, controller handler, or React hook with stable contract), the team will add:
-\begin{itemize}
-    \item at least one \textbf{nominal} case matching the MIS pre/post-conditions;
-    \item \textbf{boundary and invalid-input} cases derived from type ranges, missing fields, and HTTP error paths; and
-    \item where logic is non-trivial, \textbf{branch-focused} cases informed by coverage review (``white box'' rationale documented briefly in the test name or adjacent comment in code).
-\end{itemize}
-Black-box expectations are taken from the SRS behaviours traced to that module; white-box additions close gaps found during review. Rather than duplicate long input/output tables here while interfaces are still moving, the repository will hold the authoritative tuples, and this document will gain one subsection per MIS module listing test file paths and identifiers when the MIS revision is merged.
+Verification relies primarily on \textbf{automated} tests: \textbf{Jest} with \textbf{Supertest} or service-level calls on the backend, and \textbf{Vitest} with \textbf{React Testing Library} on the frontend. For each \textbf{exported access program} in the MIS, the team maintains at least one nominal case matching documented outputs, plus cases that exercise each listed \textbf{exception} where testable without requiring real third-party outages. Where the MIS names \textbf{local functions} (e.g., M1 \texttt{handleAPIResponse}, M3 \texttt{validateSignupData}, M8 \texttt{decodeToken}), tests cover parsing, validation, and error mapping. Black-box expectations trace to SRS requirements; extra branches use coverage review where justified.
 
 \subsection{Unit Testing Scope}
 
-\textbf{In scope:} All MacSync modules implemented by the Streamliners team that appear in the MIS and contain non-trivial logic (authentication/session handling, authorization guards, registration and ticketing services, payment orchestration, waiver storage, notifications, and organizer workflows).
+\textbf{In scope:} MIS-defined behaviour-hiding and software-decision modules M1--M8: \texttt{PaymentProcessingModule} (M1), \texttt{RBACModule} (M2), \texttt{SignUpModule} (M3, including Bus/Table/RSVP per MIS constants), \texttt{PaymentConfigurationModule} (M4), \texttt{AccessControlService} (M5), \texttt{RegistrationRulesModule} (M6), \texttt{NotificationModule} (M7), \texttt{UserAuthorizationModule} (M8).
 
-\textbf{Out of scope (not verified by this team):} Behaviour inside third-party SaaS components (e.g., hosted payment network behaviour) beyond the integration surface already covered by SRS-linked tests; operating-system or cloud infrastructure failures; and hardware-only issues.
+\textbf{Out of scope:} Internal behaviour of Stripe, OAuth/SSO, and email/SMS providers beyond boundary handling at MacSync; OS and hardware failures.
 
-\textbf{Lower priority until core paths are stable:} Purely presentational UI modules with no branching logic may initially rely on snapshot or smoke tests only, with rationale recorded in GitHub Issues if coverage is deferred.
+\textbf{Hardware-Hiding Module:} Named in the Module Guide only; verified via integration tests and deployment checks, not as a separate MIS access-program surface.
+
+\textbf{Presentation-only UI:} Snapshot or smoke tests may suffice; gaps recorded in GitHub Issues if deferred.
 
 \subsection{Tests for Functional Requirements}
 
-Most functional verification at unit level will be \textbf{automatic}. Manual walkthroughs remain reserved for cross-cutting UX and NFR validation elsewhere in this plan. If a MIS module is simple enough that inspection or linting is sufficient, the team will note that exception in the traceability table entry for that module rather than inventing redundant tests.
+Representative unit tests below follow the same field pattern as system tests. Additional cases are added as implementation evolves; CI links failures to unit test IDs with prefix \texttt{UT-M1} through \texttt{UT-M8}.
 
-\subsubsection{Planned coverage by module (to be named in MIS)}
+\subsubsection{Payment Processing Module (M1)}
 
-After the MIS names concrete modules, this document will include one numbered subsection per module (for example, authentication service, event repository, registration workflow). Each such subsection will summarize: responsibilities per MIS, representative black-box cases tied to SRS FR identifiers, and pointers to \texttt{*.spec.ts} / \texttt{*.test.tsx} files. Until then, no placeholder \texttt{test-id} rows are listed so the PDF does not contain empty instructor shells.
+\textit{MIS:} \texttt{PaymentProcessingModule}; \textit{access programs:} \texttt{submitPayment}, \texttt{validatePaymentData}, \texttt{requestRefund}; \textit{local:} \texttt{submitAPIRequest}, \texttt{handleAPIResponse}. \textit{SRS focus:} FR1.
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M1-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional, Dynamic\\
+    \textit{Initial State:} Mock backend accepts \texttt{POST /api/payments}; valid \texttt{PaymentInfo}.\\
+    \textit{Input:} \texttt{submitPayment} with complete amount, event ID, and billing fields.\\
+    \textit{Expected Output:} \texttt{ConfirmationResponse} with client secret or succeeded status (MIS semantics).\\
+    \textit{Test Case Derivation:} MIS \texttt{submitPayment} nominal path; FR1 payment initiation.\\
+    \textit{How Test Will Be Performed:} Jest with HTTP mock.
+
+    \item \textbf{Test ID:} UT-M1-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} N/A.\\
+    \textit{Input:} \texttt{validatePaymentData} with missing required field (e.g., amount).\\
+    \textit{Expected Output:} \texttt{InvalidPaymentData} or false per implementation mapping to MIS.\\
+    \textit{Test Case Derivation:} MIS \texttt{validatePaymentData} exception.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M1-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional, Dynamic\\
+    \textit{Initial State:} Mock backend error or unreachable.\\
+    \textit{Input:} \texttt{requestRefund} with invalid \texttt{RefundRequest}.\\
+    \textit{Expected Output:} \texttt{InvalidRefundRequest} or \texttt{NetworkError} as simulated.\\
+    \textit{Test Case Derivation:} MIS \texttt{requestRefund} exceptions.\\
+    \textit{How Test Will Be Performed:} Jest / Supertest with mocks.
+\end{enumerate}
+
+\subsubsection{RBAC/FBAC Access Control Module (M2)}
+
+\textit{MIS:} \texttt{RBACModule}; \textit{access programs:} \texttt{getUserRole}, \texttt{getUserCapabilities}, \texttt{authorizeAction}, \texttt{syncCapabilities}. \textit{Uses:} M5, M8. \textit{SRS focus:} FR4.
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M2-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Mock M5 returns capability list.\\
+    \textit{Input:} \texttt{getUserCapabilities(validUserID)}.\\
+    \textit{Expected Output:} Non-empty capability list per MIS.\\
+    \textit{Test Case Derivation:} MIS nominal path.\\
+    \textit{How Test Will Be Performed:} Jest with stubbed access-control client.
+
+    \item \textbf{Test ID:} UT-M2-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Policy denies action \texttt{a} for user \texttt{u}.\\
+    \textit{Input:} \texttt{authorizeAction} for \texttt{u} and \texttt{a} (per MIS signature bound in code).\\
+    \textit{Expected Output:} Denial or \texttt{AuthorizationError}.\\
+    \textit{Test Case Derivation:} MIS \texttt{authorizeAction}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M2-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Capability fetch fails.\\
+    \textit{Input:} \texttt{syncCapabilities(userID)}.\\
+    \textit{Expected Output:} \texttt{FetchError}.\\
+    \textit{Test Case Derivation:} MIS \texttt{syncCapabilities}.\\
+    \textit{How Test Will Be Performed:} Jest with failing network mock.
+\end{enumerate}
+
+\subsubsection{Sign-Up Module (M3)}
+
+\textit{MIS:} \texttt{SignUpModule}; \textit{access programs:} \texttt{submitSignup}, \texttt{getSignupStatus}, \texttt{cancelSignup}; \textit{local:} \texttt{validateSignupData}, \texttt{checkCapacity}. \textit{SRS focus:} FR2.
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M3-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional, Dynamic\\
+    \textit{Initial State:} M6 reports capacity available; authenticated session.\\
+    \textit{Input:} \texttt{submitSignup(userID, eventID, data)} with valid payload for an allowed signup type.\\
+    \textit{Expected Output:} \texttt{success = true}.\\
+    \textit{Test Case Derivation:} MIS \texttt{submitSignup} nominal path.\\
+    \textit{How Test Will Be Performed:} Jest/Vitest with mocked rules and API.
+
+    \item \textbf{Test ID:} UT-M3-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Event at capacity.\\
+    \textit{Input:} \texttt{submitSignup} for same event.\\
+    \textit{Expected Output:} \texttt{SignupError}.\\
+    \textit{Test Case Derivation:} MIS capacity / validation failure.\\
+    \textit{How Test Will Be Performed:} Jest with mocked counts.
+
+    \item \textbf{Test ID:} UT-M3-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} No signup for (\texttt{userID}, \texttt{eventID}).\\
+    \textit{Input:} \texttt{getSignupStatus}.\\
+    \textit{Expected Output:} \texttt{NotFoundError}.\\
+    \textit{Test Case Derivation:} MIS \texttt{getSignupStatus}.\\
+    \textit{How Test Will Be Performed:} Jest.
+\end{enumerate}
+
+\subsubsection{Payment Configuration Module (M4)}
+
+\textit{MIS:} \texttt{PaymentConfigurationModule}; \textit{access programs:} \texttt{getPublicStripeKey}, \texttt{getPaymentAPIEndpoint}, \texttt{getCurrencyConfig}, \texttt{shouldRefreshPaymentIntent}, \texttt{getReceiptConfig}. \textit{SRS focus:} FR1 (client payment configuration).
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M4-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Environment omits publishable key.\\
+    \textit{Input:} \texttt{getPublicStripeKey()}.\\
+    \textit{Expected Output:} \texttt{KeyNotAvailable}.\\
+    \textit{Test Case Derivation:} MIS \texttt{getPublicStripeKey}.\\
+    \textit{How Test Will Be Performed:} Jest/Vitest with cleared env.
+
+    \item \textbf{Test ID:} UT-M4-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} No URL mapping for operation.\\
+    \textit{Input:} \texttt{getPaymentAPIEndpoint(unknownOp)}.\\
+    \textit{Expected Output:} \texttt{InvalidOperationType}.\\
+    \textit{Test Case Derivation:} MIS \texttt{getPaymentAPIEndpoint}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M4-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} \texttt{lastUpdated} older than \texttt{INTENT\_CACHE\_TTL\_SEC}.\\
+    \textit{Input:} \texttt{shouldRefreshPaymentIntent(lastUpdated)}.\\
+    \textit{Expected Output:} \texttt{true}.\\
+    \textit{Test Case Derivation:} MIS TTL semantics.\\
+    \textit{How Test Will Be Performed:} Jest with mock time.
+\end{enumerate}
+
+\subsubsection{Access Control Module (M5)}
+
+\textit{MIS:} \texttt{AccessControlService}; \textit{access programs:} \texttt{checkPermission}, \texttt{assignRole}, \texttt{revokeRole}, \texttt{setPolicy}, \texttt{getPolicy}. \textit{SRS focus:} FR4.
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M5-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Principal lacks capability for \texttt{action}.\\
+    \textit{Input:} \texttt{checkPermission(action)} (with authenticated context per NestJS guard).\\
+    \textit{Expected Output:} \texttt{AuthorizationError} or false per MIS binding.\\
+    \textit{Test Case Derivation:} MIS \texttt{checkPermission}.\\
+    \textit{How Test Will Be Performed:} Jest with fixture policy.
+
+    \item \textbf{Test ID:} UT-M5-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Valid user and role.\\
+    \textit{Input:} \texttt{assignRole(userID, role)}.\\
+    \textit{Expected Output:} \texttt{success = true}.\\
+    \textit{Test Case Derivation:} MIS \texttt{assignRole} nominal path.\\
+    \textit{How Test Will Be Performed:} Jest with test DB or mock store.
+
+    \item \textbf{Test ID:} UT-M5-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} JSON violates \texttt{POLICY\_SCHEMA}.\\
+    \textit{Input:} \texttt{setPolicy(invalidJSON)}.\\
+    \textit{Expected Output:} \texttt{PolicyError}.\\
+    \textit{Test Case Derivation:} MIS \texttt{setPolicy}.\\
+    \textit{How Test Will Be Performed:} Jest.
+\end{enumerate}
+
+\subsubsection{Registration Rules Module (M6)}
+
+\textit{MIS:} \texttt{RegistrationRulesModule}; \textit{access programs:} \texttt{validateCapacity}, \texttt{validateDeadline}, \texttt{validateEligibility}, \texttt{getEventRules}. \textit{SRS focus:} FR2, FR5.
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M6-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Event full.\\
+    \textit{Input:} \texttt{validateCapacity(eventInfo, userInfo)}.\\
+    \textit{Expected Output:} \texttt{EventFull}.\\
+    \textit{Test Case Derivation:} MIS \texttt{validateCapacity}.\\
+    \textit{How Test Will Be Performed:} Jest with mocked datastore.
+
+    \item \textbf{Test ID:} UT-M6-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Past registration deadline.\\
+    \textit{Input:} \texttt{validateDeadline(eventInfo, userInfo)}.\\
+    \textit{Expected Output:} \texttt{DeadlinePassed}.\\
+    \textit{Test Case Derivation:} MIS \texttt{validateDeadline}.\\
+    \textit{How Test Will Be Performed:} Jest with mock clock.
+
+    \item \textbf{Test ID:} UT-M6-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} User fails eligibility.\\
+    \textit{Input:} \texttt{validateEligibility(eventInfo, userInfo)}.\\
+    \textit{Expected Output:} \texttt{PermissionDenied}.\\
+    \textit{Test Case Derivation:} MIS \texttt{validateEligibility}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M6-01-4\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Unknown event.\\
+    \textit{Input:} \texttt{getEventRules(eventID)}.\\
+    \textit{Expected Output:} \texttt{InvalidEvent}.\\
+    \textit{Test Case Derivation:} MIS \texttt{getEventRules}.\\
+    \textit{How Test Will Be Performed:} Jest.
+\end{enumerate}
+
+\subsubsection{Notification Handling Module (M7)}
+
+\textit{MIS:} \texttt{NotificationModule}; \textit{access programs:} \texttt{SendNotification}, \texttt{getNotificationHist}, \texttt{subscribeUser}, \texttt{UnsubscribeUser}. \textit{SRS focus:} confirmations and reminders (cross-cutting).
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M7-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Email/SMS API mock fails.\\
+    \textit{Input:} \texttt{SendNotification(userID, message, type)} with type in \texttt{NOTIFICATION\_TYPES}.\\
+    \textit{Expected Output:} \texttt{NotificationError}.\\
+    \textit{Test Case Derivation:} MIS \texttt{SendNotification}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M7-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} No notification history for user.\\
+    \textit{Input:} \texttt{getNotificationHist(userID)}.\\
+    \textit{Expected Output:} \texttt{RetrievalError} (MIS).\\
+    \textit{Test Case Derivation:} MIS \texttt{getNotificationHist}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M7-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Valid user.\\
+    \textit{Input:} \texttt{subscribeUser(userID, true)} then \texttt{UnsubscribeUser(userID, false)}.\\
+    \textit{Expected Output:} Both succeed per MIS.\\
+    \textit{Test Case Derivation:} MIS preference updates.\\
+    \textit{How Test Will Be Performed:} Jest.
+\end{enumerate}
+
+\subsubsection{User Authorization Module (M8)}
+
+\textit{MIS:} \texttt{UserAuthorizationModule}; \textit{access programs:} \texttt{login}, \texttt{logout}, \texttt{validateToken}, \texttt{getUserInfo}, \texttt{refreshToken}; \textit{local:} \texttt{decodeToken}, \texttt{isExpired}, \texttt{requestAuthServer}. \textit{SRS focus:} FR4, session security.
+
+\begin{enumerate}\setlength{\itemsep}{0.85em}
+    \item \textbf{Test ID:} UT-M8-01-1\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Provider rejects credentials.\\
+    \textit{Input:} \texttt{login(credentials)}.\\
+    \textit{Expected Output:} \texttt{InvalidCredentials}.\\
+    \textit{Test Case Derivation:} MIS \texttt{login}.\\
+    \textit{How Test Will Be Performed:} Jest with mocked OAuth/SSO.
+
+    \item \textbf{Test ID:} UT-M8-01-2\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Expired token in \texttt{tokenExpiryTimes}.\\
+    \textit{Input:} \texttt{validateToken(expiredToken)}.\\
+    \textit{Expected Output:} \texttt{TokenExpired}.\\
+    \textit{Test Case Derivation:} MIS \texttt{validateToken} / \texttt{isExpired}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M8-01-3\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} \texttt{REFRESH\_TOKEN\_SUPPORTED} false.\\
+    \textit{Input:} \texttt{refreshToken(refreshToken)}.\\
+    \textit{Expected Output:} \texttt{NotSupported}.\\
+    \textit{Test Case Derivation:} MIS \texttt{refreshToken}.\\
+    \textit{How Test Will Be Performed:} Jest.
+
+    \item \textbf{Test ID:} UT-M8-01-4\\[0.25em]
+    \textit{Type:} Automatic, Functional\\
+    \textit{Initial State:} Valid active token.\\
+    \textit{Input:} \texttt{getUserInfo(token)}.\\
+    \textit{Expected Output:} \texttt{UserProfile} (ID, email, name, role).\\
+    \textit{Test Case Derivation:} MIS \texttt{getUserInfo}.\\
+    \textit{How Test Will Be Performed:} Jest.
+\end{enumerate}
 
 \subsection{Tests for Nonfunctional Requirements}
 
-Most non-functional attributes (latency under load, end-to-end usability) are exercised in \textbf{system tests} earlier in this plan. At unit level, only NFRs that map cleanly to a single component need dedicated cases---for example, ensuring password hashes never appear in logs, or that a rate-limiter rejects excess calls with a deterministic status code. Where unit-level NFR checks would duplicate system metrics without adding diagnostic value, the team will rely on the aggregated NFR tests and record that decision in the traceability mapping.
+System tests under \textbf{Tests for Nonfunctional Requirements} (same section numbering as earlier in this plan) cover aggregate performance, usability, and security. \textbf{Unit-level} NFR checks derived from the MIS include: M8 token expiry versus MIS session assumptions; M4 ensuring only publishable Stripe material appears in client configuration; M1/M7 ensuring errors and logs omit raw secrets (automated or manual log review). Further unit NFR tests are added only when owned by a single routine without duplicating those system metrics.
 
 \subsection{Traceability Between Test Cases and Modules}
 
-Once the MIS is available, the team will maintain a matrix or GitHub Project column linking each MIS module to the set of automated test files that exercise it, and vice versa. Spot checks during each sprint will confirm that every MIS module with logic carries at least the nominal SRS-linked case unless explicitly exempted under ``Unit Testing Scope.'' That artifact satisfies the evidence requirement that all in-scope modules have been considered.
+Table~\ref{tab:unit-trace} maps MIS modules to SRS areas and the unit test ID prefixes defined above. GitHub Issues and CI jobs use the same \texttt{UT-M1}--\texttt{UT-M8} naming when tracking coverage.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{|p{2.2cm}|p{4.5cm}|p{6.8cm}|}
+\hline
+\textbf{MIS module} & \textbf{Primary SRS / system test areas} & \textbf{Unit test ID prefix} \\ \hline
+M1 Payment Processing & FR1; FR1-T* & UT-M1-* \\ \hline
+M2 RBAC/FBAC & FR4; FR4-T* & UT-M2-* \\ \hline
+M3 Sign-Up & FR2; FR2-T* & UT-M3-* \\ \hline
+M4 Payment Configuration & FR1 (client payment setup) & UT-M4-* \\ \hline
+M5 Access Control Service & FR4; policy; NFR4 & UT-M5-* \\ \hline
+M6 Registration Rules & FR2, FR5 & UT-M6-* \\ \hline
+M7 Notification Handling & Cross-cutting confirmations & UT-M7-* \\ \hline
+M8 User Authorization & FR4; NFR4 & UT-M8-* \\ \hline
+\end{tabular}
+\caption{Traceability: MIS modules to SRS focus and unit test identifiers.}
+\label{tab:unit-trace}
+\end{table}
 				
 \bibliographystyle{plainnat}
 
