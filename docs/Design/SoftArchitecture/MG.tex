@@ -48,6 +48,7 @@
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
 2025-11-13 & -1.0 & Initial draft of MG doc.\\
+2026-04-06 & 1.1 & TA review: standalone abbreviations note; User Interfaces section now explains each figure; caption typo fixed.\\
 \bottomrule
 \end{tabularx}
 
@@ -59,19 +60,29 @@ This section records information for easy reference.
 
 \subsection{Abbreviations and Acronyms}
 
+% TA feedback: this MG carries its own abbreviation table (same expectation as the MIS); do not defer readers to other documents for definitions.
+\noindent
+Abbreviations and acronyms used in this Module Guide are defined in the table below.
+
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{l l} 
   \toprule		
   \textbf{symbol} & \textbf{description}\\
   \midrule 
   AC & Anticipated Change\\
+  API & Application Programming Interface\\
   DAG & Directed Acyclic Graph \\
+  FBAC & Feature-Based Access Control\\
+  LEMS & Large Event Management System (this product)\\
   M & Module \\
-  MG & Module Guide \\
+  MG & Module Guide (this document)\\
+  MIS & Module Interface Specification\\
   OS & Operating System \\
+  RBAC & Role-Based Access Control\\
   R & Requirement\\
   SC & Scientific Computing \\
   SRS & Software Requirements Specification\\
+  SSO & Single Sign-On\\
   \progname & Explanation of program name\\
   UC & Unlikely Change \\
   \bottomrule
@@ -613,22 +624,38 @@ because they use modules from the lower levels.
 
 \section{User Interfaces}
 
+% TA feedback: briefly explain each UI figure in prose so readers know what they are looking at and how it relates to the architecture (not figures alone).
+\noindent
+This section shows representative web UI screens for LEMS. Each figure below is described before it appears: the screenshots illustrate end-user flows that exercise the behaviour-hiding modules defined earlier (sign-up, payment, and access control).
+
+\paragraph{Sign-up and registration UI.}
+Figure~\ref{fig:ui-signup} shows a sign-up-oriented view where an authenticated user selects an event registration path (e.g.\ bus, table, or RSVP) and submits structured data. The layout corresponds to the Sign-Up Module family (\ref{M3} and its submodules): the page collects form fields that the client sends to backend registration and rules services after access checks succeed.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{Signup.png}
-    \caption{Signup Page}
+    \caption{Representative sign-up / event registration screen}
+    \label{fig:ui-signup}
 \end{figure}
+
+\paragraph{Payment UI.}
+Figure~\ref{fig:ui-payment} shows the payment experience for purchasing tickets or paying fees. It reflects the Payment Processing and Payment Configuration modules (\ref{M1}, \ref{M4}): the user confirms amount and event context, and the client obtains Stripe-backed payment state (e.g.\ PaymentIntent) through the configured API endpoints described in the MIS.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{Payment.png}
-    \caption{Payment Page}
+    \caption{Representative payment checkout screen}
+    \label{fig:ui-payment}
 \end{figure}
+
+\paragraph{Access control administration UI.}
+Figure~\ref{fig:ui-access} shows an administrator-facing view for managing role- and feature-based permissions. It aligns with the RBAC/FBAC Access Control and Access Control Service modules (\ref{M2}, \ref{M5}): the UI is where policy changes are initiated; the authoritative policy store and permission checks remain in backend services as specified in the MIS.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{Access_Control.png}
-    \caption{Role-based/Feautre-based Access Control}
+    \caption{Role-based / feature-based access control administration screen}
+    \label{fig:ui-access}
 \end{figure}
 
 \section{Design of Communication Protocols}
