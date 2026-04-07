@@ -1,0 +1,438 @@
+
+
+\documentclass[12pt, twoside]{report}
+
+
+\usepackage[
+  top=1in, bottom=1in,
+  inner=1.25in, outer=1in,
+  includeheadfoot
+]{geometry}
+\usepackage{fontenc}
+\usepackage{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{float}
+\usepackage{caption}
+
+
+\definecolor{MacSyncPrimary}{HTML}{6B1A35}   % Maroon — chapter titles
+\definecolor{NoteGray}{HTML}{F2F2F2}         % Light gray — note boxes
+\definecolor{WarnGray}{HTML}{EBEBEB}         % Slightly darker gray — warnings
+\definecolor{BorderGray}{HTML}{999999}       % Gray border
+\definecolor{DarkGray}{HTML}{2B2B2B}         % Near-black text
+
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=MacSyncPrimary,
+  urlcolor=MacSyncPrimary,
+  pdftitle={MacSync Member Guide},
+  pdfauthor={MacSync Team},
+  bookmarksnumbered=true,
+  bookmarksopen=true,
+}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{MacSyncPrimary}}
+  {\chaptertitlename\ \thechapter}{10pt}{\Huge}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{black}}
+  {\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\leftmark}
+\fancyhead[RO]{\small MacSync Member Guide}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[C]{\small\textcolor{gray}{McMaster Engineering Society}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{notebox}{
+  colback=NoteGray, colframe=BorderGray,
+  fonttitle=\bfseries\small, title=Note,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{warnbox}{
+  colback=WarnGray, colframe=DarkGray,
+  fonttitle=\bfseries\small, title=Warning,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{tipbox}{
+  colback=NoteGray, colframe=BorderGray,
+  fonttitle=\bfseries\small, title=Tip,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt
+}
+
+
+\newcommand{\uielem}[1]{\textbf{#1}}
+\newcommand{\version}{1.0.0}
+\newcommand{\releasedate}{April 2026}
+
+%% ============================================================
+%%  DOCUMENT START
+%% ============================================================
+\begin{document}
+
+
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+
+  % \includegraphics[width=0.35\textwidth]{logo.png}\\[1.5cm]
+
+  {\Huge\bfseries\color{MacSyncPrimary} MacSync}\\[0.4cm]
+  {\Large\color{DarkGray} MES Large Events Management Platform}\\[0.2cm]
+  \noindent\rule{\textwidth}{1pt}\\[0.4cm]
+  {\LARGE\bfseries Member Guide}\\[0.2cm]
+  {\large Version \version\ ---\ \releasedate}\\[2cm]
+
+  {\large Mahad Ahmed \textbullet\ Abyan Jaigirdar \textbullet\ Prerna Prabhu\\
+  Farhan Rahman \textbullet\ Ali Zia}\\[0.4cm]
+  {\normalsize\textit{Capstone 2025--2026 | Streamliners}}\\[0.6cm]
+  {\large McMaster University \textbullet\ McMaster Engineering Society}\\[1cm]
+
+  \vfill
+  {\small\textcolor{gray}{\copyright\ 2026 MacSync. All rights reserved.\\
+  McMaster Engineering Society}}
+\end{titlepage}
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Document History}
+\addcontentsline{toc}{chapter}{Document History}
+\begin{longtable}{@{} p{2cm} p{2.5cm} p{4cm} p{5cm} @{}}
+  \toprule
+  \textbf{Version} & \textbf{Date} & \textbf{Author} & \textbf{Changes} \\
+  \midrule
+  \endhead
+  1.0.0 & April 2026 & MacSync Team & Initial release \\
+  \bottomrule
+\end{longtable}
+
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+
+\chapter{Introduction}
+
+\section{About MacSync}
+
+MacSync is an event management platform built for the McMaster Engineering Society (MES).
+It gives McMaster students a single place to discover events, purchase tickets, and
+manage their registrations --- all through a dedicated mobile app available on iOS
+and Android.
+
+\section{Who This Guide Is For}
+
+This guide is for \textbf{Members} --- any registered McMaster student using the
+MacSync mobile app to browse and attend events. If you are a staff member or
+administrator, refer to the \textit{MacSync Staff \& Admin Guide}.
+
+\section{How to Use This Guide}
+
+Read Chapter~\ref{chap:started} to get set up, then jump to whichever section
+covers what you need. Callout boxes highlight important information:
+
+\begin{notebox}
+Notes provide extra context or background information.
+\end{notebox}
+
+\begin{warnbox}
+Warnings flag actions that could have unintended consequences.
+\end{warnbox}
+
+\begin{tipbox}
+Tips share best practices and useful shortcuts.
+\end{tipbox}
+
+\section{System Requirements}
+\begin{itemize}
+  \item iOS or Android smartphone with the MacSync app installed.
+  \item Active internet connection.
+  \item A valid \texttt{@mcmaster.ca} email address.
+\end{itemize}
+
+
+\chapter{Getting Started}
+\label{chap:started}
+
+\section{Downloading the App}
+
+The MacSync mobile app is available on both platforms:
+\begin{itemize}
+  \item \textbf{iOS:} Search \textit{MacSync} on the Apple App Store.
+  \item \textbf{Android:} Search \textit{MacSync} on the Google Play Store.
+\end{itemize}
+
+\section{Creating an Account}
+
+\begin{enumerate}
+  \item Open the MacSync app.
+  \item Tap \uielem{Sign Up}.
+  \item Enter your \texttt{@mcmaster.ca} email address.
+  \item A \textbf{verification code} will be sent to your McMaster inbox.
+  \item Enter the verification code in the app to confirm your email.
+  \item Complete your profile and set a password.
+  \item Tap \uielem{Create Account}.
+\end{enumerate}
+
+\begin{notebox}
+Only valid \texttt{@mcmaster.ca} email addresses can register on MacSync.
+Non-McMaster emails will not receive a verification code.
+\end{notebox}
+
+\section{Logging In}
+
+\begin{enumerate}
+  \item Open the MacSync app.
+  \item Enter your \texttt{@mcmaster.ca} email and password.
+  \item Tap \uielem{Sign In}.
+\end{enumerate}
+
+\section{Navigating the App}
+
+Once logged in, the bottom navigation bar gives you access to four sections:
+
+\begin{itemize}
+  \item \uielem{Events} --- Browse all upcoming open events and sign up.
+  \item \uielem{My Tickets} --- View your active and past tickets.
+  \item \uielem{Notifications} --- View event announcements and updates.
+  \item \uielem{Profile} --- Manage your account information.
+\end{itemize}
+
+\section{Logging Out}
+
+Tap \uielem{Logout} in the top-right corner of the app. You will be returned
+to the login screen.
+
+
+\chapter{Browsing \& Registering for Events}
+
+\section{Browsing Events}
+
+The \uielem{Events} tab shows all upcoming open events. Each event card displays:
+\begin{itemize}
+  \item Event name, date, and location.
+  \item Number of registered attendees.
+  \item Ticket price (or \textit{Free} if no charge).
+  \item An \textbf{Open} badge if registration is currently available.
+\end{itemize}
+
+Use the search bar at the top to find a specific event by name.
+
+\section{Registering for a Free Event}
+
+\begin{enumerate}
+  \item Tap an event card to view its details.
+  \item If the event has table or bus signup enabled, you will be prompted
+        to select your preferred seat before confirming.
+  \item Tap \uielem{Sign Up} to complete registration.
+\end{enumerate}
+
+Once registered, the event card will show a \textbf{\checkmark\ Signed Up} badge.
+
+\section{Registering for a Paid Event}
+
+\begin{enumerate}
+  \item Tap an event card to view its details.
+  \item If seat selection is required, choose your table or bus seat.
+  \item Tap \uielem{Proceed to payment}.
+  \item The \textbf{Stripe checkout screen} will appear within the app.
+        You can pay using:
+    \begin{itemize}
+      \item \textbf{Link} --- Stripe's saved payment method for faster checkout.
+      \item \textbf{Card} --- Enter your card number, expiry, CVV,
+            cardholder name, and country.
+    \end{itemize}
+  \item Tap \uielem{Pay} to complete your purchase.
+\end{enumerate}
+
+\begin{notebox}
+Your \texttt{@mcmaster.ca} email is pre-filled in the Stripe checkout form.
+You can optionally save your card via Stripe Link for faster checkout next time.
+\end{notebox}
+
+\section{Table \& Bus Seat Selection}
+
+Some events require you to choose a seat as part of registration:
+
+\begin{itemize}
+  \item \textbf{Table signup} --- Select your preferred table number and seat
+        at that table. There is no visual seating map; selection is by number.
+  \item \textbf{Bus signup} --- Select your preferred bus number and seat on
+        that bus.
+\end{itemize}
+
+Your seat selection is shown on your ticket after registration.
+
+
+\chapter{My Tickets}
+
+
+\section{Viewing Your Tickets}
+
+Tap \uielem{My Tickets} in the bottom navigation bar. Tickets are organised
+into two tabs:
+
+\begin{itemize}
+  \item \uielem{Current} --- Active upcoming tickets.
+  \item \uielem{Past \& Refunded} --- Tickets for past events or processed refunds.
+\end{itemize}
+
+Each ticket card shows the event name, date, location, price, and your
+seat assignment (if applicable).
+
+\section{Your Entry QR Code}
+
+Tap \uielem{View details} on any ticket to open the full ticket page, which includes:
+
+\begin{itemize}
+  \item Event location, price, and seat assignment.
+  \item An \textbf{Entry QR Code} --- show this to event staff at the entrance
+        for check-in.
+  \item A \textbf{Request Refund} button.
+  \item Your unique \textbf{Ticket ID}.
+\end{itemize}
+
+\begin{tipbox}
+Save a screenshot of your QR code before the event in case you lose
+internet connection on the day.
+\end{tipbox}
+
+\section{Requesting a Refund}
+
+\begin{enumerate}
+  \item Go to \uielem{My Tickets} and tap the relevant ticket.
+  \item Tap \uielem{View details}.
+  \item Tap \uielem{Request Refund} (shown in red).
+\end{enumerate}
+
+Once processed, the ticket will move to the \uielem{Past \& Refunded} tab.
+
+\begin{warnbox}
+Refund eligibility may depend on the event organiser's policy. Contact the
+organiser directly if your refund request is not processed.
+\end{warnbox}
+
+
+\chapter{Notifications}
+
+\section{Receiving Notifications}
+
+MacSync sends notifications to keep you informed about events you are
+registered for. You will receive them in two ways:
+
+\begin{itemize}
+  \item \textbf{Push notification} on your device (if notifications are
+        enabled for the MacSync app in your phone settings).
+  \item \textbf{In-app} under the \uielem{Notifications} tab, which shows
+        a badge count for unread items.
+\end{itemize}
+
+\section{Types of Notifications}
+
+\begin{itemize}
+  \item \textbf{Ticket confirmation} --- Sent automatically when you
+        successfully register for an event
+        (e.g.\ \textit{``You're registered for [Event]! Your ticket has
+        been confirmed.''}).
+  \item \textbf{Event announcements} --- Sent by event staff with updates
+        or reminders (e.g.\ \textit{``Remember to bring your student ID!''}).
+\end{itemize}
+
+Notifications appear in reverse chronological order. Unread ones are marked
+with a dot. Tap \uielem{Mark All Read} to clear all unread indicators.
+
+
+\chapter{Account Settings}
+
+\section{Viewing Your Profile}
+
+Tap \uielem{Profile} in the bottom navigation bar to view your account
+information:
+
+\begin{itemize}
+  \item Name and role (e.g.\ Member).
+  \item Email address (cannot be changed).
+  \item Phone number.
+  \item McMaster program.
+  \item In-App Notifications toggle.
+\end{itemize}
+
+\section{Editing Your Profile}
+
+\begin{enumerate}
+  \item Tap \uielem{Profile}, then tap \uielem{Edit Profile}.
+  \item Update any of the following:
+    \begin{itemize}
+      \item Name
+      \item Phone number
+      \item Program
+      \item In-App Notifications toggle
+    \end{itemize}
+  \item Tap \uielem{Save Changes} to apply, or \uielem{Cancel} to discard.
+\end{enumerate}
+
+\begin{notebox}
+Your \textbf{email address} is linked to your McMaster account and
+cannot be changed after registration.
+\end{notebox}
+
+\section{Notification Preferences}
+
+The \uielem{In-App Notifications} toggle controls whether you receive push
+notifications from MacSync:
+
+\begin{itemize}
+  \item \textbf{On} --- Notifications are delivered to your device and
+        visible in the \uielem{Notifications} tab.
+  \item \textbf{Off} --- Notifications are silenced, but you can still
+        view them manually in the \uielem{Notifications} tab.
+\end{itemize}
+
+
+\chapter{Glossary}
+
+\begin{description}[leftmargin=3.5cm, style=sameline]
+  \item[Check-in]      The process of having your QR code scanned at the
+                       event entrance to confirm your attendance.
+  \item[Entry QR Code] A unique scannable code on your ticket used for
+                       event check-in.
+  \item[Event]         A scheduled activity organised by an MES club or
+                       society, visible to all MacSync members.
+  \item[Member]        The default role for every registered MacSync user.
+  \item[MES]           McMaster Engineering Society --- the organisation
+                       that operates the MacSync platform.
+  \item[Stripe]        The payment processor used by MacSync for paid
+                       event registrations.
+  \item[Ticket ID]     A unique identifier assigned to each ticket purchase.
+\end{description}
+
+\end{document}
