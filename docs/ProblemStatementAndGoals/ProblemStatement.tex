@@ -37,7 +37,15 @@ The McMaster Engineering Society (MES) organizes large-scale events such as Fire
  and Pub Nights, often drawing several hundred attendees. Currently, registration, ticketing, waiver collection,
  and check-in processes are fragmented across multiple platforms (Google Forms, spreadsheets, Discord, Instagram,
  etc.). This lack of centralization increases the administrative burden on student organizers and creates a
- confusing, inconsistent experience for attendees.
+ confusing, inconsistent experience for attendees.\\
+
+% TA Feedback (Problem Statement): Added explicit statement of the team's main objective/focus and how it fits within a larger integrated project, addressing "what" the team will deliver and reducing ambiguity.
+\noindent The main objective of this capstone subproject is to deliver a centralized event management platform for MES
+that supports both (1) attendee-facing workflows (discovering events, registering, paying, receiving
+tickets/QR codes, and checking in) and (2) organizer/admin workflows (event setup, capacity management,
+waiver handling, communication, and reporting). Because our work is part of a larger integrated initiative, 
+our focus is on the end-to-end event registration/ticketing and operational administration slice that
+can integrate cleanly with other groups' components via documented APIs and shared data conventions.
 \\
 \\Students struggle to:
 \begin{itemize}
@@ -53,6 +61,9 @@ Organizers struggle to:
 \end{itemize}
 The absence of a centralized system reduces event memorability, increases missed opportunities, and 
 wastes volunteer time that could be spent on event quality rather than administration.
+
+% TA Feedback (Problem Statement): Explicitly surfaced project scope questions (security/privacy, platform targets, integrations, performance expectations) so the reader understands key constraints and concerns at the "what" level.
+This project must also account for \textbf{security and privacy} (personal details, waiver acknowledgements, and payment-related records), \textbf{platform scope} (a mobile-first attendee experience plus a web-based admin interface), potential \textbf{third-party integrations} (payment processors and notification services), and \textbf{performance expectations} for high-traffic registration windows (e.g., several hundred users attempting to purchase/register within minutes of ticket release).
 
 \subsection{Inputs and Outputs}
 
@@ -76,24 +87,13 @@ wastes volunteer time that could be spent on event quality rather than administr
 
 
 \subsection{Stakeholders}
-\paragraph{Primary Stakeholders:}
+% TA Feedback (Stakeholders): Replaced strict primary/secondary/tertiary hierarchy with a clearer, non-hierarchical stakeholder view to avoid unnecessary granularity and better reflect overlapping influence/interest.
 \begin{itemize}
-    \item MES Event Attendees (students): Use the platform to register, purchase tickets, receive updates,
-        and check in.
-    \item MES Event Organizers/Volunteers: Use the platform to manage events, track registrations, ticket
-     sales and payments, waivers, handle check-ins, and communicate with attendees.
-\end{itemize}
-
-\paragraph{Secondary Stakeholders:}
-\begin{itemize}
-    \item MES Executives: Oversee finances, risk management, and reporting.
-\end{itemize}
-
-\paragraph{Tertiary Stakeholders:}
-\begin{itemize}
-    \item Sponsors and partners: Interested in gaining visibility, engagement, and smooth execution.
-    \item McMaster University Administration: Indirectly involved for compliance, liability via waivers,
-     and student satisfaction.
+    \item \textbf{MES Event Attendees (students)}: Discover events; register/RSVP; purchase tickets; manage bus/table sign-ups; receive updates; present QR code for check-in.
+    \item \textbf{MES Event Organizers/Volunteers}: Create/manage events; configure capacities and ticket types; handle waivers; manage waitlists; communicate updates; run check-in operations.
+    \item \textbf{MES Executives}: Require financial summaries, auditability, and risk-management visibility (e.g., waiver completion rates, incident reporting readiness).
+    \item \textbf{Sponsors/Partners}: Interested in consistent event execution and any agreed sponsor visibility/engagement mechanisms.
+    \item \textbf{McMaster University Administration (indirect)}: Concerned with compliance, liability posture (waivers), and student experience outcomes.
 \end{itemize}
 
 \subsection{Environment}
@@ -105,8 +105,9 @@ wastes volunteer time that could be spent on event quality rather than administr
 
 \paragraph{Software Environment:}
 \begin{itemize}
-    \item Web-based admin dashboard for event creation and analytics.
-    \item Cross-platform mobile app for students (primary focus) with fallback web access.
+% TA Feedback (Problem Statement): Clarified whether the solution is mobile, web, or both; made the intended delivery explicit.
+    \item Web-based admin dashboard for event creation, operations, and analytics.
+    \item Cross-platform mobile app for students (primary attendee interface), with fallback web access for basic attendee actions if needed.
     \item Payment integration (e.g., Stripe, Square, Paypal).
     \item Backend database to store user, event, and financial data.
 \end{itemize}
@@ -117,44 +118,66 @@ wastes volunteer time that could be spent on event quality rather than administr
 
 \paragraph{Centralized Registration \& Ticketing}
 \begin{itemize}
-    \item \textbf{Description:} The platform must consolidate ticket purchasing, registration, and RSVPs into one place.
-    \item \textbf{Justification:} This eliminates confusion caused by scattered tools and ensures students always have access to the latest event information.
+% TA Feedback (Goal Content): Rewrote goals to include measurable success criteria (quantitative/qualitative) in addition to description and rationale.
+    \item \textbf{Intent:} Consolidate event discovery, registration/RSVP, and ticket purchase into one platform for attendees and organizers.
+    \item \textbf{Measurable success criteria:} For a pilot event, at least \textbf{90\%} of registrations and ticket purchases occur through the platform (not external forms/spreadsheets), and at least \textbf{80\%} of surveyed attendees report the registration process as ``clear'' or ``very clear''.
+    \item \textbf{Rationale:} Reduces confusion caused by scattered tools and ensures students have a single source of truth for event participation.
 \end{itemize}
 
 \paragraph{Payment Integration}
 \begin{itemize}
-    \item \textbf{Description:} Provide secure and flexible payment options (Stripe, Square, PayPal).
-    \item \textbf{Justification:} Enables students to pay quickly with widely used systems while reducing cash-handling risks for organizers.
+% TA Feedback (Goal Content): Added measurable success criteria and clarified outcome-focused wording.
+    \item \textbf{Intent:} Provide secure online payments for ticketed events through a supported payment processor.
+    \item \textbf{Measurable success criteria:} For ticketed events, \textbf{100\%} of successful purchases generate a confirmation and ticket/QR code within \textbf{60 seconds}; payment failures produce a clear error and do not create duplicate tickets.
+    \item \textbf{Rationale:} Enables fast payments using established payment systems while reducing cash-handling risk and manual reconciliation for organizers.
 \end{itemize}
 
 \paragraph{Role-Based Access Control (RBAC/FBAC)}
 \begin{itemize}
-    \item \textbf{Description:} Implement granular permissions so organizers only see\slash manage the tools relevant to their role.
-    \item \textbf{Justification:} Reduces errors, ensures security, and improves efficiency in large event teams.
+% TA Feedback (Goal Content): Added measurable criteria and tied goal to organizer workflow outcomes.
+    \item \textbf{Intent:} Implement granular organizer permissions so only authorized roles can perform sensitive actions (e.g., refunds, capacity overrides, exports).
+    \item \textbf{Measurable success criteria:} All organizer endpoints/actions enforce authorization checks; in acceptance testing, a user without the required role is \textbf{unable} to access restricted actions, and audit logs record \textbf{who} performed sensitive operations.
+    \item \textbf{Rationale:} Reduces operational errors, supports accountability, and protects attendee data and financial actions.
 \end{itemize}
 
 \paragraph{Bus \& Table Sign-ups}
 \begin{itemize}
-    \item \textbf{Description:} Allow attendees to reserve buses and tables with automatic capacity tracking.
-    \item \textbf{Justification:} Simplifies logistics and avoids overbooking, replacing spreadsheets and manual coordination.
+% TA Feedback (Goal Content): Made the goal measurable and explicitly tied to overbooking prevention.
+    \item \textbf{Intent:} Support reservations for limited resources (buses, tables) with automatic capacity tracking.
+    \item \textbf{Measurable success criteria:} The system prevents overbooking (capacity is never exceeded) and updates availability in near real time; for pilot events, organizers can reconcile allocations without manual spreadsheets.
+    \item \textbf{Rationale:} Simplifies logistics and reduces manual coordination during high-volume registration periods.
 \end{itemize}
 
 \paragraph{Notifications \& Reminders}
 \begin{itemize}
-    \item \textbf{Description:} Send push notifications and reminders for registrations, updates, and cancellations.
-    \item \textbf{Justification:} Improves event memorability, prevents missed opportunities, and reduces no-shows.
+% TA Feedback (Goal Content): Added measurable criteria and kept goal framed as an outcome rather than an implementation detail.
+    \item \textbf{Intent:} Provide timely attendee communications (confirmations, updates, reminders, cancellations).
+    \item \textbf{Measurable success criteria:} Confirmation messages are delivered immediately after registration/purchase; organizers can send an update to all attendees within \textbf{5 minutes} of composing it, and attendees report receiving critical changes (time/location) before the event in post-event feedback.
+    \item \textbf{Rationale:} Improves event memorability, reduces missed opportunities, and lowers no-show risk.
 \end{itemize}
 
 \paragraph{Analytics \& Reporting}
 \begin{itemize}
-    \item \textbf{Description:} Provide organizers with real-time dashboards on sales, demographics, and waitlists.
-    \item \textbf{Justification:} Supports decision-making, improves resource allocation, and helps executives evaluate event success.
+% TA Feedback (Goal Content): Added measurable reporting targets aligned with organizer/executive needs.
+    \item \textbf{Intent:} Provide organizers/executives with reporting on ticket sales, attendance/check-in rates, and waitlists.
+    \item \textbf{Measurable success criteria:} Dashboards update with new registrations/purchases within \textbf{1 minute}; after an event, organizers can export a summary (sales + attendance) without manual spreadsheet merging.
+    \item \textbf{Rationale:} Enables decision-making during planning and provides objective post-event evaluation.
 \end{itemize}
 
 \paragraph{Attendee Experience}
 \begin{itemize}
-    \item \textbf{Description:} Ensure the platform is mobile-first, intuitive, and accessible.
-    \item \textbf{Justification:} Reduces barriers to use, supports inclusivity, and maximizes student engagement.
+% TA Feedback (Goal Content): Made usability/accessibility expectations measurable via user feedback and observable criteria.
+    \item \textbf{Intent:} Deliver a mobile-first, intuitive, and accessible attendee experience for registration and check-in.
+    \item \textbf{Measurable success criteria:} In usability testing, at least \textbf{80\%} of participants can complete registration and locate their ticket/QR code without assistance; accessibility considerations (e.g., readable contrast and clear error messaging) are verified through a defined checklist during testing.
+    \item \textbf{Rationale:} Reduces barriers to use, supports inclusivity, and increases engagement for a broad student audience.
+\end{itemize}
+
+% TA Feedback (Number of goals): Added an explicit security/privacy goal, as suggested, to reflect handling of personal and payment-adjacent data.
+\paragraph{Security \& Privacy}
+\begin{itemize}
+    \item \textbf{Intent:} Protect attendee personal information and reduce security/privacy risk in storage, access, and operational use.
+    \item \textbf{Measurable success criteria:} Sensitive attendee attributes are access-controlled; organizer access is logged for sensitive actions; no payment card data is stored by the system; and privacy expectations are documented (what data is collected and why) in user-facing text.
+    \item \textbf{Rationale:} The platform handles identifiable information and waiver-related records, requiring careful protection to maintain trust and reduce organizational risk.
 \end{itemize}
 
 \section{Stretch Goals}
@@ -208,19 +231,9 @@ wastes volunteer time that could be spent on event quality rather than administr
     they are suitable for a Capstone project (not overly ambitious but also of
     appropriate complexity for a senior design project)?
     \\
-    \\At the beginning, we had many ambitious ideas, including projects involving AI and large language models, as well as other advanced
-     projects that were highly related to specific team members' interests. However, we realized
-     that not all team members had the technical background or confidence to pursue those ideas effectively. This made us step back
-     and focus on a project that was both practical and meaningful to all of us. The MES event management platform came naturally from
-     our own past experiences and frustrations, which made it more grounded and relatable. We also discussed how it could connect to
-     our co-op experiences: it would challenge us to learn new skills such as payment integration, role-based access control, and
-     mobile app development, which some of us have prior experience in while others will be completely new to these concepts,
-     while still refining technical skills we already had from previous work terms. By focusing on a project
-     with clear real-world impact but narrowing it to a feasible scope, we ensured it was the right balance of ambitious and achievable
-     for a capstone. Additionally, since the project is divided among two other groups, we made sure to clearly define our team's specific
-      responsibilities and the features that we can work on without overlapping or depending on other groups' contributions. This way we are
-      able to manage our workload effectively and ensure that we can deliver a complete and functional product within the given timeframe and
-      not be blocked by other teams' progress or takuing on too many features.
+% TA Feedback (Reflection): Kept Q3 as a team-wide response (as requested) but tightened wording to emphasize scope control and subproject boundaries.
+    \\
+    \\As a team, we adjusted scope by prioritizing a clear, end-to-end ``core path'' for MES events: event discovery, registration/ticketing, payment (when applicable), waiver acknowledgement, and check-in. We treated additional features (recommendations, sponsor tooling, post-event engagement) as stretch goals rather than core goals. Since the overall initiative is integrated across multiple groups, we also clarified our subproject boundary to reduce dependencies: we aim to deliver a complete attendee and organizer workflow slice that can integrate with other components through well-defined interfaces, without requiring other groups to finish first. This kept our goals ambitious but feasible within the capstone timeline.
 \end{enumerate}  
 
 \end{document}
