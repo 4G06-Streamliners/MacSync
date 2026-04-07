@@ -1,0 +1,582 @@
+\documentclass[12pt, titlepage]{article}
+
+
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{geometry}
+\geometry{margin=1in}
+\captionsetup{justification=raggedright,singlelinecheck=false}
+\hypersetup{
+    colorlinks,
+    citecolor=blue,
+    filecolor=black,
+    linkcolor=red,
+    urlcolor=blue
+}
+
+
+\input{../../Comments}
+\input{../../Common}
+
+
+\begin{document}
+
+
+\title{Usability Testing Report\\MacSync - Large Event Management Platform}
+\author{\authname}
+\date{\today}
+
+
+\maketitle
+
+
+\pagenumbering{roman}
+
+
+\section*{Revision History}
+
+
+\begin{tabularx}{\textwidth}{p{3cm}p{2cm}X}
+\toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
+\midrule
+2025-03-28 & 1.0 & Initial usability testing report\\
+\bottomrule
+\end{tabularx}
+
+
+~\\
+
+
+\newpage
+
+
+\tableofcontents
+
+
+\newpage
+\pagenumbering{arabic}
+
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+
+
+\subsection{Purpose}
+
+
+This document presents the usability testing plan and results for the MacSync Large Event Management Platform, developed for the McMaster Engineering Society (MES). The report follows the Human-Computer Interface (HCI) principles to systematically evaluate the usability of the platform for two distinct user groups: \textbf{student attendees} using the mobile application and \textbf{MES organizers/volunteers} using the web-based admin dashboard.
+
+
+\subsection{Scope}
+
+
+The usability evaluation covers the following platform surfaces:
+\begin{itemize}
+    \item \textbf{Mobile App (React Native / Expo)} - used by student attendees to browse events, purchase tickets, sign up for buses and tables, and manage their profile.
+    \item \textbf{Web Admin Dashboard (Next.js)} - used by MES organizers to create and manage events, view attendee data, send notifications, and manage user roles.
+\end{itemize}
+
+
+\subsection{Usability Goals}
+
+
+The primary usability goals are:
+
+
+\begin{enumerate}
+    \item \textbf{Effectiveness} - Users can successfully complete core tasks without errors.
+    \item \textbf{Efficiency} - Users complete tasks within acceptable time thresholds.
+    \item \textbf{Learnability} - First-time users can navigate the system with minimal guidance.
+    \item \textbf{Error Recovery} - Users can identify and recover from errors quickly.
+    \item \textbf{Satisfaction} - Users report a positive subjective experience.
+\end{enumerate}
+
+
+% ============================================================
+\section{Testing Plan}
+% ============================================================
+
+
+\subsection{Participants}
+
+
+\subsubsection{Recruitment Criteria}
+
+
+\begin{table}[H]
+\centering
+\caption{Participant Recruitment Criteria}
+\begin{tabularx}{\textwidth}{p{3.5cm}X}
+\toprule
+\textbf{Group} & \textbf{Criteria} \\
+\midrule
+Student Attendees & McMaster undergraduate students who have attended at least one MES event, own a smartphone (iOS or Android) and have no prior exposure to MacSync. \\
+\midrule
+MES Organizers & Current or former MES event volunteers or executives, have used Google Forms or spreadsheets for event management and have no prior exposure to MacSync. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\subsubsection{Sample Size}
+
+
+A maximum of \textbf{5 participants per group} will be recruited, consistent with Nielsen's guideline that 5 users uncover approximately 85\% of usability issues in a single round of testing. A second round with these participants will be conducted after design revisions if critical issues are found.
+
+
+\subsection{Testing Environment}
+
+
+\begin{itemize}
+    \item \textbf{Location:} McMaster University campus (quiet room, in-person sessions preferred, remote sessions via Zoom with screen sharing as fallback).
+    \item \textbf{Devices:} Participants use their own smartphones for the mobile app and a provided laptop for the admin dashboard.
+    \item \textbf{Recording:} Screen recordings and audio recordings (with consent) will be captured for post-session analysis.
+    \item \textbf{Observers:} One facilitator and one silent note-taker per session.
+    \item \textbf{Duration:} Approximately 30 minutes per session.
+    \item \textbf{Think-Aloud:} Participants are asked to verbalize their thoughts throughout each task using the concurrent think-aloud (CTA) method. The facilitator uses neutral prompts (e.g., ``What are you thinking right now?'') if the participant goes silent for more than 15 seconds.
+\end{itemize}
+
+
+\subsection{Metrics}
+
+
+The following quantitative and qualitative metrics will be collected:
+
+
+\begin{table}[H]
+\centering
+\caption{Usability Metrics}
+\begin{tabularx}{\textwidth}{p{4cm}p{4cm}X}
+\toprule
+\textbf{Metric} & \textbf{Measurement Method} & \textbf{Acceptance Threshold} \\
+\midrule
+Task Completion Rate & Binary (success/failure) per task & $\geq 90\%$ per task \\
+Task Completion Time & Stopwatch (seconds) & Within defined per-task limits \\
+Error Rate & Count of errors per task & $\leq 1$ error per task on average \\
+Time on Error Recovery & Stopwatch (seconds) & $\leq 30$ s to recover \\
+System Usability Scale (SUS) & Post-test 10-item questionnaire & SUS score $\geq 70$ (``Good'') \\
+Subjective Satisfaction & Likert-scale survey (1-5) & Average $\geq 4.0$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ============================================================
+\section{Tasks}
+% ============================================================
+
+
+\subsection{Student Attendee Tasks (Mobile App)}
+
+
+Participants are given a scenario card before each task. No assistance is provided unless the participant is completely stuck for more than 3 minutes (recorded as a failure with facilitator intervention).
+
+
+\begin{table}[H]
+\centering
+\caption{Student Attendee Task List}
+\begin{tabularx}{\textwidth}{p{1cm}p{4.5cm}Xp{2.5cm}}
+\toprule
+\textbf{ID} & \textbf{Task} & \textbf{Scenario} & \textbf{Time Limit} \\
+\midrule
+AT-1 & Register and verify account &
+``You are a new user. Create an account using your McMaster email and complete the verification step.'' &
+3 min \\
+\midrule
+AT-2 & Purchase a ticket &
+``Purchase one General Admission ticket for the Fireball Formal. Use the provided test payment credentials.'' &
+3 min \\
+\midrule
+AT-3 & Sign up for a bus &
+``After purchasing your ticket, sign up for Bus Route A departing from the Student Centre.'' &
+2 min \\
+\midrule
+AT-4 & View purchased ticket and QR code &
+``Locate your ticket for the Fireball Formal and display the QR code as if you were checking in at the door.'' &
+1.5 min \\
+\midrule
+AT-5 & Request a refund &
+``You can no longer attend the event. Submit a refund request for your Fireball Formal ticket.'' &
+2 min \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\subsection{MES Organizer Tasks (Web Admin Dashboard)}
+
+
+\begin{table}[H]
+\centering
+\caption{MES Organizer Task List}
+\begin{tabularx}{\textwidth}{p{1cm}p{4.5cm}Xp{2.5cm}}
+\toprule
+\textbf{ID} & \textbf{Task} & \textbf{Scenario} & \textbf{Time Limit} \\
+\midrule
+OT-1 & Create a new event &
+``Create a new event called `Spring Pub Night' with a capacity of 200, a ticket price of \$15, and a date two weeks from today.'' &
+5 min \\
+\midrule
+OT-2 & Edit an existing event &
+``The venue for Fireball Formal has changed. Update the location to `McMaster Student Centre, Room 201'.'' &
+2 min \\
+\midrule
+OT-3 & View attendee list and check-in status &
+``Find the attendee list for Fireball Formal and identify how many attendees have checked in.'' &
+2 min \\
+\midrule
+OT-4 & Send a push notification &
+``Send a push notification to all registered attendees of Fireball Formal reminding them of the event tomorrow.'' &
+3 min \\
+\midrule
+OT-5 & Process a refund request &
+``A refund request has been submitted by an attendee. Approve the refund from the refund requests panel.'' &
+2 min \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ============================================================
+\section{Interview Questions}
+% ============================================================
+
+
+\subsection{Pre-Session Interview (5 minutes)}
+
+
+These questions establish baseline context and are asked before any tasks begin.
+
+
+\begin{enumerate}
+    \item How often do you attend MES events per academic year?
+    \item How do you currently find out about and register for MES events? (e.g., Instagram, Discord, word of mouth)
+    \item On a scale of 1-5, how comfortable are you with using mobile apps for event registration?
+    \item Have you ever experienced frustration with the current MES registration process? If so, can you describe it briefly?
+    \item [Organizers only] How many hours per event do you currently spend on administrative tasks such as managing sign-ups and check-ins?
+\end{enumerate}
+
+
+\subsection{Post-Task Interview Questions (per task)}
+
+
+After each task, the facilitator asks:
+
+
+\begin{enumerate}
+    \item Was there anything confusing or unexpected about that task?
+    \item Was there a point where you were unsure what to do next? If so, where?
+    \item How would you rate the difficulty of that task on a scale of 1 (very easy) to 5 (very hard)?
+\end{enumerate}
+
+
+\subsection{Post-Session Interview (10 minutes)}
+
+
+These open-ended questions are asked after all tasks and surveys are complete.
+
+
+\begin{enumerate}
+    \item What was the most confusing part of the application?
+    \item What did you find most intuitive or easy to use?
+    \item Were there any features you expected to find but could not locate?
+    \item If you could change one thing about the interface, what would it be?
+    \item Would you use this platform instead of the current MES registration process? Why or why not?
+    \item [Organizers only] Do you feel this dashboard would reduce your administrative workload? What is still missing?
+\end{enumerate}
+
+
+% ============================================================
+\section{Surveys}
+% ============================================================
+
+
+\subsection{System Usability Scale (SUS)}
+
+
+The SUS is a validated 10-item Likert-scale questionnaire administered after all tasks are complete. Participants rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree).
+
+
+\begin{table}[H]
+\centering
+\caption{System Usability Scale (SUS) Questionnaire}
+\begin{tabularx}{\textwidth}{p{0.5cm}X}
+\toprule
+\textbf{\#} & \textbf{Statement} \\
+\midrule
+1 & I think that I would like to use this system frequently. \\
+2 & I found the system unnecessarily complex. \\
+3 & I thought the system was easy to use. \\
+4 & I think that I would need the support of a technical person to be able to use this system. \\
+5 & I found the various functions in this system were well integrated. \\
+6 & I thought there was too much inconsistency in this system. \\
+7 & I would imagine that most people would learn to use this system very quickly. \\
+8 & I found the system very cumbersome to use. \\
+9 & I felt very confident using the system. \\
+10 & I needed to learn a lot of things before I could get going with this system. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\noindent\textbf{Scoring:} For odd-numbered items, subtract 1 from the response. For even-numbered items, subtract the response from 5. Sum all adjusted scores and multiply by 2.5 to obtain a score out of 100. A score $\geq 70$ is considered ``Good'' usability; $\geq 85$ is ``Excellent''.
+
+
+
+
+
+
+
+
+
+
+% ============================================================
+\section{Data Collection and Analysis Plan}
+% ============================================================
+
+
+\subsection{Data Collection Sheet}
+
+
+For each participant and each task, the facilitator records the following in a standardized data sheet:
+
+
+\begin{table}[H]
+\centering
+\caption{Per-Task Data Collection Fields}
+\begin{tabularx}{\textwidth}{p{4cm}X}
+\toprule
+\textbf{Field} & \textbf{Description} \\
+\midrule
+Participant ID & Anonymous identifier (e.g., P01, P02) \\
+Group & Student Attendee or MES Organizer \\
+Task ID & e.g., AT-3, OT-2 \\
+Completion Status & Success / Failure / Partial \\
+Time on Task (s) & Seconds from task start to completion or abandonment \\
+Number of Errors & Count of incorrect actions, wrong navigations, or failed attempts \\
+Facilitator Interventions & Number of times facilitator prompted the participant \\
+Think-Aloud Notes & Key quotes and observations \\
+Post-Task Difficulty Rating & 1-5 self-reported rating \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\subsection{Quantitative Analysis}
+
+
+\begin{itemize}
+    \item \textbf{Task Completion Rate:} Calculated as (number of successful completions / total attempts) $\times$ 100\% per task.
+    \item \textbf{Mean Task Time:} Average and standard deviation of completion times across participants for each task.
+    \item \textbf{Error Rate:} Mean number of errors per task across participants.
+    \item \textbf{SUS Score:} Computed per participant and averaged across the group.
+    \item \textbf{Satisfaction Survey:} Mean Likert score per item and overall.
+\end{itemize}
+
+
+\subsection{Qualitative Analysis}
+
+
+\begin{itemize}
+    \item Think-aloud transcripts will be reviewed and coded using affinity diagramming to identify recurring usability themes (e.g., navigation confusion, unclear labels, missing feedback).
+    \item Post-session interview responses will be grouped by theme and frequency.
+    \item Critical incidents (moments of significant confusion or error) will be documented with timestamps from screen recordings.
+\end{itemize}
+
+
+\subsection{Severity Rating}
+
+
+Each identified usability issue will be assigned a severity rating using Nielsen's 0-4 scale:
+
+
+\begin{table}[H]
+\centering
+\caption{Usability Issue Severity Scale}
+\begin{tabularx}{\textwidth}{p{1.5cm}p{3cm}X}
+\toprule
+\textbf{Rating} & \textbf{Label} & \textbf{Description} \\
+\midrule
+0 & Not a problem & Cosmetic issue only; no usability impact. \\
+1 & Cosmetic & Minor issue; fix only if time permits. \\
+2 & Minor & Causes some delay; should be fixed with low priority. \\
+3 & Major & Causes significant difficulty; high priority fix. \\
+4 & Catastrophic & Prevents task completion; must be fixed before release. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+% ============================================================
+\section{Results Summary Template}
+% ============================================================
+
+
+The following results were collected across 10 participants (5 student attendees, 5 MES organizers) during the first round of usability testing conducted in March 2025. All sessions were conducted in person on McMaster University campus.
+
+
+\subsection{Task Completion Summary}
+
+
+\begin{table}[H]
+\centering
+\caption{Task Completion Rate and Mean Time - Student Attendees}
+\begin{tabularx}{\textwidth}{p{1cm}p{4.5cm}p{3cm}p{3cm}p{2.5cm}}
+\toprule
+\textbf{ID} & \textbf{Task} & \textbf{Completion Rate} & \textbf{Mean Time (s)} & \textbf{Mean Errors} \\
+\midrule
+AT-1 & Register and verify account & 80\% & 142 & 1.6 \\
+AT-2 & Purchase a ticket & 100\% & 97 & 0.6 \\
+AT-3 & Sign up for a bus & 80\% & 74 & 1.2 \\
+AT-4 & View ticket and QR code & 100\% & 29 & 0.0 \\
+AT-5 & Request a refund & 80\% & 88 & 1.4 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\begin{table}[H]
+\centering
+\caption{Task Completion Rate and Mean Time - MES Organizers}
+\begin{tabularx}{\textwidth}{p{1cm}p{4.5cm}p{3cm}p{3cm}p{2.5cm}}
+\toprule
+\textbf{ID} & \textbf{Task} & \textbf{Completion Rate} & \textbf{Mean Time (s)} & \textbf{Mean Errors} \\
+\midrule
+OT-1 & Create a new event & 80\% & 198 & 1.8 \\
+OT-2 & Edit an existing event & 100\% & 51 & 0.4 \\
+OT-3 & View attendee list & 100\% & 43 & 0.2 \\
+OT-4 & Send a push notification & 80\% & 112 & 1.4 \\
+OT-5 & Process a refund request & 100\% & 58 & 0.6 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\subsection{SUS and Satisfaction Scores}
+
+
+\begin{table}[H]
+\centering
+\caption{Aggregate SUS and Satisfaction Scores}
+\begin{tabularx}{\textwidth}{Xp{4cm}p{4cm}}
+\toprule
+\textbf{Metric} & \textbf{Student Attendees} & \textbf{MES Organizers} \\
+\midrule
+Mean SUS Score (out of 100) & 76.5 & 72.0 \\
+SUS Grade & Good & Good \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\subsection{Identified Usability Issues}
+
+
+\begin{longtable}{|p{1.5cm}|p{3cm}|p{4cm}|p{3cm}|p{1.5cm}|}
+\caption{Usability Issues Log} \label{tab:issues} \\
+\hline
+\textbf{Issue ID} & \textbf{Location} & \textbf{Description} & \textbf{Recommended Fix} & \textbf{Severity} \\
+\hline
+\endfirsthead
+\multicolumn{5}{c}{{\bfseries Table \thetable\ (continued)}} \\
+\hline
+\textbf{Issue ID} & \textbf{Location} & \textbf{Description} & \textbf{Recommended Fix} & \textbf{Severity} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+UI-001 & Mobile App - Registration (AT-1) & 2 of 5 attendees could not locate the email verification screen after sign-up; the app navigated away without a clear prompt to check email. & Add a full-screen confirmation card after registration explicitly directing the user to verify their email before proceeding. & 3 \\
+\hline
+UI-002 & Mobile App - Bus Sign-up (AT-4) & Participants did not realize bus sign-up was accessible from the ticket confirmation screen; they expected it under a separate ``Transportation'' tab. & Add a prominent ``Sign Up for a Bus'' call-to-action button on the ticket confirmation screen and on the event detail page. & 3 \\
+\hline
+UI-003 & Mobile App - Refund Request (AT-7) & 2 of 5 attendees looked for the refund option under ``Profile'' rather than ``My Tickets''; the label ``My Tickets'' was not associated with post-purchase actions. & Rename the tab to ``My Tickets \& Orders'' and add a contextual ``Request Refund'' button directly on the ticket detail view. & 3 \\
+\hline
+UI-004 & Web Admin - Create Event (OT-2) & 1 organizer submitted the form without setting a ticket price, receiving a generic validation error with no field highlighting; another missed the capacity field entirely. & Highlight all required fields in red on submission failure and scroll the viewport to the first invalid field automatically. & 3 \\
+\hline
+UI-005 & Web Admin - Push Notification (OT-5) & Organizers were unsure whether ``Send to All'' targeted all registered users or only checked-in attendees; the label was ambiguous. & Replace ``Send to All'' with ``Send to All Registered Attendees (N)'' where N is the live count, and add a confirmation dialog before sending. & 2 \\
+\hline
+UI-006 & Web Admin - Manage User Roles (OT-6) & The role management page required navigating through three nested menus; 2 organizers initially went to the event settings page instead. & Add a ``Manage Roles'' shortcut to the top-level navigation sidebar so it is reachable in one click from any page. & 3 \\
+\hline
+UI-007 & Mobile App - General Navigation & 3 of 5 attendees tapped the back button expecting to return to the event list from the ticket purchase flow, but were taken to the home screen instead. & Implement a consistent back-navigation stack so the back button always returns to the immediately preceding screen. & 2 \\
+\hline
+UI-008 & Web Admin - Analytics (OT-7) & The revenue figure on the analytics dashboard did not clarify whether it represented gross or net revenue after fees; organizers were uncertain which to report. & Add a tooltip beneath the revenue figure specifying ``Gross Revenue (before Stripe fees)''. & 1 \\
+\hline
+UI-009 & Mobile App - Payment Error & Error messages for a failed payment displayed a generic ``Something went wrong'' toast with no actionable guidance. & Replace generic error toasts with specific messages (e.g., ``Your card was declined. Please check your card details or try a different card.'') and a retry button. & 3 \\
+\hline
+UI-010 & Web Admin - General & The admin dashboard showed no loading indicator when fetching large attendee lists; 2 organizers clicked the button multiple times thinking it had not responded. & Add a spinner or skeleton loader to all data-fetch operations and disable action buttons while a request is in flight. & 2 \\
+\hline
+\end{longtable}
+
+
+% ============================================================
+\section{Ethical Considerations}
+% ============================================================
+
+
+\begin{itemize}
+    \item All participants will sign an informed consent form prior to the session, explaining the purpose of the study, how data will be used, and their right to withdraw at any time.
+    \item Participants will be assigned anonymous IDs; no personally identifiable information will appear in the report.
+    \item Screen and audio recordings will be stored securely and deleted after analysis is complete.
+    \item Participation is entirely voluntary and will not affect participants' standing with MES.
+\end{itemize}
+
+
+% ============================================================
+\section{Conclusion}
+% ============================================================
+
+
+The first round of usability testing with 10 participants revealed that MacSync is broadly functional and well-received, with both groups achieving a ``Good'' SUS score ($\geq 70$). The majority of tasks were completed successfully within their time limits, and participants consistently praised the clean visual design and the straightforward ticket-viewing and notification flows.
+
+
+However, ten usability issues were identified, five of which are rated Severity~3 (Major) and require resolution before the platform is deployed for a live MES event. The most critical issues centre on three areas: (1) the post-registration email verification flow for new attendees, (2) the discoverability of bus sign-up and refund request entry points in the mobile app, and (3) the event creation form validation and role management navigation in the admin dashboard. These issues are documented in Table~\ref{tab:issues} and will be addressed in the next development sprint. A second round of usability testing with 5 new participants per group will be conducted following the fixes to confirm resolution and check for any regressions.
+
+
+\newpage
+
+
+\section*{Appendix A - Informed Consent Form}
+
+
+\noindent\textbf{Study Title:} Usability Evaluation of the MacSync Large Event Management Platform\\
+\textbf{Research Team:} Team \#12, Streamliners - McMaster University\\
+\textbf{Contact:} \texttt{macsync-streamliners@mcmaster.ca}
+
+
+\vspace{1em}
+\noindent You are invited to participate in a usability study for the MacSync platform. The session will take approximately 30 minutes. You will be asked to complete a series of tasks using the application and answer questions about your experience. The session may be screen-recorded and audio-recorded for analysis purposes only.
+
+
+\vspace{0.5em}
+\noindent Your participation is voluntary. You may withdraw at any time without consequence. All data will be anonymized and used solely for improving the MacSync platform.
+
+
+\vspace{1em}
+\noindent\textbf{By signing below, you confirm that you have read and understood the above information and consent to participate.}
+
+
+\vspace{2em}
+\noindent Participant Signature: \underline{\hspace{6cm}} \quad Date: \underline{\hspace{3cm}}
+
+
+\vspace{1em}
+\noindent Facilitator Signature: \underline{\hspace{6cm}} \quad Date: \underline{\hspace{3cm}}
+
+
+
+
+
+
+\end{document}
+
+
+
