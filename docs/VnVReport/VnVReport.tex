@@ -7,6 +7,8 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{float}
+% TA feedback: traceability matrices were unreadable when scaled to \textwidth; landscape improves legibility without shrinking fonts excessively.
+%\usepackage{pdflscape}
 \hypersetup{
     colorlinks,
     citecolor=black,
@@ -48,8 +50,9 @@ Date 2 & 1.1 & Notes \\
 
 \section{Symbols, Abbreviations and Acronyms}
 
+% Use tabularx so long descriptions wrap; plain l+l columns caused a huge overfull box and break some strict LaTeX setups.
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{l l} 
+\begin{tabularx}{\textwidth}{l Y}
   \toprule		
   \textbf{Symbol} & \textbf{Description}\\
   \midrule
@@ -57,6 +60,8 @@ Date 2 & 1.1 & Notes \\
   SRS & Software Requirements Specification\\
   VnV & Verification and Validation\\
   FR1--FR5 & Functional Requirement categories\\
+  % TA feedback: align report NFR numbering and meanings with the VnV Plan (same IDs as Plan Section~4.2).
+  NFR1--NFR6 & Non-functional requirement categories as defined in the VnV Plan (performance; data integrity; usability; security compliance; reliability; auditability)\\
   FRx-Tyy & Functional Requirement test case with ID \texttt{FR\textit{x}-T\textit{yy}}\\
   RBAC & Role-Based Access Control\\
   TPPS & Ticket Purchase and Payment System\\
@@ -67,7 +72,7 @@ Date 2 & 1.1 & Notes \\
   Jest & JavaScript testing framework used for automated tests\\
   Stripe & Third-party payment processing service used for ticket payments and refunds\\
   \bottomrule
-\end{tabular}\\
+\end{tabularx}
 \newpage
 
 \tableofcontents
@@ -82,6 +87,7 @@ Date 2 & 1.1 & Notes \\
 
 
 \section{Functional Requirements Evaluation}
+\label{sec:functional}
 
 This section evaluates whether the Large Event Management System (LEMS) satisfies the functional requirements defined in the Software Requirements Specification (SRS). Functional requirements describe the expected behaviour of the system and define how users interact with the platform to perform tasks such as reserving tickets, completing event registrations, processing payments, requesting refunds, and managing user accounts.
 
@@ -430,23 +436,32 @@ The system uses a role guard to evaluate role metadata associated with protected
 \end{enumerate}
 
 \section{Nonfunctional Requirements Evaluation}
+\label{sec:nonfunctional}
 
-This section evaluates whether the system satisfies the nonfunctional requirements defined in the SRS and tested according to the VnV Plan. The evaluation covers performance, usability, and security compliance. Where formal quantitative testing (e.g., timed load benchmarks, structured usability studies) was not conducted within the project timeline, the evaluation describes the alternative evidence gathered through unit tests, developer testing, and informal usability sessions with external users.
+% TA feedback: use the same NFR IDs and meanings as the VnV Plan (NFR1 performance, NFR2 data integrity, NFR3 usability, NFR4 security, NFR5 reliability, NFR6 auditability); explicitly document where lighter methods replaced planned load/usability/formal activities.
+This section evaluates whether the system satisfies the nonfunctional requirements described in the SRS and exercised according to the Verification and Validation Plan. (NFR1: Performance; NFR2: Data Integrity; NFR3: Usability; NFR4: Security Compliance; NFR5: Reliability; NFR6: Auditability).
 
-The nonfunctional areas evaluated are:
+% TA feedback: justify reduced scope (formal load testing, structured usability, etc.) relative to the plan rather than implying full equivalence.
+Several planned activities were \emph{scaled down} in execution: for example, the VnV Plan calls for timed end-to-end registration benchmarks (including concurrent load with many simulated users), structured usability sessions with quantitative completion-rate targets, continuous uptime monitoring over multiple days, and formal audit-log sampling. Within the capstone timeline, those were partially replaced by \textbf{Jest unit and component tests}, \textbf{qualitative device testing}, \textbf{architectural review}, and \textbf{CI test runs}. The subsections below state, for each requirement family, which evidence was obtained and how complete that evidence is \emph{relative to the plan}. This does not downgrade the importance of the original requirements; it documents \emph{verification depth} actually achieved.
+
+The nonfunctional areas addressed in this report are:
 
 \begin{itemize}
-\item Performance
-\item Usability
-\item Security Compliance
+\item NFR1 --- Performance
+\item NFR2 --- Data Integrity
+\item NFR3 --- Usability
+\item NFR4 --- Security Compliance
+\item NFR5 --- Reliability
+\item NFR6 --- Auditability
 \end{itemize}
 
 
 \subsection{Performance (NFR1)}
 
-Performance was evaluated through a combination of manual developer testing during implementation and automated unit-level concurrency tests. Formal timed benchmarking with a dedicated load-testing tool (as described in the VnV Plan) was not conducted due to time constraints; however, the system's responsiveness was validated through real-device testing with external users and the concurrent checkout stress tests described in Section~6.
+% TA feedback: distinguish performance (latency/responsiveness under planned loads) from data integrity; concurrent oversell-prevention evidence is primarily NFR2 in the VnV Plan, while NFR1-T02 in the plan still targets signup latency under load (here partially addressed only).
+Performance was evaluated through manual developer and peer testing on physical devices, plus automated tests that exercise registration and check-in code paths. \textbf{Formal load testing} (e.g., 100--200 concurrent registrations with measured percentiles, as in VnV Plan NFR1-T01-2 and NFR1-T02-2) \textbf{was not executed}; the evidence below is therefore \emph{partial} relative to the plan, but it still supports responsiveness under low concurrency and single-user flows.
 
-\paragraph{Test Case NFR1-T01: Registration Workflow Responsiveness}
+\paragraph{Test Case NFR1-T01: End-to-End Registration}
 
 \begin{enumerate}
 
@@ -456,31 +471,32 @@ Performance was evaluated through a combination of manual developer testing duri
 
 \textit{Input:} A developer manually completes the full registration workflow on a physical mobile device: browse events, select ticket, proceed to Stripe checkout, and receive ticket confirmation.
 
-\textit{Expected Output:} The workflow completes without perceivable delay at each step. No timeouts or errors occur.
+% TA feedback: tie qualitative outcome to plan intent (latency/usability of path) while stating that numeric thresholds from the plan were not measured.
+\textit{Expected Output:} The workflow completes without perceivable delay at each step. No timeouts or errors occur. (The VnV Plan specifies measured end-to-end latency thresholds; those quantitative targets were \emph{not} instrumented in this iteration.)
 
-\textit{Test Case Derivation:} Provides a qualitative confirmation that the registration path is responsive under single-user conditions, addressing VnV Plan NFR1-T01.
+\textit{Test Case Derivation:} Qualitative evidence for VnV Plan NFR1-T01-1 (single-user registration responsiveness). Does not satisfy the load-test portion NFR1-T01-2.
 
 \end{enumerate}
 
 
-\paragraph{Test Case NFR1-T02: Concurrent Signup Handling}
+\paragraph{Test Case NFR1-T02: RSVP/Signups}
 
 \begin{enumerate}
 
 \item \textbf{Test ID:} NFR1-T02-1
 
-\textit{Initial State:} An event with exactly one table seat remaining.
+\textit{Initial State:} Backend with an event that has available seats; typical local/developer configuration.
 
-\textit{Input:} Two checkout requests are fired concurrently via \texttt{Promise.all} in a Jest unit test (test SRL6).
+\textit{Input:} A single signup or checkout path is executed via tests or manual flow (API submit through confirmation).
 
-\textit{Expected Output:} Exactly one request succeeds; the other receives an error. No duplicate tickets or seats are assigned.
+\textit{Expected Output:} The operation completes in a time perceived as acceptable on the device or in unit-test wall time (no formal $\leq$\,1.0\,s API assertion in the executed suite).
 
-\textit{Test Case Derivation:} Validates that the \texttt{FOR UPDATE SKIP LOCKED} mechanism handles concurrent access without data corruption. While this is a unit-level simulation rather than a full HTTP load test, it directly exercises the critical concurrency code path identified in VnV Plan NFR1-T02.
+\textit{Test Case Derivation:} Partially addresses VnV Plan NFR1-T02-1 (single-user signup performance). \textbf{High-concurrency timing} for NFR1-T02-2 was not reproduced at the scale described in the plan.
 
 \end{enumerate}
 
 
-\paragraph{Test Case NFR1-T03: Check-In Responsiveness}
+\paragraph{Test Case NFR1-T03: Check-In}
 
 \begin{enumerate}
 
@@ -492,20 +508,102 @@ Performance was evaluated through a combination of manual developer testing duri
 
 \textit{Expected Output:} The check-in confirmation appears on the admin device without perceivable delay. The backend correctly marks the ticket as checked in (verified by unit tests TP6--TP9).
 
-\textit{Test Case Derivation:} Confirms that the check-in flow is fast enough for practical use at event doors, as required by VnV Plan NFR1-T03.
+\textit{Test Case Derivation:} Confirms that the check-in flow is fast enough for practical use at event doors, aligned with VnV Plan NFR1-T03-1. Invalid-scan timing (plan NFR1-T03-2) is covered indirectly by TP6 error paths rather than measured sub-second latency.
 
 \end{enumerate}
 
 
-\subsection{Usability (NFR2)}
+\subsection{Data Integrity (NFR2)}
 
-Usability was evaluated through informal testing sessions with peers from other capstone groups who had no prior exposure to MacSync. A formal structured usability study (as described in VnV Plan NFR3-T01) was not conducted within the project timeline; however, these sessions on physical mobile devices provided qualitative validation of the core workflows.
+% TA feedback: add an explicit NFR2 subsection matching the VnV Plan; integrity was previously folded into performance or security narratives.
+This subsection documents evidence that the system avoids inconsistent or duplicate data under registration, concurrency, payment confirmation, and administrative updates---the scope of \textbf{NFR2} in the VnV Plan.
 
-\paragraph{Test Case NFR2-T01: Registration Workflow Clarity}
+\paragraph{Test Case NFR2-T01: Registration}
 
 \begin{enumerate}
 
-\item \textbf{Test ID:} NFR2-T01-1
+\item \textbf{Test ID:} NFR2-T01-1 (failure path, partial)
+
+\textit{Initial State:} Event with capacity available; Stripe test-mode enabled.
+
+\textit{Input:} Registration or checkout fails (capacity lockout, no seats, or API error before payment finalization).
+
+\textit{Expected Output:} No finalized ticket or inconsistent payment record for the failed attempt; error responses match tests SRL2--SRL3, SRL4 (reservation release), and ES7 (full event).
+
+\textit{Test Case Derivation:} Automated tests demonstrate that blocked or failed signups do not leave orphan reservations or tickets in the scenarios exercised. \textbf{Injected payment-provider failure} exactly as in plan NFR2-T01-1 was not isolated as its own scripted test.
+
+\item \textbf{Test ID:} NFR2-T01-2
+
+\textit{Initial State:} Reservation exists and payment completes successfully (Stripe webhook path mocked or driven in tests).
+
+\textit{Input:} Successful payment processing for a held seat.
+
+\textit{Expected Output:} Ticket and payment rows are created; reservation cleared (tests SRL5, FR2-T02, FR2-T03).
+
+\textit{Test Case Derivation:} Aligns with VnV Plan NFR2-T01-2 (success creates consistent rows across related tables).
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR2-T02: No Oversell Under Concurrency}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR2-T02-1
+
+\textit{Initial State:} An event with exactly one table seat remaining.
+
+\textit{Input:} Two checkout requests are fired concurrently via \texttt{Promise.all} in Jest (SRL6).
+
+\textit{Expected Output:} Exactly one request succeeds; the other receives an error. No duplicate tickets or seats are assigned.
+
+\textit{Test Case Derivation:} Exercises the \texttt{FOR UPDATE SKIP LOCKED} transaction path and confirms \textbf{no oversell for two racing checkouts}. This is direct evidence for VnV Plan NFR2-T02-1 at \emph{small} concurrency; it does \textbf{not} replace the plan's larger-scale simulation (e.g., many purchasers on the last seats).
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR2-T03: Idempotent Payment Webhooks}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR2-T03-1 (scope gap)
+
+\textit{Initial State:} Not fully exercised as a dedicated replay test in the reported suite.
+
+\textit{Input/Output:} The VnV Plan requires duplicate \texttt{payment\_succeeded} webhooks to produce exactly one ticket.
+
+\textit{Test Case Derivation:} Marked as \textbf{not fully verified} in this report; recommended follow-up is an explicit Jest test that replays identical webhook payloads.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR2-T04: Admin Edits}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR2-T04-1
+
+\textit{Initial State:} Existing event managed in the system.
+
+\textit{Input:} Administrator updates event fields through the admin workflow (ECM9).
+
+\textit{Expected Output:} Event record updates coherently in the database (verified by automated backend test).
+
+\textit{Test Case Derivation:} Provides structural evidence for admin-initiated data changes (VnV Plan NFR2-T04-1). Broader cross-reference consistency (receipts, notifications) was not exhaustively asserted in automated tests.
+
+\end{enumerate}
+
+
+\subsection{Usability (NFR3)}
+
+% TA feedback: report NFR3 must map to plan NFR3 (usability), not report-NFR2; lighter peer sessions vs. planned structured study must be explicit.
+Usability was evaluated through \textbf{informal} sessions with peers from other capstone groups who had no prior exposure to MacSync. The VnV Plan's NFR3-T01 calls for representative users, timed feature discovery, post-test surveys, and completion-rate targets; \textbf{those structured metrics were not collected}. The evidence below supports qualitative ease-of-use and error clarity only.
+
+\paragraph{Test Case NFR3-T01: App Usage}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR3-T01-1
 
 \textit{Initial State:} MacSync deployed on a physical mobile device; peers from other capstone groups acting as first-time users.
 
@@ -513,16 +611,16 @@ Usability was evaluated through informal testing sessions with peers from other 
 
 \textit{Expected Output:} Users complete the workflow without confusion or assistance. No critical navigation or comprehension issues are observed.
 
-\textit{Test Case Derivation:} Provides qualitative evidence that the registration flow is intuitive, partially addressing VnV Plan NFR3-T01-1. External users completed the workflow without requiring guidance.
+\textit{Test Case Derivation:} Qualitative evidence toward VnV Plan NFR3-T01-1 only (no 99\% completion rate or timed survey as specified in the plan).
 
 \end{enumerate}
 
 
-\paragraph{Test Case NFR2-T02: Feature Discoverability}
+\paragraph{Test Case NFR3-T01: App Usage (continued)}
 
 \begin{enumerate}
 
-\item \textbf{Test ID:} NFR2-T02-1
+\item \textbf{Test ID:} NFR3-T01-2
 
 \textit{Initial State:} MacSync mobile app running with bottom tab navigation.
 
@@ -530,16 +628,16 @@ Usability was evaluated through informal testing sessions with peers from other 
 
 \textit{Expected Output:} All primary features are accessible from the bottom tab bar without requiring multi-step navigation.
 
-\textit{Test Case Derivation:} The tab-based navigation design ensures that core features are one tap away, addressing VnV Plan NFR3-T01-2. This was confirmed during peer testing sessions.
+\textit{Test Case Derivation:} Confirms discoverability in line with plan NFR3-T01-2 at a \textbf{functional} level; per-user timing within 15 seconds was not formally recorded.
 
 \end{enumerate}
 
 
-\paragraph{Test Case NFR2-T03: Error Message Clarity}
+\paragraph{Test Case NFR3-T01: App Usage (error recovery)}
 
 \begin{enumerate}
 
-\item \textbf{Test ID:} NFR2-T03-1
+\item \textbf{Test ID:} NFR3-T01-3
 
 \textit{Initial State:} User interacts with the event signup screen.
 
@@ -547,20 +645,20 @@ Usability was evaluated through informal testing sessions with peers from other 
 
 \textit{Expected Output:} A clear error message is displayed explaining the issue (e.g., ``Event Full'', ``Payment failed''). The user is not left on a blank or broken screen.
 
-\textit{Test Case Derivation:} Error handling is verified by frontend unit tests ES7 (full event error) and backend tests SRL2--SRL3 (lockout and capacity errors), addressing VnV Plan NFR3-T01-3.
+\textit{Test Case Derivation:} Error handling is verified by frontend unit tests ES7 (full event error) and backend tests SRL2--SRL3 (lockout and capacity errors), addressing message clarity aspects of VnV Plan NFR3-T01-3 (without structured observation of recovery time).
 
 \end{enumerate}
 
 
-\subsection{Security Compliance (NFR3)}
+\subsection{Security Compliance (NFR4)}
 
-Security was verified through automated unit tests for role-based access control and through architectural review of the payment and authentication subsystems. The RBAC guard tests (RBAC1--RBAC5) provide direct evidence that access control is enforced correctly.
+Security was verified through automated unit tests for role-based access control, reliance on Clerk for authentication, and architectural review of payment data handling. Identifiers below match \textbf{NFR4} in the VnV Plan.
 
-\paragraph{Test Case NFR3-T01: Role-Based Access Control}
+\paragraph{Test Case NFR4-T01: Role-Based Access Control (RBAC/FBAC)}
 
 \begin{enumerate}
 
-\item \textbf{Test ID:} NFR3-T01-1
+\item \textbf{Test ID:} NFR4-T01-1
 
 \textit{Initial State:} Users with student and admin roles exist in the test environment.
 
@@ -568,16 +666,33 @@ Security was verified through automated unit tests for role-based access control
 
 \textit{Expected Output:} Admin-only features are hidden from non-admin users. Users can access their own tickets but not other users' tickets (unless admin). Unauthorized requests are rejected.
 
-\textit{Test Case Derivation:} Directly tested by automated unit tests RBAC1--RBAC5. Validates VnV Plan NFR4-T01.
+\textit{Test Case Derivation:} Directly tested by automated unit tests RBAC1--RBAC5, matching VnV Plan NFR4-T01-1.
 
 \end{enumerate}
 
 
-\paragraph{Test Case NFR3-T02: Sensitive Data Protection}
+\paragraph{Test Case NFR4-T02: Authentication and Session Security}
 
 \begin{enumerate}
 
-\item \textbf{Test ID:} NFR3-T02-1
+\item \textbf{Test ID:} NFR4-T02-1
+
+\textit{Initial State:} Authentication delegated to Clerk; backend expects validated tokens on protected routes.
+
+\textit{Input:} Automated tests exercise authorized vs.\ unauthorized API access via RBAC; production auth flows use Clerk-managed sessions.
+
+\textit{Expected Output:} Privileged operations are not exposed without appropriate roles; session and credential storage are not implemented in the application database.
+
+\textit{Test Case Derivation:} \textbf{Partial} coverage of VnV Plan NFR4-T02-1: RBAC tests demonstrate authorization boundaries; dedicated automated scenarios for expired sessions and invalid credentials are not itemized in this report.
+
+\end{enumerate}
+
+
+\paragraph{Test Case NFR4-T03: Sensitive Data Protection}
+
+\begin{enumerate}
+
+\item \textbf{Test ID:} NFR4-T03-1
 
 \textit{Initial State:} System uses Stripe for all payment processing; user authentication handled via Clerk.
 
@@ -585,15 +700,22 @@ Security was verified through automated unit tests for role-based access control
 
 \textit{Expected Output:} No credit card numbers, CVVs, or payment tokens are stored in the application database. Payment data is handled entirely by Stripe. User passwords are managed by Clerk and never stored by the application.
 
-\textit{Test Case Derivation:} Architectural review confirms that the system delegates sensitive data handling to third-party services (Stripe, Clerk), satisfying VnV Plan NFR4-T03. The application database stores only Stripe session IDs and payment intent IDs for reference.
+\textit{Test Case Derivation:} Architectural review confirms delegation to Stripe and Clerk, satisfying the intent of VnV Plan NFR4-T03-1 for sensitive data placement (complemented by RBAC tests limiting data visibility).
 
 \end{enumerate}
+
+
+\subsection{Reliability (NFR5) and Auditability (NFR6)}
+
+% TA feedback: acknowledge plan items NFR5/NFR6 for document consistency with the full VnV Plan trace table.
+The VnV Plan also defines \textbf{NFR5} (multi-day uptime monitoring) and \textbf{NFR6} (structured audit logging of registration, payment, and admin actions). Those activities were \textbf{not executed} as specified in the plan during this reporting period: there was no continuous 7-day staging uptime study, nor a documented sampling procedure that proved every transaction class emits a complete audit record. \textbf{Operational reliability} is supported indirectly by passing CI pipelines and stable manual demonstrations, and \textbf{logging} exists in the architecture, but evidence does not yet match the depth described for NFR5-T01-1 or NFR6-T01 in the plan.
 
 \section{Comparison to Existing Implementation}
 
 This section will not be appropriate for every project.
 
 \section{Unit Testing}
+\label{sec:unit-testing}
 
 \subsection{Event Creation and Management Module}
 
@@ -796,14 +918,16 @@ Table~\ref{tab:reqtrace} maps the selected tests to the main functional
 requirements. A checkmark indicates that the test provides evidence for the
 corresponding requirement.
 
-\begin{table}[H]
+% TA feedback: trace matrices were unreadable when scaled with \resizebox; landscape preserves normal font size and full width.
+%\begin{landscape}
+\begin{table}[p]
 \centering
 \caption{Traceability Between Tests and Functional Requirements}
 \label{tab:reqtrace}
-\small
+\scriptsize
+\setlength{\tabcolsep}{10pt}
 \renewcommand{\arraystretch}{1.2}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lccccc}
+\begin{tabular}{@{}l *{5}{c}@{}}
 \toprule
 \textbf{Test ID} & \textbf{FR1} & \textbf{FR2} & \textbf{FR3} & \textbf{FR4} & \textbf{FR5} \\
 \midrule
@@ -840,9 +964,9 @@ SRL3 & \cmark &  &  &  &  \\
 SRL5 & \cmark & \cmark &  &  &  \\
 SRL6 & \cmark &  &  &  &  \\
 \bottomrule
-\end{tabular}%
-}
+\end{tabular}
 \end{table}
+%\end{landscape}
 
 \section{Trace to Modules}
 
@@ -850,14 +974,15 @@ Table~\ref{tab:modtrace} maps the selected tests to the major functional
 modules of the system. A checkmark indicates that the test belongs to or
 primarily validates that module.
 
-\begin{table}[H]
+%\begin{landscape}
+\begin{table}[p]
 \centering
 \caption{Traceability Between Tests and Modules}
 \label{tab:modtrace}
-\small
-\renewcommand{\arraystretch}{1.2}
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lccccc}
+\scriptsize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabular}{@{}l *{5}{c}@{}}
 \toprule
 \textbf{Test ID} & \textbf{TPPS} & \textbf{BTR} & \textbf{WPS} & \textbf{RBAC} & \textbf{ECM} \\
 \midrule
@@ -895,8 +1020,34 @@ SRL4 & \cmark &  &  &  &  \\
 SRL5 & \cmark &  &  &  &  \\
 SRL6 & \cmark &  &  &  &  \\
 \bottomrule
-\end{tabular}%
-}
+\end{tabular}
+\end{table}
+%\end{landscape}
+
+\section{Trace to Nonfunctional Requirements}
+
+Table~\ref{tab:nfrtrace} crosswalks each VnV Plan nonfunctional requirement (NFR1--NFR6) to the discussion and principal evidence in this report. Portrait layout keeps the text readable; landscape was reserved for the wider FR/module checkmark matrices (TA feedback on trace table legibility).
+
+% TA feedback: align report with VnV Plan NFR numbering (NFR1--NFR6); explicit crosswalk improves traceability without mixing report-only IDs.
+\begin{table}[htbp]
+\centering
+\caption{Crosswalk: VnV Plan Nonfunctional Requirements and Evidence in This Report}
+\label{tab:nfrtrace}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{@{}p{2.45cm}Y@{}}
+\toprule
+\textbf{Plan NFR} & \textbf{Where addressed / principal evidence} \\
+\midrule
+NFR1 Performance & Subsection ``Performance (NFR1)'': qualitative registration and check-in responsiveness; single-path and light-load behaviour. Planned high-volume timed load tests not run. \\
+NFR2 Data Integrity & Subsection ``Data Integrity (NFR2)'': success/failure registration consistency (SRL*, FR2); concurrent seat race (SRL6); admin edit (ECM9); webhook idempotency called out as gap. \\
+NFR3 Usability & Subsection ``Usability (NFR3)'': informal peer sessions plus automated error-path tests (ES7, SRL2--SRL3). Plan structured usability metrics not collected. \\
+NFR4 Security Compliance & Subsection ``Security Compliance (NFR4)'': RBAC1--RBAC5, architectural review (Stripe/Clerk); session edge cases only partially tested. \\
+NFR5 Reliability & Subsection ``Reliability (NFR5) and Auditability (NFR6)'': not executed per plan; CI and demos as indirect evidence only. \\
+NFR6 Auditability & Same subsection: formal multi-action audit sampling not executed per plan. \\
+\bottomrule
+\end{tabularx}
 \end{table}
 
 \clearpage
@@ -911,11 +1062,24 @@ collection via Jest's built-in instrumentation.\\
 \item \texttt{src/backend/src/auth/**/*.ts}
 \item \texttt{src/backend/src/users/**/*.ts}
 \end{itemize}
-Coverage reports are written to \texttt{test/coverage/backend}. The events, auth, and users modules correspond to the core backend logic for event management, RBAC, and user administration tested by the unit tests described in Section 6.\\
+Coverage reports are written to \texttt{test/coverage/backend}. The events, auth, and users modules correspond to the core backend logic for event management, RBAC, and user administration tested by the unit tests described in Section~\ref{sec:unit-testing}.\\
 
-\textbf{Frontend coverage} is configured in \texttt{test/frontend/jest.config.js}. Coverage is collected from \texttt{src/frontend/mobile/app/**/*.\{ts,tsx\}}, excluding type definitions and \texttt{\_layout.tsx}. Reports are written to \texttt{test/coverage/frontend}. This scope aligns the mobile app screens (event creation, events list, ticket detail, refund requests, QR scanner) with the frontend tests.
+\textbf{Frontend coverage} is configured in \texttt{test/frontend/jest.config.js}. Coverage is collected from the mobile app tree under \texttt{src/frontend/mobile/app/} (glob \texttt{**/*} with extensions \texttt{.ts} and \texttt{.tsx}), excluding type definitions and the root layout file \texttt{\_layout.tsx}. Reports are written to \texttt{test/coverage/frontend}. This scope aligns the mobile app screens (event creation, events list, ticket detail, refund requests, QR scanner) with the frontend tests.
 
 Coverage is generated locally by running \texttt{npm run coverage:backend} and \texttt{npm run coverage:frontend} (or \texttt{npm run coverage} for both) from the \texttt{test} directory. The CI workflow currently runs the test suites without the \texttt{--coverage} flag; coverage reporting in CI and enforcement of the 75\% target can be added in a future iteration. The VnV Plan also mentions mutation testing to quantify the effectiveness of the test plan; mutation testing is not yet integrated into the build or CI pipeline.
+
+\section{Conclusions}
+
+% Rubric / TA feedback (LO\_Synthesize): conclusions must state what the evidence shows about product quality and remaining gaps, explicitly tied to the test and trace material above (not only a list of activities).
+This report's evidence supports the following conclusions about MacSync at the time of writing:
+
+\begin{itemize}
+\item \textbf{Functional behaviour.} The documented manual procedures and Jest suites in Section~\ref{sec:unit-testing} and the functional test narratives in Section~\ref{sec:functional} show \textbf{passing} behaviour for ticket reservation, payment recording, refunds, user operations, and RBAC in the environments exercised. The trace matrices (Tables~\ref{tab:reqtrace} and \ref{tab:modtrace}) link those tests to FR1--FR5 and to the TPPS, BTR, RBAC, and ECM modules, so the conclusion that core SRS functional areas are \emph{covered by executed tests} is traceable from the tables, not inferred only from prose.
+
+\item \textbf{Nonfunctional assurance.} Table~\ref{tab:nfrtrace} ties each VnV Plan NFR1--NFR6 to the subsection where it is discussed. \textbf{NFR1--NFR4} are \emph{partially} verified: performance and usability evidence is mainly qualitative or small-scale; data integrity has strong automated coverage for seat races and successful checkout but an \textbf{explicit gap} on webhook idempotency (Section~\ref{sec:nonfunctional}, NFR2-T03); security has strong RBAC automation plus architectural delegation to Stripe/Clerk, with session edge cases less exhaustively tested. \textbf{NFR5--NFR6} are \textbf{not} substantiated to the depth described in the plan; remaining risk lies in production uptime, monitoring, and audit completeness.
+
+\item \textbf{Completeness vs.\ VnV Plan.} Where formal load testing, structured usability metrics, multi-day reliability monitoring, or audit sampling were deferred (introduction to Section~\ref{sec:nonfunctional}), the \textbf{conclusion} is that overall V\&V \emph{completeness relative to the written plan is reduced}, even though the substitute methods provide meaningful confidence for a capstone release. The highest-priority follow-ups, ordered by traceability impact, are: (1) idempotent webhook replay tests (NFR2-T03), (2) staged load or k6-style runs for registration (NFR1 plan items), (3) structured usability measures if a further release targets general audiences (NFR3), and (4) uptime and audit instrumentation aligned with NFR5--NFR6.
+\end{itemize}
 
 \bibliographystyle{plainnat}
 \bibliography{../../refs/References}
