@@ -7,7 +7,6 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{colortbl}
-\usepackage{xr}
 \usepackage{hyperref}
 \usepackage{longtable}
 \usepackage{xfrac}
@@ -31,8 +30,6 @@ urlcolor=cyan          % color of external links
 
 \usepackage{array}
 
-\externaldocument{../../SRS/SRS}
-
 \input{../../Comments}
 \input{../../Common}
 
@@ -54,12 +51,16 @@ urlcolor=cyan          % color of external links
 \toprule {\bf Date} & {\bf Version} & {\bf Notes}\\
 \midrule
 2025-11-13 & -1.0 & Initial draft of MIS doc. \\
+2026-04-06 & 1.1 & TA review: standalone symbols; sufficiency-for-build note; M1/M3/M5 state clarity; Team~10 PR link; appendix and MG-aligned UI figure guidance (see MG). \\
 \bottomrule
 \end{tabularx}
 
 ~\newpage
 
+% TA feedback: each document must carry its own symbols table (do not defer readers to SRS/MG for acronyms).
 \section{Symbols, Abbreviations and Acronyms}
+
+\noindent
 
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{l l} 
@@ -67,15 +68,33 @@ urlcolor=cyan          % color of external links
   \textbf{symbol} & \textbf{description}\\
   \midrule 
   AC & Anticipated Change\\
+  API & Application Programming Interface\\
   DAG & Directed Acyclic Graph \\
+  FBAC & Feature-Based Access Control\\
+  FR & Functional requirement identifier (project requirements baseline)\\
+  HTTP & Hypertext Transfer Protocol\\
+  JSON & JavaScript Object Notation\\
+  LEMS & Large Event Management System (this product)\\
   M & Module \\
-  MG & Module Guide \\
+  MacID & McMaster University digital identity (SSO)\\
+  MES & McMaster Engineering Society (client organization)\\
+  MG & Module Guide (separate architecture document for the same project)\\
+  MIS & Module Interface Specification (this document)\\
+  NFR & Non-functional requirement identifier (project requirements baseline)\\
+  OAuth & Open Authorization protocol\\
   OS & Operating System \\
   R & Requirement\\
+  RBAC & Role-Based Access Control\\
+  REST & Representational State Transfer (style of HTTP API)\\
   SC & Scientific Computing \\
   SRS & Software Requirements Specification\\
+  SSO & Single Sign-On\\
+  SSR & Safety or security requirement identifier (from project hazard analysis)\\
+  Stripe & Third-party payment processor used by LEMS\\
+  TTL & Time-to-live (cache or token lifetime)\\
   \progname & Explanation of program name\\
   UC & Unlikely Change \\
+  URL & Uniform Resource Locator\\
   \bottomrule
 \end{tabular}\\
 
@@ -107,6 +126,21 @@ Role-Based and Feature-Based Access Control (RBAC/FBAC) Module, and the Bus/Tabl
 Complementary documents include the System Requirement Specifications
 and Module Guide.  The full documentation and implementation can be
 found at \url{https://github.com/4G06-Streamliners/MacSync}.
+
+% TA feedback (EnoughToBuild / DetDesDoc): strengthen evidence that an independent developer could implement every module without contacting the team.
+\subsection{Sufficiency for Independent Implementation}
+
+\noindent
+Each module section in this document is written so that an implementer with comparable skills
+ but no prior knowledge of the team can code the module from the specification alone.
+For every module, the MIS specifies: the module name and intent; \emph{Uses} dependencies;
+ exported access programs with input, output, and exception types; \emph{State Variables} as
+ explicit data structures (not merely behaviour names); environment and configuration assumptions;
+ and access-routine semantics (transitions, outputs, exceptions).
+REST endpoint paths, Stripe integration boundaries, and authentication token usage are stated where
+ they affect the contract.
+Local helper functions are listed when they clarify non-obvious behaviour.
+Together, these elements are intended to satisfy the ``enough to build'' criterion for all listed modules.
 
 \section{Notation}
 
@@ -141,9 +175,10 @@ list & \texttt{list}[T] & Finite ordered list of \(T\) (i.e. \texttt{list[Str]})
 object & \texttt{JSON} & JSON object as a (key \(\to\) value) mapping with JSON-serializable values \\
  & \texttt{URL} & Absolute/relative URI string for backend endpoints \\
  & \texttt{opType} & Operation discriminator used as a map key (i.e. \texttt{`create'}, \texttt{`refund'}) \\
-identifier & \texttt{SRS-FR\#} & Functional Requirement in the \textit{SRS} \\
-identifier & \texttt{SRS-NFR\#} & Non-Functional Requirement in the \textit{SRS} \\
-identifier & \texttt{SSR-\#} & Safety/Security Requirement from the \textit{Hazard Analysis} \\
+% TA feedback: requirement identifiers are explained here without pointing readers to another document's symbol list.
+identifier & \texttt{SRS-FR\#} & Functional requirement label in the project requirements baseline (same prefix as in the \textit{SRS}) \\
+identifier & \texttt{SRS-NFR\#} & Non-functional requirement label in the project requirements baseline (same prefix as in the \textit{SRS}) \\
+identifier & \texttt{SSR-\#} & Safety/security requirement label from the \textit{Hazard Analysis} \\
 identifier & \texttt{M\#} & Module identifier used throughout the MIS (e.g. \textit{M1 - Payment Processing Module}) \\
 identifier & \texttt{M\#.\#} & Submodule identifier when applicable (e.g. \textit{M3.2 - Table Sign-Up Submodule}) \\
 \bottomrule
@@ -160,7 +195,8 @@ described by giving their type signature followed by their specification.
 
 \section{Module Decomposition}
 
-The following table is taken directly from the Module Guide document for this project.
+% TA feedback: avoid implying that essential definitions live only in another document; the hierarchy is restated here in full.
+The following table gives the Level~1 / Level~2 module hierarchy for LEMS (the same decomposition described in the project's Module Guide, reproduced here for completeness).
 
 \begin{table}[H]
 \centering
@@ -239,25 +275,17 @@ N/A
 
 \subsubsection{State Variables}
 
+% TA feedback: name persistent aggregates explicitly as data structures (lists, dicts, queues), not as vague ``functions''; align payment/refund records with implementable fields.
 \begin{itemize}
 
-    \item \textbf{PendingPayments}:  
-    Mapping of Stripe PaymentIntent IDs to pending transaction details.  
-    \[
-    \{ \text{paymentIntentID} \rightarrow (\text{userID},\ \text{eventID},\ \text{amount},\ \text{status="pending"}) \}
-    \]
+    \item \textbf{PaymentRecords}: \texttt{list}$\bigl[\langle \text{paymentID},\ \text{userID},\ \text{amount},\ \text{status},\ \text{timestamp}\rangle\bigr]$\\
+    Ordered history of payment outcomes visible to this module (and persisted on the server). Each \texttt{paymentID} is the logical identifier returned by the backend; it may correspond one-to-one with a Stripe PaymentIntent or charge ID depending on deployment. Status values include at least \texttt{pending}, \texttt{succeeded}, and \texttt{failed}.
 
-    \item \textbf{CompletedPayments}:  
-    List of finalized, successful Stripe payments.  
-    \[
-    \{ (\text{paymentID},\ \text{paymentIntentID},\ \text{userID},\ \text{eventID},\ \text{amount},\ \text{status="succeeded"},\ \text{timestamp}) \}
-    \]
+    \item \textbf{PendingPayments}: \texttt{dict}$\bigl[\text{paymentIntentID} \rightarrow \langle \text{userID},\ \text{eventID},\ \text{amount},\ \text{status}\rangle\bigr]$ with $\text{status} = \texttt{pending}$ for all entries in this map\\
+    In-flight PaymentIntents not yet terminal. Keys are Stripe PaymentIntent identifiers while a client session holds a client secret.
 
-    \item \textbf{RefundRequests}:  
-    Queue of refund operations.  
-    \[
-    \{ (\text{refundID},\ \text{paymentIntentID},\ \text{reason},\ \text{status}) \}
-    \]
+    \item \textbf{RefundRequests}: queue implemented as \texttt{list}$\bigl[\langle \text{refundID},\ \text{paymentID},\ \text{reason},\ \text{status}\rangle\bigr]$ (FIFO at the head)\\
+    Refund work items submitted through \texttt{requestRefund}. The \texttt{paymentID} ties each refund to a row in \textbf{PaymentRecords} (or to the backend record it mirrors).
 
 \end{itemize}
 
@@ -479,11 +507,11 @@ N/A
 \subsection{Semantics}
 
 \subsubsection{State Variables}
+
+% TA feedback: state for sign-up should read as explicit persistent structures (typed dict / record fields), not an ambiguous map keyed by a tuple without interpretation.
 \begin{itemize}
-    \item signupDetails: dict[(userID, eventID): JSON]
-    \begin{itemize}
-        \item Stores all signup information and metadata.
-    \end{itemize}
+    \item \textbf{SignUpRecords}: \texttt{dict}$\bigl[(\text{userID},\ \text{eventID}) \rightarrow \text{JSON payload}\bigr]$\\
+    Each value is a signup record (e.g.\ event-specific form payload, bus seat choice, table assignment request, RSVP status) validated before write. The composite key $(\text{userID},\ \text{eventID})$ enforces one active signup document per user per event unless superseded by \texttt{cancelSignup}.
 \end{itemize}
 
 \subsubsection{Environment Variables}
@@ -503,7 +531,7 @@ N/A
 
 \noindent submitSignup(UserID, eventID, data):
 \begin{itemize}
-\item transition: Adds new entry to signupDetails for given userID and eventID.
+\item transition: Adds or replaces the entry in \textbf{SignUpRecords} for the given \texttt{userID} and \texttt{eventID}.
 \item output: Returns true if signup is successful.
 \item exception: SignupError if validation fails or event is full.
 \end{itemize}
@@ -517,7 +545,7 @@ N/A
 
 \noindent cancelSignup(userID, eventID):
 \begin{itemize}
-\item transition: Removes signup for given userID and eventID.
+\item transition: Deletes the $(\texttt{userID},\ \texttt{eventID})$ entry from \textbf{SignUpRecords} when present.
 \item output: Returns true on successful deletion.
 \item exception: CancellationError if no record is found for deletion
 \end{itemize}
@@ -528,7 +556,7 @@ N/A
 \begin{itemize}
 \item transition: None.
 \item output: Returns true if all required fields are complete.
-\item exception: ValidationError if required fields are missing or have invalid data format.s
+\item exception: ValidationError if required fields are missing or have invalid data formats.
 \end{itemize}
 
 \noindent checkCapacity(eventID: str):
@@ -723,13 +751,14 @@ N/A
 
 \subsubsection{State Variables}
 
+% TA feedback: avoid ``loose'' global policyDocument/policyVersion; tie version to a structured policy store so the MIS style matches other modules.
 \begin{itemize}
-    \item \texttt{roleAssignments : dict[userID → set[role]]}\\
-    Maps each user role to its permitted features.
-    \item \texttt{policyDocument : JSON}\\
-    Full mapping of roles → features → capabilities
-    \item \texttt{policyVersion : Int}\\
-    Incremented upon policy update.
+    \item \texttt{roleAssignments}: \texttt{dict} from \texttt{userID} strings to finite sets of role-name strings\\
+    Maps each authenticated user to the set of roles currently assigned (RBAC layer). Feature and capability expansion is derived from \texttt{policyByVersion} below, not stored redundantly in this map.
+    \item \texttt{policyByVersion}: \texttt{dict} from $\mathbb{N}$ (version keys) to \texttt{JSON}\\
+    Immutable snapshots of the complete policy: roles, features, capabilities, and guard rules. Keys are monotonically increasing version numbers assigned when a policy is committed.
+    \item \texttt{currentPolicyVersion}: $\mathbb{N}$\\
+    Version key whose snapshot is authoritative for \texttt{getPolicy}, \texttt{checkPermission}, and related routines. Updated only when \texttt{setPolicy} successfully validates and persists a new snapshot (the new key is one greater than the previous maximum version in typical implementations).
 \end{itemize}
 
 \subsubsection{Environment Variables}
@@ -776,7 +805,7 @@ N/A
 
 \noindent \texttt{setPolicy(policy: JSON)}:
 \begin{itemize}
-\item transition: Validates and replaces the policy document with the new policy, increments the internal policy version counter.
+\item transition: Validates \texttt{policy} against \texttt{POLICY\_SCHEMA}, stores it in \texttt{policyByVersion} under a new key, and sets \texttt{currentPolicyVersion} to that key.
 \item input: A JSON object containing an updated set of roles, features, capabilities, and guard rules.
 \item output: Returns \texttt{True} on success.
 \item exception: \texttt{PolicyError} if the policy does not match the defined schema or cannot be persisted.
@@ -786,7 +815,7 @@ N/A
 \begin{itemize}
 \item transition: None.
 \item input: None.
-\item output: Returns the current policy document in JSON format.
+\item output: Returns \texttt{policyByVersion[currentPolicyVersion]} (the active policy snapshot).
 \item exception: None.
 \end{itemize}
 
@@ -1076,7 +1105,8 @@ None.
     \item All modules calling this one must supply a token obtained from \texttt{login} or \texttt{refreshToken}.
     \item The external authentication provider (OAuth/SSO) is available and reliable.
     \item Tokens are cryptographically signed by the authentication provider and cannot be tampered with by the client.
-    \item Session expiry rules follow the SRS and Hazard Analysis requirements (e.g., 15-minute admin timeout).
+    % TA feedback: state session rules in this document instead of pointing readers to other docs for requirements text.
+    \item Session expiry rules include, at minimum, a 15-minute idle timeout for administrator sessions and standard attendee session limits agreed with the client; implementers must enforce these limits when issuing and validating tokens.
 \end{itemize}
 
 \subsubsection{Access Routine Semantics}
@@ -1142,15 +1172,18 @@ None.
 
 \section{Appendix} \label{Appendix}
 
-Extra information will be placed here.
+% TA feedback: remove template placeholder text; describe what the appendix actually contains.
+\noindent
+This appendix collects reflective write-ups for the Module Interface Specification milestone.
+It records team and individual lessons learned, design trade-offs, and cross-team implementation experience; it is not a normative part of the module contracts in the body of the MIS.
 
 \newpage{}
 
 \section*{Appendix --- Reflection}
 
-
-The information in this section will be used to evaluate the team members on the
-graduate attribute of Problem Analysis and Design.
+% TA feedback: replace boilerplate with a concise purpose statement (template ``will be used to evaluate\ldots'' removed).
+\noindent
+The questions below are answered by team members as part of the capstone reflection for this deliverable.
 
 \input{../../Reflection.tex}
 
@@ -1261,6 +1294,8 @@ graduate attribute of Problem Analysis and Design.
   could have changed to make the process go more smoothly for when an
   ``outsider'' completes some of the implementation? \\
 
+  % TA feedback: cite the public pull request for the History Manager delivered to Team 10 (``Five of a Kind'') so the marker can verify the contribution.
+  \noindent\textbf{Deliverable link (Team 10 --- History Manager):} \url{https://github.com/OmarHassanAdelhamid/Five-of-a-Kind-capstone-project-/pull/328}\\
 
   \noindent Our team was tasked with implementing the History Manager (M8) module for Team 10
   ("Five of a Kind"). Through this process, we learned that a well-defined Module

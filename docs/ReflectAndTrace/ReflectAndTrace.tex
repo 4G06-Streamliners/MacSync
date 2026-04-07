@@ -65,6 +65,27 @@ low.}
 
 \subsection{Design and Design Documentation}
 
+\noindent
+\textbf{Module Interface Specification (MIS).}\\
+In response to design-review feedback, we strengthened the MIS so it better supports an independent implementer
+ and stands alone as a document: the symbol and acronym table was expanded and explicitly scoped to this deliverable
+  (no deferring readers to the SRS or MG for definitions).
+We added a short subsection stating how each module section is intended to be sufficient to build from
+ (interfaces, typed state, assumptions, behaviour).
+Payment (M1), sign-up (M3), and access control (M5) state was rewritten using explicit data structures---for
+ example consolidated payment and refund records, a named \texttt{SignUpRecords} map, and versioned policy
+  storage (\texttt{policyByVersion}, \texttt{currentPolicyVersion}) with correct \texttt{roleAssignments} semantics.
+Other edits included tightening the module hierarchy wording, stating session-timeout expectations inside
+ the MIS instead of pointing to other docs, replacing appendix placeholder text, and documenting the History
+  Manager work for Team~10 with a public pull request: \url{https://github.com/OmarHassanAdelhamid/Five-of-a-Kind-capstone-project-/pull/328}.
+Unused SRS cross-document label imports were removed from the MIS source.\\
+
+\noindent
+\textbf{Module Guide (MG).}\\
+We added brief narrative before each user-interface figure to explain what the screenshot shows and which modules it
+ relates to, fixed a caption typo, and noted that abbreviations in the MG are defined in that document itself for
+  consistency with the MIS approach.
+
 \subsection{VnV Plan and Report}
 
 \noindent\textbf{VnV Plan:}\\
