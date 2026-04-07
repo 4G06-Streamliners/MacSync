@@ -131,9 +131,14 @@ found at \url{https://github.com/4G06-Streamliners/MacSync}.
 \subsection{Sufficiency for Independent Implementation}
 
 \noindent
-Each module section in this document is written so that an implementer with comparable skills but no prior knowledge of the team can code the module from the specification alone.
-For every module, the MIS specifies: the module name and intent; \emph{Uses} dependencies; exported access programs with input, output, and exception types; \emph{State Variables} as explicit data structures (not merely behaviour names); environment and configuration assumptions; and access-routine semantics (transitions, outputs, exceptions).
-REST endpoint paths, Stripe integration boundaries, and authentication token usage are stated where they affect the contract.
+Each module section in this document is written so that an implementer with comparable skills
+ but no prior knowledge of the team can code the module from the specification alone.
+For every module, the MIS specifies: the module name and intent; \emph{Uses} dependencies;
+ exported access programs with input, output, and exception types; \emph{State Variables} as
+ explicit data structures (not merely behaviour names); environment and configuration assumptions;
+ and access-routine semantics (transitions, outputs, exceptions).
+REST endpoint paths, Stripe integration boundaries, and authentication token usage are stated where
+ they affect the contract.
 Local helper functions are listed when they clarify non-obvious behaviour.
 Together, these elements are intended to satisfy the ``enough to build'' criterion for all listed modules.
 
