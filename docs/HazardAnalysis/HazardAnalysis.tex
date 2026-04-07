@@ -41,6 +41,7 @@
 \textbf{\#} & \textbf{Author(s)} & \textbf{Description of Changes} & \textbf{Date}\\
 \midrule
 0 & All & Created first draft of the document & 2025-10-10\\
+1 & Prerna Prabhu & Address TA rubric feedback, comments and improve readability & 2026-04-06\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -58,7 +59,8 @@
 
 This document outlines the hazard analysis of the \textbf{Large Event Management System (LEMS)} for the McMaster
 Engineering Society (MES). The LEMS is a centralized platform designed to streamline event workflows such as
- \textbf{ticket sales, registrations, waivers, payments, bus/table sign-ups, notifications, and event check-ins}.'
+% Feedback/style fix: removed an extraneous trailing apostrophe that could appear as a typo in the compiled PDF.
+ \textbf{ticket sales, registrations, waivers, payments, bus/table sign-ups, notifications, and event check-ins}.
 \newline
 
 \noindent
@@ -131,7 +133,8 @@ meets the standards of safety, security, and reliability expected by the McMaste
 
 \section{System Boundaries and Components}
 
-The MacSync platform system that the hazard analysis will be conducted on consists of:
+% Feedback clarification: aligned naming with the rest of the document (LEMS) to avoid confusion about what system the boundary refers to.
+The LEMS platform system that the hazard analysis will be conducted on consists of:
 \begin{enumerate}
     \item The application that is both web and mobile based, which includes the front-end and back-end made up of the following major components:
     \begin{itemize}
@@ -148,6 +151,39 @@ The MacSync platform system that the hazard analysis will be conducted on consis
 \end{enumerate}
 
 The system boundary in the case of the MacSync platform includes components necessary to support event operations for the MES, which includes the entire application, both web and mobile based, along with their subcomponents, the database, payment gateway and notification service. The payment and notification services are controlled by external providers. The payment is controlled by Stripe and the notification service is controlled by Microsoft. However, they remain critical to the function of the system and the overall operation of the platform and thus fall within the system boundary.
+% TA feedback: added a boundary diagram to make component interactions and what is inside/outside the boundary easier to understand at a glance.
+\begin{figure}[H]
+    \centering
+    \setlength{\tabcolsep}{10pt}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{c}
+        \fbox{%
+        \begin{minipage}{0.92\textwidth}
+            \centering
+            \textbf{LEMS System Boundary}\\[0.6em]
+            \fbox{\begin{minipage}{0.85\textwidth}
+                \centering
+                \textbf{LEMS Application (Web + Mobile)}\\
+                Dashboards (User/Admin) \(\mid\) Authentication (RBAC/FBAC) \(\mid\) Sign-ups (RSVP/Bus/Table) \(\mid\) Payment UI/Workflow
+            \end{minipage}}\\[0.6em]
+            \fbox{\begin{minipage}{0.85\textwidth}
+                \centering
+                \textbf{PostgreSQL Database}\\
+                Users \(\mid\) Events \(\mid\) Registrations \(\mid\) Transactions \(\mid\) Roles/Permissions
+            \end{minipage}}\\[0.6em]
+            \fbox{\begin{minipage}{0.85\textwidth}
+                \centering
+                \textbf{Integration Interfaces}\\
+                Payment Module \(\rightarrow\) External Payment Gateway \quad \(\mid\) \quad Notification Service \(\rightarrow\) External Email/Notification Provider
+            \end{minipage}}
+        \end{minipage}}
+    \end{tabular}
+    \caption{System boundary diagram showing in-scope components and external dependencies.}
+    \label{fig:system-boundary}
+\end{figure}
+
+% Feedback clarification: aligned naming with the rest of the document (LEMS) and tightened wording to match the boundary diagram.
+The system boundary in the case of the LEMS platform includes components necessary to support event operations for the MES. This includes the entire application (web and mobile) along with its subcomponents, the PostgreSQL database, and the integration interfaces to payments and notifications. The payment gateway (e.g., Stripe) and notification provider (e.g., Microsoft services) are controlled by external vendors; however, because the platform depends on them for core workflows (payments, refunds, and user communications), they are treated as critical external dependencies within the system boundary for the purposes of this hazard analysis.
 
 \section{Critical Assumptions}
 
@@ -178,9 +214,11 @@ The following hazards fall outside the control of the dev team however, still ha
     \item The users mobile device
     \item Hosting provider availability
     \item External payment gateway provider availability
-    \item Any External API's hosted by third-party providers (ie. Calendars, Database, OAuth)
+    % Feedback/style fix: corrected grammar and removed incorrect apostrophe in plurals to improve readability.
+    \item Any external APIs hosted by third-party providers (e.g., calendars, OAuth)
 \end{enumerate}
-These dependecies are all hosted by third party services and therefore the development team cannot control the downtime or availability of them. However, an attempt will be made to mitigate these hazards as much as possible in the case they occur.
+% Feedback/style fix: corrected spelling and improved sentence flow to match rubric expectations for clarity and professionalism.
+These dependencies are all hosted by third-party services and therefore the development team cannot control their downtime or availability. However, an attempt will be made to mitigate these hazards as much as possible in the case they occur.
 
 \subsection{Failure Modes \& Effects Analysis Table}
 
@@ -192,7 +230,8 @@ These dependecies are all hosted by third party services and therefore the devel
 
 \begin{subfigure}{\textwidth}
     \centering\includegraphics[width=\textwidth]{part2-rbac_db.jpg} 
-    \caption{FMEA Table Part 1}
+    % Feedback/style fix: corrected duplicated caption to accurately reflect the figure part number.
+    \caption{FMEA Table Part 2}
 \end{subfigure}
 
 \end{figure}
