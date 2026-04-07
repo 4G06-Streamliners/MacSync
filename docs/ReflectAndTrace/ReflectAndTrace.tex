@@ -67,6 +67,14 @@ low.}
 
 \subsection{VnV Plan and Report}
 
+\noindent\textbf{VnV Report:}
+\begin{itemize}
+\item \textbf{Traceability readability feedback:} FR and module traceability matrices were hard to read when scaled. \textbf{Change made:} moved matrices to become larger and wide matrices to landscape pages instead of shrinking width\texttt{\textbackslash resizebox}, improving readability without reducing font size.
+\item \textbf{NFR consistency feedback:} report NFR labels did not consistently match the VnV Plan. \textbf{Change made:} aligned the report to plan IDs NFR1--NFR6 and added a dedicated NFR trace crosswalk table for one-to-one mapping.
+\item \textbf{Scope/rigour feedback:} earlier wording implied full equivalence to planned load/usability activities. \textbf{Change made:} explicitly documented where lighter methods were used, what was partially verified, and what remains as scope gaps (for example webhook idempotency, reliability monitoring, and audit depth).
+\item \textbf{Rev 0 product feedback:} ``request refund not yet working'' and ``admin cannot edit created event.'' \textbf{Change made:} implemented backend refund endpoint and frontend refund workflow, and replaced admin event-edit placeholder with a working edit form.
+\end{itemize}
+
 \section{Extras}
 
 \plt{Summarize the extras that were tackled by this project.  Extras
