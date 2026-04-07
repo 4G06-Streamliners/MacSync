@@ -61,6 +61,45 @@ be able to grade your response to feedback.  In that case your grade on this
 document, and likely the Revision 1 versions of the other documents will be
 low.} 
 
+% TA/Rubric Feedback Traceability: Added explicit subsections for Problem Statement/Goals and Dev Plan so feedback-to-change mapping is easy to grade and does not get lost under unrelated deliverables.
+\subsection{Problem Statement and Goals}
+% TA/Rubric Feedback Traceability: Summarized each rubric comment and the corresponding document change in a compact table, per the template’s guidance to address every feedback item.
+\begin{table}[hp]
+\caption{Problem Statement and Goals --- Feedback Response Summary} \label{TblPSGFeedbackResponse}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{Source} & \textbf{Feedback Item (Brief)} & \textbf{Change Made (Brief)} \\
+\midrule
+TA Rubric & Main objective/focus unclear; integrated project context missing & Added explicit project objective, scope focus, and integration context in problem statement. \\
+TA Rubric & Missing discussion: security/privacy, platform scope, integrations, performance & Added security/privacy concerns, mobile+web scope, third-party integration notes, and high-traffic expectations. \\
+TA Rubric & Stakeholder hierarchy too rigid/over-structured & Replaced primary/secondary/tertiary hierarchy with a single stakeholder list reflecting overlaps. \\
+TA Rubric & Goals not clearly measurable; missing security/privacy goal & Rewrote goals with intent + measurable criteria + rationale; added Security \& Privacy goal. \\
+TA Rubric & Reflection should be individual (Q1/Q2), team-wide (Q3) & Restructured reflection appendix: Q1/Q2 per member; Q3 team response. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% TA/Rubric Feedback Traceability: Added a concise summary subsection for Development Plan feedback so Rev 1 changes can be traced without requiring the reader to infer them from the full document.
+\subsection{Development Plan and Proof of Concept Demonstration Plan}
+% TA/Rubric Feedback Traceability: Captured both the rubric’s content-depth comments and the LO13 tool-selection justification feedback in one place.
+\begin{table}[hp]
+\caption{Development Plan --- Feedback Response Summary} \label{TblDevPlanFeedbackResponse}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{Source} & \textbf{Feedback Item (Brief)} & \textbf{Change Made (Brief)} \\
+\midrule
+TA Rubric (LO13) & Section 10 tech choices lacked rationale/pros/cons & Expanded ``Expected Technology'' with project-specific rationale, trade-offs, and limitations per tool/tech. \\
+TA Rubric & Roles missing technical responsibilities and overlap plan & Added technical ownership (primary/secondary) across frontend, mobile, backend, DB, CI/CD. \\
+TA Rubric & Workflow not at Contributor’s-Guide level & Added PR/review expectations, labels, quality gates, and Definition of Done. \\
+TA Rubric & Scheduling section shallow; requested timetable-style detail & Added a high-level timetable table with phases and planned outcomes. \\
+TA Rubric & POC plan needed more context + failed-POC consequences & Added project context, expanded risks, added scenario-based demo + failure-mode check, defined failed POC. \\
+TA Rubric & Formatting: justified alignment not applied in places & Removed \texttt{flushleft} usage in communication plan section to avoid forced left alignment. \\
+TA Rubric & GitHub link should point to main repo page & Updated link from board to repository URL. \\
+TA Rubric & Reflection should be individual (Q1/Q2), team-wide (Q3) & Restructured reflection appendix: Q1/Q2 per member; Q3 team response. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsection{SRS and Hazard Analysis}
 
 \subsection{Design and Design Documentation}
