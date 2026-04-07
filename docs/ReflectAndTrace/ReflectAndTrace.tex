@@ -61,9 +61,69 @@ be able to grade your response to feedback.  In that case your grade on this
 document, and likely the Revision 1 versions of the other documents will be
 low.} 
 
+% TA/Rubric Feedback Traceability: Added explicit subsections for Problem Statement/Goals and Dev Plan so feedback-to-change mapping is easy to grade and does not get lost under unrelated deliverables.
+\subsection{Problem Statement and Goals}
+% TA/Rubric Feedback Traceability: Summarized each rubric comment and the corresponding document change in a compact table, per the template’s guidance to address every feedback item.
+\begin{table}[hp]
+\caption{Problem Statement and Goals --- Feedback Response Summary} \label{TblPSGFeedbackResponse}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{Source} & \textbf{Feedback Item (Brief)} & \textbf{Change Made (Brief)} \\
+\midrule
+TA Rubric & Main objective/focus unclear; integrated project context missing & Added explicit project objective, scope focus, and integration context in problem statement. \\
+TA Rubric & Missing discussion: security/privacy, platform scope, integrations, performance & Added security/privacy concerns, mobile+web scope, third-party integration notes, and high-traffic expectations. \\
+TA Rubric & Stakeholder hierarchy too rigid/over-structured & Replaced primary/secondary/tertiary hierarchy with a single stakeholder list reflecting overlaps. \\
+TA Rubric & Goals not clearly measurable; missing security/privacy goal & Rewrote goals with intent + measurable criteria + rationale; added Security \& Privacy goal. \\
+TA Rubric & Reflection should be individual (Q1/Q2), team-wide (Q3) & Restructured reflection appendix: Q1/Q2 per member; Q3 team response. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% TA/Rubric Feedback Traceability: Added a concise summary subsection for Development Plan feedback so Rev 1 changes can be traced without requiring the reader to infer them from the full document.
+\subsection{Development Plan and Proof of Concept Demonstration Plan}
+% TA/Rubric Feedback Traceability: Captured both the rubric’s content-depth comments and the LO13 tool-selection justification feedback in one place.
+\begin{table}[hp]
+\caption{Development Plan --- Feedback Response Summary} \label{TblDevPlanFeedbackResponse}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{Source} & \textbf{Feedback Item (Brief)} & \textbf{Change Made (Brief)} \\
+\midrule
+TA Rubric (LO13) & Section 10 tech choices lacked rationale/pros/cons & Expanded ``Expected Technology'' with project-specific rationale, trade-offs, and limitations per tool/tech. \\
+TA Rubric & Roles missing technical responsibilities and overlap plan & Added technical ownership (primary/secondary) across frontend, mobile, backend, DB, CI/CD. \\
+TA Rubric & Workflow not at Contributor’s-Guide level & Added PR/review expectations, labels, quality gates, and Definition of Done. \\
+TA Rubric & Scheduling section shallow; requested timetable-style detail & Added a high-level timetable table with phases and planned outcomes. \\
+TA Rubric & POC plan needed more context + failed-POC consequences & Added project context, expanded risks, added scenario-based demo + failure-mode check, defined failed POC. \\
+TA Rubric & Formatting: justified alignment not applied in places & Removed \texttt{flushleft} usage in communication plan section to avoid forced left alignment. \\
+TA Rubric & GitHub link should point to main repo page & Updated link from board to repository URL. \\
+TA Rubric & Reflection should be individual (Q1/Q2), team-wide (Q3) & Restructured reflection appendix: Q1/Q2 per member; Q3 team response. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsection{SRS and Hazard Analysis}
 
 \subsection{Design and Design Documentation}
+
+\noindent
+\textbf{Module Interface Specification (MIS).}\\
+In response to design-review feedback, we strengthened the MIS so it better supports an independent implementer
+ and stands alone as a document: the symbol and acronym table was expanded and explicitly scoped to this deliverable
+  (no deferring readers to the SRS or MG for definitions).
+We added a short subsection stating how each module section is intended to be sufficient to build from
+ (interfaces, typed state, assumptions, behaviour).
+Payment (M1), sign-up (M3), and access control (M5) state was rewritten using explicit data structures---for
+ example consolidated payment and refund records, a named \texttt{SignUpRecords} map, and versioned policy
+  storage (\texttt{policyByVersion}, \texttt{currentPolicyVersion}) with correct \texttt{roleAssignments} semantics.
+Other edits included tightening the module hierarchy wording, stating session-timeout expectations inside
+ the MIS instead of pointing to other docs, replacing appendix placeholder text, and documenting the History
+  Manager work for Team~10 with a public pull request: \url{https://github.com/OmarHassanAdelhamid/Five-of-a-Kind-capstone-project-/pull/328}.
+Unused SRS cross-document label imports were removed from the MIS source.\\
+
+\noindent
+\textbf{Module Guide (MG).}\\
+We added brief narrative before each user-interface figure to explain what the screenshot shows and which modules it
+ relates to, fixed a caption typo, and noted that abbreviations in the MG are defined in that document itself for
+  consistency with the MIS approach.
 
 \subsection{VnV Plan and Report}
 
@@ -74,6 +134,18 @@ low.}
 \item \textbf{Scope/rigour feedback:} earlier wording implied full equivalence to planned load/usability activities. \textbf{Change made:} explicitly documented where lighter methods were used, what was partially verified, and what remains as scope gaps (for example webhook idempotency, reliability monitoring, and audit depth).
 \item \textbf{Rev 0 product feedback:} ``request refund not yet working'' and ``admin cannot edit created event.'' \textbf{Change made:} implemented backend refund endpoint and frontend refund workflow, and replaced admin event-edit placeholder with a working edit form.
 \end{itemize}
+
+\noindent\textbf{VnV Plan:}\\
+In response to TA feedback, we expanded the symbols and acronyms table
+(beyond the placeholder row), removed instructor template prompts (\texttt{wss}) and replaced them
+with final text, and tightened vague objectives and usability language---including concrete definitions
+for elevated load (tied to existing NFR concurrency cases) and measurable usability criteria (task
+success, timings, Likert item for NFR3). The appendix now documents symbolic parameters from those
+tests and states how optional usability surveys relate to NFR3. After the Module Interface
+Specification (MIS) was available, we filled the unit-test section: implementation verification
+references modules M1--M8; for each module we added representative unit test cases (\texttt{UT-M*})
+mapped to MIS access programs and exceptions, plus a traceability table to SRS areas. Revision history
+ records version 1.1 (MIS-dependent content) and 1.2 (TA feedback pass).\\
 
 \section{Extras}
 

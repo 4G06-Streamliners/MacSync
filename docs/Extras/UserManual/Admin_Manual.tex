@@ -1,0 +1,672 @@
+
+
+\documentclass[12pt, twoside]{report}
+
+\usepackage[
+  top=1in, bottom=1in,
+  inner=1.25in, outer=1in,
+  includeheadfoot
+]{geometry}
+\usepackage{fontenc}
+\usepackage{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{float}
+\usepackage{caption}
+
+\definecolor{MacSyncPrimary}{HTML}{6B1A35}   % Maroon — chapter titles
+\definecolor{NoteGray}{HTML}{F2F2F2}         % Light gray — note boxes
+\definecolor{WarnGray}{HTML}{EBEBEB}         % Slightly darker gray — warnings
+\definecolor{BorderGray}{HTML}{999999}       % Gray border
+\definecolor{DarkGray}{HTML}{2B2B2B}         % Near-black text
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=MacSyncPrimary,
+  urlcolor=MacSyncPrimary,
+  pdftitle={MacSync Staff and Admin Guide},
+  pdfauthor={MacSync Team},
+  bookmarksnumbered=true,
+  bookmarksopen=true,
+}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{MacSyncPrimary}}
+  {\chaptertitlename\ \thechapter}{10pt}{\Huge}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{black}}
+  {\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\leftmark}
+\fancyhead[RO]{\small MacSync Staff \& Admin Guide}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[C]{\small\textcolor{gray}{McMaster Engineering Society}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{notebox}{
+  colback=NoteGray, colframe=BorderGray,
+  fonttitle=\bfseries\small, title=Note,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{warnbox}{
+  colback=WarnGray, colframe=DarkGray,
+  fonttitle=\bfseries\small, title=Warning,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt
+}
+
+\newtcolorbox{tipbox}{
+  colback=NoteGray, colframe=BorderGray,
+  fonttitle=\bfseries\small, title=Tip,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt
+}
+
+\newcommand{\uielem}[1]{\textbf{#1}}
+\newcommand{\version}{1.0.0}
+\newcommand{\releasedate}{April 2026}
+
+%% ============================================================
+%%  DOCUMENT START
+%% ============================================================
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+
+  % \includegraphics[width=0.35\textwidth]{logo.png}\\[1.5cm]
+
+  {\Huge\bfseries\color{MacSyncPrimary} MacSync}\\[0.4cm]
+  {\Large\color{DarkGray} MES Large Events Management Platform}\\[0.2cm]
+  \noindent\rule{\textwidth}{1pt}\\[0.4cm]
+  {\LARGE\bfseries Staff \& Admin Guide}\\[0.2cm]
+  {\large Version \version\ ---\ \releasedate}\\[2cm]
+
+  {\large Mahad Ahmed \textbullet\ Abyan Jaigirdar \textbullet\ Prerna Prabhu\\
+  Farhan Rahman \textbullet\ Ali Zia}\\[0.4cm]
+  {\normalsize\textit{Capstone 2025--2026 | Streamliners}}\\[0.6cm]
+  {\large McMaster University \textbullet\ McMaster Engineering Society}\\[1cm]
+
+  \vfill
+  {\small\textcolor{gray}{\copyright\ 2026 MacSync. All rights reserved.\\
+  McMaster Engineering Society}}
+\end{titlepage}
+
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\chapter*{Document History}
+\addcontentsline{toc}{chapter}{Document History}
+\begin{longtable}{@{} p{2cm} p{2.5cm} p{4cm} p{5cm} @{}}
+  \toprule
+  \textbf{Version} & \textbf{Date} & \textbf{Author} & \textbf{Changes} \\
+  \midrule
+  \endhead
+  1.0.0 & April 2026 & MacSync Team & Initial release \\
+  \bottomrule
+\end{longtable}
+
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\chapter{Introduction}
+
+\section{About MacSync}
+
+MacSync is an event management platform built for the McMaster Engineering Society (MES).
+It enables MES clubs and staff to create, manage, and promote large-scale events.
+Staff manage everything through the web-based admin portal at
+\texttt{admin.macsync.org}, while members use the mobile app to discover and
+attend events. Both interfaces share the same account system.
+
+\section{Who This Guide Is For}
+
+This guide is for \textbf{staff and administrators} --- anyone with a staff role
+who uses the admin portal to create or manage events, as well as System Admins
+who manage users, roles, and platform settings. For the member-facing mobile
+app, refer to the \textit{MacSync Member Guide}.
+
+\section{How to Use This Guide}
+
+Start with Chapter~\ref{chap:started} to access the admin portal, then refer
+to the relevant chapters for each feature. Callout boxes highlight important
+information:
+
+\begin{notebox}
+Notes provide extra context or background information.
+\end{notebox}
+
+\begin{warnbox}
+Warnings flag actions that could have unintended consequences.
+\end{warnbox}
+
+\begin{tipbox}
+Tips share best practices and useful shortcuts.
+\end{tipbox}
+
+\section{System Requirements}
+\begin{itemize}
+  \item Modern web browser: Chrome, Firefox, Safari, or Edge.
+  \item Active internet connection.
+  \item A valid \texttt{@mcmaster.ca} account with a staff role or
+        System Admin privileges.
+\end{itemize}
+
+
+\chapter{Getting Started}
+\label{chap:started}
+
+\section{The Two MacSync Portals}
+
+MacSync has two interfaces that share the same account system:
+
+\begin{table}[H]
+  \centering
+  \caption{MacSync Portals Overview}
+  \begin{tabular}{@{} p{3.2cm} p{4cm} p{5.5cm} @{}}
+    \toprule
+    \textbf{Portal} & \textbf{Who It's For} & \textbf{What You Can Do} \\
+    \midrule
+    \textbf{Mobile App}
+      & All users (Members and Staff)
+      & Browse events, register, purchase tickets, manage seat selections,
+        view notifications. Staff can also create and manage events. \\
+    \addlinespace
+    \textbf{Web Admin Portal}
+      & Staff and System Admins only
+      & Create and manage events, manage users and roles,
+        view attendee details, download venue reports, send notifications. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{notebox}
+Staff can use \textbf{both} portals. Use the mobile app as an attendee
+and the web admin portal to manage events.
+\end{notebox}
+
+\section{Accessing the Admin Portal}
+
+Navigate to \texttt{admin.macsync.org} in any modern web browser.
+
+\begin{notebox}
+Only \texttt{@mcmaster.ca} accounts with an Admin role, a custom staff role,
+or System Admin privileges can access this portal. Regular Members will see
+an \textit{``Access denied. Sign in with a system administrator or event
+staff account''} message.
+\end{notebox}
+
+\section{Logging In}
+
+\begin{enumerate}
+  \item Go to \texttt{admin.macsync.org}.
+  \item Enter your \texttt{@mcmaster.ca} email and password.
+  \item Click \uielem{Sign in}.
+\end{enumerate}
+
+\section{Navigating the Admin Portal}
+
+Once logged in, the sidebar provides access to:
+
+\begin{itemize}
+  \item \uielem{Dashboard} --- Overview of platform activity.
+  \item \uielem{Events} --- Create, edit, delete, and view events you manage.
+  \item \uielem{Manage Roles} --- Create and delete custom roles
+        (System Admins only).
+  \item \uielem{Users} --- View and manage all registered users
+        (System Admins only).
+  \item \uielem{Notifications} --- Send announcements to event attendees.
+\end{itemize}
+
+
+\chapter{User Roles \& Permissions}
+\label{chap:roles}
+
+\section{Role Overview}
+
+MacSync uses a flexible role-based access control (RBAC) system. Every registered
+user automatically receives the \textbf{Member} role. Additional roles can be
+created by a System Admin and assigned to users to grant event management privileges.
+A user can hold \textbf{multiple roles simultaneously}.
+
+There are two built-in roles on every MacSync instance:
+
+\begin{table}[H]
+  \centering
+  \caption{Built-in Roles}
+  \begin{tabular}{@{} p{2.5cm} p{1.8cm} p{8.3cm} @{}}
+    \toprule
+    \textbf{Role} & \textbf{Protected} & \textbf{Description} \\
+    \midrule
+    Member  & Yes & Default role for every registered user. Can browse
+                    and register for events. Cannot create or manage events. \\
+    Admin   & No  & Staff role. Can create events and manage events
+                    where their role matches the event's Managing Role. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Custom roles (e.g.\ \texttt{MES\_ADMIN}) can be created from the
+\uielem{Manage Roles} page and assigned to any combination of users.
+
+\section{System Admin}
+
+The \textbf{System Admin} privilege is a special toggle separate from roles,
+found under \uielem{Advanced Settings} on any user's profile.
+
+\begin{itemize}
+  \item A System Admin has \textbf{unrestricted access} to all platform
+        features, events, users, and settings with no role restrictions.
+  \item Only an existing System Admin can grant or revoke this privilege.
+  \item In production, this should be held by MES Presidents and senior executives.
+\end{itemize}
+
+\begin{warnbox}
+System Admin is listed under \uielem{Advanced Settings --- Dangerous actions
+and system-level changes}. Grant this privilege carefully --- it overrides
+all role and event-level restrictions.
+\end{warnbox}
+
+\section{How the Managing Role Works}
+
+Every event has a \textbf{Managing Role} field that determines which staff
+users can edit, delete, and view attendee data for that event.
+
+\begin{itemize}
+  \item When creating an event, the managing role defaults to the creator's
+        highest assigned role.
+  \item Any user who holds the matching role can administer that event.
+  \item Example: if an event's managing role is \texttt{MES\_ADMIN},
+        all users with the \texttt{MES\_ADMIN} role can manage it.
+  \item System Admins can manage all events regardless of managing role.
+\end{itemize}
+
+\begin{tipbox}
+To restrict an event to a specific team, create a custom role
+(e.g.\ \texttt{HATCH\_EXEC}), assign it only to that team's members,
+and set it as the managing role when creating the event.
+\end{tipbox}
+
+\section{Creating a New Role (System Admin Only)}
+
+\begin{enumerate}
+  \item Navigate to \uielem{Manage Roles} in the sidebar.
+  \item Under \uielem{Create a new role}, enter a role name.
+  \item Click \uielem{Create role}.
+\end{enumerate}
+
+\begin{notebox}
+Role names are case-sensitive. Use consistent naming conventions
+(e.g.\ all caps with underscores: \texttt{CLUB\_EXEC}).
+\end{notebox}
+
+\section{Deleting a Role (System Admin Only)}
+
+\begin{enumerate}
+  \item Navigate to \uielem{Manage Roles}.
+  \item Find the role under \uielem{Existing roles}.
+  \item Click \uielem{Delete role}.
+\end{enumerate}
+
+\begin{warnbox}
+Deleting a role removes it from all users currently assigned that role and
+from any events using it as their managing role. The \textbf{Member} role
+is protected and cannot be deleted.
+\end{warnbox}
+
+\section{Assigning Roles to a User (System Admin Only)}
+
+\begin{enumerate}
+  \item Navigate to \uielem{Users} and click the target user.
+  \item Click \uielem{Show advanced settings}.
+  \item Under \uielem{Roles}, check the boxes for all roles to assign.
+  \item Click \uielem{Save roles}.
+\end{enumerate}
+
+The user's active roles are displayed in the top-right of their profile page.
+
+\section{Granting System Admin Privileges (System Admin Only)}
+
+\begin{enumerate}
+  \item Navigate to \uielem{Users} and open the target user's profile.
+  \item Click \uielem{Show advanced settings}.
+  \item Toggle \uielem{System admin} to the on position.
+\end{enumerate}
+
+\begin{warnbox}
+There is no confirmation dialog for this action. Verify you have the correct
+user's profile open before enabling System Admin.
+\end{warnbox}
+
+
+\chapter{Managing Events}
+
+\section{Creating an Event}
+
+Any user with an Admin role or a custom staff role can create events.
+Regular Members cannot create events.
+
+\begin{enumerate}
+  \item From the sidebar, click \uielem{Events}, then click
+        \uielem{Create event} in the top-right corner.
+  \item Fill in the event details (see Section~\ref{sec:eventfields}).
+  \item Configure optional signup settings if needed
+        (see Sections~\ref{sec:table} and~\ref{sec:bus}).
+  \item Set the \uielem{Managing role} to control which staff can
+        administer this event.
+  \item Click \uielem{Create event} to publish.
+\end{enumerate}
+
+\section{Event Form Fields}
+\label{sec:eventfields}
+
+\begin{table}[H]
+  \centering
+  \caption{Create Event --- Field Reference}
+  \begin{tabular}{@{} p{3cm} p{1.5cm} p{8cm} @{}}
+    \toprule
+    \textbf{Field} & \textbf{Required} & \textbf{Description} \\
+    \midrule
+    Name        & Yes & The public-facing title of the event. \\
+    Description & No  & A summary of the event. \\
+    Date \& Time & Yes & Date and start time in \texttt{yyyy-mm-dd hh:mm} format. \\
+    Capacity    & No  & Maximum number of attendees. Leave blank for unlimited. \\
+    Location    & Yes & The venue or address where the event is held. \\
+    Price (USD) & No  & Ticket price. Leave empty or enter \texttt{0} for a
+                        free event with no payment screen. \\
+    Image URL   & No  & A direct URL to an externally hosted image used as
+                        the event banner. \\
+    Requires table signup & No & Enables table and seat selection for
+                                  attendees. See Section~\ref{sec:table}. \\
+    Requires bus signup   & No & Enables bus and seat selection for
+                                  attendees. See Section~\ref{sec:bus}. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Table Signup Configuration}
+\label{sec:table}
+
+When \uielem{Requires table signup} is checked, you will be prompted to enter:
+\begin{itemize}
+  \item Number of tables at the venue.
+  \item Seats per table.
+\end{itemize}
+
+Attendees will then choose their preferred table number and seat number
+when registering. Selection is by number only --- there is no visual seating map.
+
+\begin{notebox}
+Table and seat assignments are visible in the Registered Attendees panel
+on the event detail page.
+\end{notebox}
+
+\section{Bus Signup Configuration}
+\label{sec:bus}
+
+When \uielem{Requires bus signup} is checked, you will be prompted to enter:
+\begin{itemize}
+  \item Number of buses available.
+  \item Seats per bus.
+\end{itemize}
+
+Attendees will choose their preferred bus number and seat number when registering.
+
+\section{Viewing an Event}
+
+Clicking an event from the \uielem{Events} list opens the event detail page.
+What you see depends on whether your role matches the event's managing role:
+
+\textbf{All staff} can see:
+\begin{itemize}
+  \item Event metadata: description, location, capacity, price.
+  \item Seating configuration (tables and/or buses, if configured).
+\end{itemize}
+
+\textbf{Staff with the matching managing role} (and System Admins) additionally see:
+\begin{itemize}
+  \item \uielem{Edit event}, \uielem{Delete}, and
+        \uielem{Download venue report} buttons.
+  \item \uielem{Managing role} selector.
+  \item \uielem{Registered Attendees} table with contact details, seat
+        assignments, check-in status, and sign-up timestamps.
+\end{itemize}
+
+\section{Registered Attendees Table}
+
+The Registered Attendees section shows a full table of everyone signed up,
+with the following columns:
+
+\begin{table}[H]
+  \centering
+  \caption{Registered Attendees Table Columns}
+  \begin{tabular}{@{} p{3cm} p{10cm} @{}}
+    \toprule
+    \textbf{Column} & \textbf{Description} \\
+    \midrule
+    Attendee    & Full name and McMaster program. \\
+    Contact     & Email address and phone number. \\
+    Table Seat  & Assigned table and seat (if table signup enabled). \\
+    Bus Seat    & Assigned bus and seat (if bus signup enabled). \\
+    Check-in    & \texttt{Not checked in} or \texttt{Checked in}. \\
+    Signed Up   & Date and time of registration. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Editing an Event}
+
+\begin{enumerate}
+  \item Open the event detail page.
+  \item Click \uielem{Edit event}.
+  \item Update the relevant fields.
+  \item Click \uielem{Save} to apply changes.
+\end{enumerate}
+
+\section{Deleting an Event}
+
+\begin{warnbox}
+Deleting an event is \textbf{permanent and cannot be undone}. All associated
+registrations and attendee data will also be removed.
+\end{warnbox}
+
+\begin{enumerate}
+  \item Open the event detail page.
+  \item Click \uielem{Delete}.
+  \item Confirm the deletion in the dialog that appears.
+\end{enumerate}
+
+
+\chapter{Venue Reports}
+
+\section{Downloading a Venue Report}
+
+The venue report is a PDF summary of an event's details and registered
+attendees, suitable for sharing with venue coordinators or transport providers.
+
+\begin{enumerate}
+  \item Navigate to \uielem{Events} and click the relevant event.
+  \item Click \uielem{Download venue report} at the top of the page.
+  \item The PDF will download automatically.
+\end{enumerate}
+
+\begin{notebox}
+The \uielem{Download venue report} button is only visible to staff whose
+role matches the event's managing role, and to System Admins.
+\end{notebox}
+
+\section{What the Venue Report Contains}
+
+The report is a two-page PDF structured as a formal invoice:
+
+\textbf{Page 1 --- Event Summary:}
+\begin{itemize}
+  \item Invoice number, issue date, and status.
+  \item Event name, description, location, date/time, price per ticket,
+        capacity, and prepared-by name.
+  \item Seating configuration --- tables and seats per table.
+  \item Transportation --- number of buses, seats per bus.
+\end{itemize}
+
+\textbf{Page 2 --- Registered Attendees:}
+\begin{itemize}
+  \item Total registered count.
+  \item Table listing each attendee's name, program, email, table
+        assignment, bus assignment, and sign-up date.
+\end{itemize}
+
+\begin{tipbox}
+The venue report is ideal for sharing with venue coordinators, catering
+teams, or transportation providers ahead of the event.
+\end{tipbox}
+
+
+
+\chapter{Notifications}
+
+
+\section{Overview}
+
+Staff can send push notifications to all registered attendees of an event
+from the \uielem{Notifications} page. You can only send notifications for
+events whose managing role matches one of your assigned roles. System Admins
+can send notifications for any event.
+
+\section{Sending a Notification}
+
+\begin{enumerate}
+  \item Navigate to \uielem{Notifications} in the sidebar.
+  \item Use the \uielem{Event} dropdown to select the event. Only events
+        you have permission to manage will appear.
+  \item The form shows how many attendees will be notified.
+  \item Optionally enter a \uielem{Message} for extra context.
+  \item Click \uielem{Send Notification}.
+\end{enumerate}
+
+A confirmation banner will appear: \textit{``Notification sent to N
+attendee(s).''} The button is then disabled for \textbf{60 minutes}.
+
+\begin{warnbox}
+There is a \textbf{60-minute cooldown} between notifications for the same
+event. A warning banner will appear if a cooldown is active. Plan your
+notifications carefully, especially close to event time.
+\end{warnbox}
+
+\begin{tipbox}
+Only attendees \textbf{registered} for the selected event will receive
+the notification.
+\end{tipbox}
+
+
+
+\chapter{Managing Users}
+
+
+\section{Overview}
+
+The \uielem{Users} page lists every registered MacSync user. Access level
+determines what you can do on a user's profile:
+
+\begin{table}[H]
+  \centering
+  \caption{Users Page --- Access by Privilege Level}
+  \begin{tabular}{@{} p{3.5cm} p{9cm} @{}}
+    \toprule
+    \textbf{Privilege} & \textbf{What They Can See / Do} \\
+    \midrule
+    Staff (any role)  & View public profile: name, email, tickets purchased,
+                        events attended, program, and ticket history. \\
+    System Admin      & Everything above, plus Advanced Settings: assign/remove
+                        roles, toggle System Admin, delete the user. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Viewing the Users List}
+
+\begin{enumerate}
+  \item Navigate to \uielem{Users} in the sidebar.
+  \item The list shows all registered users with their name, email, and
+        any special privilege badges (e.g.\ \texttt{SYSTEM\_ADMIN}).
+  \item Use the \uielem{Search users by name or email} field to find a
+        specific user.
+\end{enumerate}
+
+\section{Viewing a User Profile}
+
+Click any user to open their profile, which displays:
+
+\begin{itemize}
+  \item Name, email, and active roles (shown top-right).
+  \item Tickets purchased, events attended, and McMaster program.
+  \item Full ticket history: event name, date, location, price, purchase
+        date, seat assignment, and check-in status.
+\end{itemize}
+
+\section{Deleting a User (System Admin Only)}
+
+\begin{warnbox}
+Deleting a user is \textbf{permanent and cannot be undone}. All associated
+data including tickets, registrations, and seat assignments will be removed.
+\end{warnbox}
+
+\begin{enumerate}
+  \item Open the user's profile.
+  \item Click \uielem{Show advanced settings}.
+  \item Click \uielem{Delete user} and confirm.
+\end{enumerate}
+
+
+
+\chapter{Glossary}
+
+
+\begin{description}[leftmargin=3.5cm, style=sameline]
+  \item[Admin]         A built-in staff role. Can create and manage events
+                       where their role matches the event's managing role.
+  \item[Check-in]      The process of scanning a user's QR code at the
+                       event entrance to mark them as attended.
+  \item[Entry QR Code] A unique scannable code on a user's ticket used for
+                       event check-in.
+  \item[Event]         A scheduled activity created and managed within MacSync,
+                       visible to all registered users on the mobile app.
+  \item[Managing Role] The role assigned to an event that determines which
+                       staff users can edit, delete, and manage it.
+  \item[Member]        The default role for every registered MacSync user.
+                       Can browse and register for events.
+  \item[MES]           McMaster Engineering Society --- the organisation that
+                       operates the MacSync platform.
+  \item[RBAC]          Role-Based Access Control --- the permission system
+                       governing what each user can do based on their roles.
+  \item[System Admin]  A special privilege toggle granting unrestricted access
+                       to all platform features, events, and settings.
+  \item[Venue Report]  A two-page PDF summarising an event's details, seating,
+                       transportation, and registered attendees.
+\end{description}
+
+\end{document}

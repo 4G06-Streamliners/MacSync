@@ -23,6 +23,8 @@
 \textbf{Date} & \textbf{Developer(s)} & \textbf{Change}\\
 \midrule
 2025-09-22 & All & Initial draft of development plan.\\
+% Rubric feedback updates: add brief revision-history entry.
+2026-04-06   & Prerna Prabhu & Expand plan per rubric feedback and address TA comments\\
 ... & ... & ...\\
 \bottomrule
 \end{tabularx}
@@ -73,12 +75,12 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
 
 \section{Team Communication Plan}
 
-\begin{flushleft}
-\textbf{Main Objectives:} The main objective of the team communication plan is to ensure the team is updated on the tasks they have to complete, the current project progress and the deadlines for completing their tasks. This is to ensure all members are accountable for the progress of the project.\vspace{1em}
+% TA Feedback (Formatting and style): Removed flush-left block so paragraphs remain justified and consistent with the document's overall alignment.
+\noindent\textbf{Main Objectives:} The main objective of the team communication plan is to ensure the team is updated on the tasks they have to complete, the current project progress and the deadlines for completing their tasks. This is to ensure all members are accountable for the progress of the project.\vspace{1em}
 
 \textbf{Communication Platform:} The team's main form of communication will be through Discord for quick updates, project reminders, discussions on division of labour for milestones and getting help for issues faced.\vspace{1em}
 
-\textbf{Response Times:} Maximum 12 hours response time for any form of communication from accepting github issue assignments to message responses on Discord.\vspace{1em}
+\textbf{Response Times:} Maximum 12 hours response time for any form of communication from accepting GitHub issue assignments to message responses on Discord.\vspace{1em}
 
 \textbf{GitHub Issue Tracking:}
 \begin{itemize}
@@ -89,8 +91,6 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
 \end{itemize}
 
 \textbf{Conflict Resolution:} Disagreements on responsibilities, division of tasks or ideas escalated to the entirety of the team for a vote to decide on next steps. Final escalation to project supervisor if no consensus reached.
-
-\end{flushleft}
 
 
 \section{Team Member Roles}
@@ -108,6 +108,18 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
     Responsibilities: Help resolve issues and challenges faced by the team from research to GitHub and analyze problems and criteria to figure out solutions.
 \end{enumerate}
 \noindent\textbf{*} Roles are subject to change based on evolving project needs and further assessment on each team members strengths.
+
+% TA Feedback (Team member roles): Added technical ownership/overlap plan to show who specializes in which technical areas and how coverage/backup will work.
+\subsection*{Technical Roles and Ownership (Initial)}
+\noindent In addition to the collaboration/coordination roles above, the team will assign primary technical ownership areas so that responsibilities are clear while still maintaining overlap for continuity and support:
+\begin{itemize}
+    \item \textbf{Frontend (Web Admin Dashboard) Primary:} Farhan; \textbf{Secondary:} Abyan. Focus on organizer UX, dashboards, and admin flows.
+    \item \textbf{Mobile (Attendee App) Primary:} Ali; \textbf{Secondary:} Prerna. Focus on attendee registration, ticket wallet/QR, and notification UX.
+    \item \textbf{Backend (API + AuthZ + Business Logic) Primary:} Mahad; \textbf{Secondary:} Farhan. Focus on domain logic (capacity rules, roles/permissions) and API contracts.
+    \item \textbf{Database \& Migrations Primary:} Abyan; \textbf{Secondary:} Mahad. Focus on schema, constraints, and migration workflow.
+    \item \textbf{CI/CD \& Developer Experience Primary:} Prerna; \textbf{Secondary:} Ali. Focus on pipelines, linting, tests, and documentation for contributors.
+\end{itemize}
+\noindent This ownership model will be revisited after early proof-of-concept work; overlap ensures that a single absence does not block progress and supports peer review on critical components.
 
 
 
@@ -142,6 +154,16 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
 \end{itemize}
 \end{itemize}
 
+% TA Feedback (Git workflow plan): Expanded workflow details toward a Contributor's-Guide level (review rules, PR expectations, labels, and quality gates).
+\noindent Additional workflow conventions (to support consistent contribution quality):
+\begin{itemize}
+    \item \textbf{Pull requests (PRs):} PRs should be small, scoped to one issue where possible, and include a short summary and test notes (what was validated).
+    \item \textbf{Reviews:} At least one peer review is required before merging. Changes that affect authentication/authorization, payments, or database schema require review from the technical owner of that area.
+    \item \textbf{Branch protection intent:} The main branch should only accept PRs that pass automated checks (lint/test/build) to reduce regressions.
+    \item \textbf{Issue labeling:} Use consistent labels such as \texttt{documentation}, \texttt{feature}, \texttt{bug}, \texttt{chore}, \texttt{security}, and \texttt{frontend}/\texttt{backend}/\texttt{mobile} to improve filtering and ownership.
+    \item \textbf{Definition of Done (DoD):} An issue is ``Done'' when the implementation is merged, basic tests are updated/added where applicable, and relevant documentation is updated (README or in-repo docs).
+\end{itemize}
+
 \subsection{Issues and Project Management}
 \begin{itemize}
     \item Github issues will serve as the primary issue/ticket system
@@ -174,16 +196,40 @@ Before all meetings, an agenda will be provided. The agenda will cover the main 
   \item Issues will be categorized under GitHub Milestones/Deliverables. Milestones will have deadlines that will aid in prioritizing issues.
   \item Milestone deadlines and deliverables provided in the course Google calendar will be the primary source for planning sprints. 
   \item The team will meet at the beginning of each week to assign new issues and monitor progress.
-  \item GitHub Project link:
-  \url{https://github.com/orgs/4G06-Streamliners/projects/2}
+% TA Feedback (GitHub Project link): Updated link to point to the main repository page (not only the Kanban dashboard link).
+  \item GitHub repository link:
+  \url{https://github.com/4G06-Streamliners/MacSync}
 \end{itemize}
 
+% TA Feedback (Content / Sections 6-8): Added a concrete timetable-style schedule to provide more evidence of planning (requested explicitly by TA).
+\noindent The following high-level timetable will be used to keep work aligned across subteams and ensure integration checkpoints occur early:
+\begin{table}[hp]
+\caption{High-Level Schedule (Planned)} \label{TblHighLevelSchedule}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Phase} & \textbf{Planned Outcomes} \\
+\midrule
+Month 1--2 (POC) & Validate end-to-end slice: create event (admin) $\rightarrow$ register/purchase (attendee) $\rightarrow$ ticket/QR generated $\rightarrow$ check-in updates attendance. Confirm baseline DB schema and API contract. \\
+Month 3--5 (Core build) & Implement core features: ticketing/RSVP, capacity rules (bus/table), organizer dashboards, basic reporting exports, and role/permission enforcement. \\
+Month 6--7 (Integration + hardening) & Integrate notifications, refine UX, add testing depth (integration/E2E for critical flows), and perform performance checks for high-traffic registration windows. \\
+Month 8 (Polish + release readiness) & Improve reliability, accessibility, documentation, and operational readiness (backups, environment setup), then prepare final demo and handoff notes for MES. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \section{Proof of Concept Demonstration Plan}
+
+% TA Feedback (POC Demo plan): Added more project context so risks and the POC's purpose are clearer at this early planning stage.
+\noindent This project delivers a centralized event platform for MES, spanning an attendee experience (registration/tickets/QR check-in) and an organizer experience (event setup, capacity rules, reporting). The proof-of-concept (POC) will demonstrate an end-to-end ``thin slice'' across the architecture to reduce early risk.
 
 The primary risks of the project are as follows.
 \begin{itemize}
     \item The ability to seamlessly integrate the system architecture components (i.e. frontend, backend, mobile app, database, APIs etc.).
     \item The ability of end users to intuitively use all features as intended.
+% TA Feedback (POC Demo plan): Added additional early-stage risks (learning curve, third-party dependencies, and data/privacy constraints) to better connect the plan to realistic project success risks.
+    \item The learning curve and time required to correctly implement payments, authentication/authorization, and database migrations without blocking progress.
+    \item Reliability of third-party services (e.g., payment processor webhooks, notification delivery) and how failures affect user experience.
+    \item Security and privacy constraints when handling attendee personal information, waivers, and auditability needs.
 \end{itemize}
 
 \noindent The proof-of-concept demonstration overcoming these risks will consist of.
@@ -191,27 +237,43 @@ The primary risks of the project are as follows.
 \begin{itemize}
     \item A minimal but functional demo showcasing the different architecture layers working cohesively.
     \item A walkthrough showing a general end-user workflow (i.e. registering for events, paying for events, creating events, etc.).
+% TA Feedback (POC Demo plan): Increased specificity so the demo is clearly tied to the risks and can be evaluated.
+    \item A scenario-based demo: organizer creates an event with a capacity limit; attendee registers (and pays if ticketed); system issues a QR ticket; organizer scans/validates the ticket and the dashboard reflects attendance.
+    \item A ``failure mode'' check: demonstrate how the system handles a failed payment or duplicate submission (no duplicate tickets; clear error messaging).
 \end{itemize}
+
+% TA Feedback (POC Demo plan): Added consequences/interpretation of a "failed" POC and immediate next steps (no detailed mitigation required, but evidence of thought).
+\noindent A POC will be considered \textbf{failed} if the end-to-end slice cannot be demonstrated reliably (e.g., inconsistent database state across steps, inability to issue/validate tickets, or unclear ownership of integration boundaries), or if key third-party interactions (payments/webhooks) cannot be executed safely in a test environment. In that case, the team will treat the result as a signal to narrow scope to a simpler core workflow (e.g., RSVP-first with delayed payment), replace or defer a high-risk dependency, and prioritize stabilizing the API/database contract before adding additional features.
 
 \section{Expected Technology}
 
 \subsubsection*{Languages \& Frameworks} 
-The team will use \textbf{JavaScript} as the primary language across the stack. 
-The web application will be built with \textbf{Next.js (React)}, the mobile application with \textbf{React Native}, 
-and the backend will be developed using \textbf{NestJS} (chosen for its opinionated structure atop Express).
+% TA Feedback (Eval Tools / LO13): Rewrote this subsection to justify each technology choice with project-specific pros/cons and limitations (not just a list).
+The team will use \textbf{TypeScript (JavaScript + types)} as the primary language across the stack to reduce integration friction between the web app, mobile app, and backend while improving maintainability through static typing. The main limitation is added build configuration complexity and occasional type overhead during rapid prototyping, but this trade-off is justified by the size of the codebase and the need for reliable role/access-control logic.
+
+% TA Feedback (Eval Tools / LO13): Added explicit rationale and trade-offs for the selected frameworks in the context of MES event workflows.
+\begin{itemize}
+  \item \textbf{Web: Next.js (React)} will be used for the organizer/admin dashboard because it supports fast development of data-heavy pages (tables, filters, analytics) and offers built-in routing and performance features (SSR/SSG) that help with perceived responsiveness. The primary drawback is additional framework conventions and deployment considerations compared to a simpler React SPA, but it aligns well with dashboard-style UX and iteration speed.
+  \item \textbf{Mobile: React Native} will be used for the attendee-facing experience to prioritize a mobile-first workflow (ticket wallet, QR code, notifications) while sharing UI patterns and business logic with the React web code. The trade-offs include native module complexity (camera/QR scanning, push notifications) and platform-specific quirks; we mitigate this by keeping device-specific logic isolated and by validating early via proof-of-concept spikes.
+  \item \textbf{Backend: NestJS (Node.js)} will be used because its opinionated architecture (modules, controllers, dependency injection) improves testability and helps enforce consistent structure across a multi-contributor student team. The main con is increased boilerplate compared to Express, but the structure is valuable for implementing non-trivial domains like payments, RBAC/FBAC, and event capacity rules.
+\end{itemize}
 
 \subsubsection*{Database \& ORM} 
-The database will be \textbf{PostgreSQL}, self-managed via a Docker container. 
-For database access, the team is considering \textbf{Drizzle ORM} as the shared standard across groups.
+% TA Feedback (Eval Tools / LO13): Expanded database/tool choice with justification and limitations relevant to event registration, reporting, and consistency.
+The database will be \textbf{PostgreSQL}, self-managed via a Docker container for consistent local development and repeatable integration testing. PostgreSQL is well-suited for transactional workflows (ticket purchases, waitlists, check-in state) and supports relational constraints that help prevent overselling capacity. The main limitations are the operational overhead of schema migrations and environment management; we address this through automated migrations in CI and containerized local environments.
+
+% TA Feedback (Eval Tools / LO13): Added pros/cons for ORM choice and how it impacts cross-group alignment.
+For database access, the team is considering \textbf{Drizzle ORM} as a shared standard across groups because it provides strong TypeScript typing while staying close to SQL, which helps with performance and predictable queries for reporting/analytics. The trade-offs are a smaller ecosystem than more established ORMs and potential learning curve for contributors; we will mitigate this by documenting patterns (migrations, transactions) and keeping a clear boundary between domain logic and persistence.
 
 \subsubsection*{Payments} 
-Payments will be handled through \textbf{Stripe}, integrated using official SDKs. 
-Processor-specific logic will be isolated within the backend service.
+% TA Feedback (Eval Tools / LO13): Added rationale and limitations for payments tech in context (student tickets, refunds, auditability).
+Payments will be handled through \textbf{Stripe}, integrated using official SDKs, because it provides mature support for card payments, webhooks, refunds, and reconciliation---features that directly reduce organizer burden and improve auditability for MES events. Key limitations include reliance on third-party uptime and the need to secure webhook endpoints; we will isolate processor-specific logic behind a backend service boundary and use idempotency keys plus webhook signature verification to reduce double-charging risk.
 
 \subsubsection*{Selected Libraries (initial)}
 \begin{itemize}
-  \item \textbf{Frontend:} a React component library (e.g., Tailwind or Material UI) to accelerate UI development.
-  \item \textbf{Backend:} NestJS modules for routing/validation; Stripe SDK for payments; Drizzle ORM for database access.
+% TA Feedback (Eval Tools / LO13): Clarified how each library will be used and why it fits, including trade-offs rather than naming options.
+  \item \textbf{Frontend UI:} \textbf{Tailwind CSS} (preferred) or \textbf{Material UI} (fallback) to accelerate delivery of consistent UI components. Tailwind enables fast iteration and design consistency with low runtime overhead but can increase class verbosity; Material UI provides rich prebuilt components but can constrain visual customization and increase bundle size if not used carefully.
+  \item \textbf{Backend:} NestJS modules for routing/validation to standardize API behavior and reduce input-handling defects; Stripe SDK for payments to minimize custom payment handling; Drizzle ORM for typed database access to reduce query bugs. The main limitation is dependency updates and version alignment across groups; we will pin versions per milestone and validate integration in a shared staging environment.
 \end{itemize}
 
 \subsubsection*{Custom Components Expected to Be Implemented} 
@@ -223,8 +285,10 @@ Despite the existence of some libraries, the team anticipates implementing core 
 
 \subsubsection*{Dev Workflow \& Tooling}
 \begin{itemize}
-  \item \textbf{Git} for version control; \textbf{GitHub} for repository management; \textbf{GitHub Projects} for task tracking.
-  \item Production hosting will be on \textbf{DigitalOcean} (school-hosted), with Postgres running in Docker.
+% TA Feedback (Eval Tools / LO13): Added rationale and limitations for workflow/hosting tools used during development and deployment.
+  \item \textbf{Git + GitHub} will be used for version control and code review because PR-based workflows support traceability, peer review, and safer integration across multiple contributors. The main drawback is review overhead; we will mitigate by keeping PRs small and using issue templates/checklists.
+  \item \textbf{GitHub Projects} will be used for sprint planning and visibility because it provides a shared source of truth for tasks across subteams. A limitation is that boards can drift from reality if not maintained; we will enforce updates during weekly planning and progress check-ins.
+  \item Hosting will be on \textbf{DigitalOcean} for a straightforward deployment path and predictable costs suitable for a student project. The trade-off is that operations (monitoring, backups, secrets management) are the team’s responsibility; we will start with a minimal staging environment and add operational safeguards (backups, environment variables, least-privilege access) as the project stabilizes.
 \end{itemize}
 
 \subsubsection*{Testing, CI/CD, and Performance} 
@@ -269,6 +333,7 @@ For version control, all work will be done in feature branches, with pull reques
     \item What disagreements did your group have in this deliverable, if any,
     and how did you resolve them?
    
+% TA Feedback (Reflection): Kept Q3 as a team-wide response.
     The team did not have any major disagreements, but there were discussions around which ORM should be used. Some members had experience with Prisma, while others were interested in Drizzle for its modern features and close mapping to SQL. After reviewing the trade-offs together and following up with the mentors for additional guidance, the team decided to move forward with Drizzle as the preferred option. This process allowed the team to weigh different perspectives while still keeping flexibility in case future integration across groups requires adjustments.
 \end{enumerate}
 
