@@ -1,17 +1,16 @@
 # Makefile
 # From https://danielkaes.wordpress.com/2009/03/14/compiling-latex-documents-using-makefiles/
 
-PROJECTS=User_Manual Admin_Manual
+PROJECT=UsabilityTesting
 TEX=pdflatex
 BIBTEX=bibtex
+BUILDTEX=$(TEX) $(PROJECT).tex
 
 all:
-	$(foreach p,$(PROJECTS), \
-		$(TEX) $(p).tex; \
-		$(BIBTEX) $(p); \
-		$(TEX) $(p).tex; \
-		$(TEX) $(p).tex; \
-	)
+	$(BUILDTEX)
+	$(BIBTEX) $(PROJECT)
+	$(BUILDTEX)
+	$(BUILDTEX)
 
 clean-all:
 	rm -f *.dvi *.log *.bak *.aux *.bbl *.blg *.idx *.ps *.eps *.pdf *.toc *.out *~
